@@ -1,7 +1,9 @@
-package com.ld.poetry.utils;
+package com.ld.poetry.utils.storage;
 
 import com.ld.poetry.entity.Resource;
 import com.ld.poetry.service.ResourceService;
+import com.ld.poetry.utils.CommonConst;
+import com.ld.poetry.vo.FileVO;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
 import com.qiniu.storage.BucketManager;
@@ -14,6 +16,7 @@ import com.qiniu.util.StringMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -25,7 +28,8 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-public class QiniuUtil {
+@ConditionalOnProperty(name = "qiniu.enable", havingValue = "true")
+public class QiniuUtil implements StoreService {
 
     /**
      * 七牛云
@@ -55,14 +59,19 @@ public class QiniuUtil {
         return auth.uploadToken(bucket, key, EXPIRE_SECONDS, putPolicy);
     }
 
+    @Override
     public void deleteFile(List<String> files) {
+        if (CollectionUtils.isEmpty(files)) {
+            return;
+        }
+
         //构造一个带指定 Region 对象的配置类
         Configuration cfg = new Configuration(Region.region0());
         Auth auth = Auth.create(accessKey, secretKey);
         BucketManager bucketManager = new BucketManager(auth, cfg);
         try {
             //单次批量请求的文件数量不得超过1000
-            String[] keyList = files.toArray(new String[0]);
+            String[] keyList = files.stream().map(path -> path.replace(downloadUrl, "")).toArray(String[]::new);
             BucketManager.BatchOperations batchOperations = new BucketManager.BatchOperations();
             batchOperations.addDeleteOp(bucket, keyList);
             Response response = bucketManager.batch(batchOperations);
@@ -71,14 +80,25 @@ public class QiniuUtil {
                 BatchStatus status = batchStatusList[i];
                 String key = keyList[i];
                 if (status.code == 200) {
-                    log.info(key + "：删除成功！");
+                    log.info("文件删除成功：" + key);
+                    resourceService.lambdaUpdate().eq(Resource::getPath, downloadUrl + key).remove();
                 } else {
-                    log.error(key + "：" + status.data.error);
+                    log.error("文件删除失败：" + key + "，原因：" + status.data.error);
                 }
             }
         } catch (QiniuException ex) {
-            log.error(ex.response.toString());
+            log.error("文件删除失败：" + ex.response.toString());
         }
+    }
+
+    @Override
+    public FileVO saveFile(FileVO fileVO) {
+        return null;
+    }
+
+    @Override
+    public String getStoreName() {
+        return StoreEnum.QINIU.getCode();
     }
 
     public Map<String, Map<String, String>> getFileInfo(List<String> files) {
@@ -143,6 +163,7 @@ public class QiniuUtil {
                     re.setType(CommonConst.PATH_TYPE_ASSETS);
                     re.setSize(Integer.valueOf(Long.toString(item.fsize)));
                     re.setMimeType(item.mimeType);
+                    re.setStoreType(StoreEnum.QINIU.getCode());
                     re.setUserId(CommonConst.ADMIN_USER_ID);
                     resources.add(re);
                 }
