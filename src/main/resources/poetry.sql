@@ -1,3 +1,5 @@
+-- 第一步：执行建库语句
+
 CREATE DATABASE IF NOT EXISTS poetize DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 
