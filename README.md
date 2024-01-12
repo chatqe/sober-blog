@@ -44,49 +44,49 @@ Vue3（IM 聊天室系统）是非必须的，如果部署需要依赖博客，�
 ## 网站示例
 
 ### 首页、文章速览、文章分类
-![首页](poetize_picture/首页.jpg)
+![首页](首页.jpg)
 
-![首页文章速览](poetize_picture/首页文章速览.jpg)
+![首页文章速览](首页文章速览.jpg)
 
-![分类页面](poetize_picture/分类页面.jpg)
+![分类页面](分类页面.jpg)
 
 ### 文章详情页：文章、视频功能与留言
-![文章详情页](poetize_picture/文章详情页.jpg)
+![文章详情页](文章详情页.jpg)
 
-![文章视频功能](poetize_picture/文章视频功能.jpg)
+![文章视频功能](文章视频功能.jpg)
 
-![文章留言区域](poetize_picture/文章留言区域.jpg)
+![文章留言区域](文章留言区域.jpg)
 
 ### 恋爱笔记与旅拍
-![恋爱笔记页面](poetize_picture/恋爱笔记页面.jpg)
+![恋爱笔记页面](恋爱笔记页面.jpg)
 
-![旅拍页面](poetize_picture/旅拍页面.jpg)
+![旅拍页面](旅拍页面.jpg)
 
 ### 百宝箱、弹幕墙与友人帐
-![百宝箱](poetize_picture/百宝箱.jpg)
+![百宝箱](百宝箱.jpg)
 
-![弹幕墙](poetize_picture/弹幕墙.jpg)
+![弹幕墙](弹幕墙.jpg)
 
-![友人帐](poetize_picture/友人帐.jpg)
+![友人帐](友人帐.jpg)
 
 ### 聊天室与朋友圈
-![聊天室](poetize_picture/聊天室.jpg)
+![聊天室](聊天室.jpg)
 
-![朋友圈](poetize_picture/朋友圈.jpg)
+![朋友圈](朋友圈.jpg)
 
 ### 后台管理系统
 
 #### 访问统计、基础设置与文件管理
-![后台管理访问统计](poetize_picture/后台管理访问统计.jpg)
+![后台管理访问统计](后台管理访问统计.jpg)
 
-![后台管理网站基础设置](poetize_picture/后台管理网站基础设置.jpg)
+![后台管理网站基础设置](后台管理网站基础设置.jpg)
 
-![后台管理文件资源管理](poetize_picture/后台管理文件资源管理.jpg)
+![后台管理文件资源管理](后台管理文件资源管理.jpg)
 
 #### 文章管理与新增文章
-![后台管理文章管理](poetize_picture/后台管理文章管理.jpg)
+![后台管理文章管理](后台管理文章管理.jpg)
 
-![后台管理新增文章](poetize_picture/后台管理新增文章.jpg)
+![后台管理新增文章](后台管理新增文章.jpg)
 
 ## 更新进度
 
