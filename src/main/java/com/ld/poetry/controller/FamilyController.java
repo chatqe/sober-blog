@@ -99,7 +99,7 @@ public class FamilyController {
     public PoetryResult<FamilyVO> getAdminFamily() {
         Family family = (Family) PoetryCache.get(CommonConst.ADMIN_FAMILY);
         if (family == null) {
-            return PoetryResult.fail("请根据文档【https://poetize.cn/article?id=26】初始化表白墙");
+            return PoetryResult.fail("请根据文档【https://poetize.cn/article/26】初始化表白墙");
         }
         FamilyVO familyVO = new FamilyVO();
         BeanUtils.copyProperties(family, familyVO);

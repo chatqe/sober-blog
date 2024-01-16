@@ -148,7 +148,7 @@ Vue3（IM 聊天室系统）是非必须的，如果部署需要依赖博客，�
 感谢您【V 29.9￥】支持该项目，您将获得：
 1. 学习交流群
 2. 在线答疑
-3. 详细部署文档：[https://poetize.cn/article?id=26](https://poetize.cn/article?id=26)
+3. 详细部署文档：[https://poetize.cn/article/26](https://poetize.cn/article/26)
 
 如果需要，请联系作者【微信号：poetize-sara】（备注来意）
 
