@@ -1,7 +1,7 @@
-## POETIZE（SpringBoot）
+## POETIZE - 最美博客
 POETIZE：作诗，有诗意地描写。
 
-## 网站示例
+## 我的个人网站
 [poetize.cn](https://poetize.cn)
 
 这是我的个人网站，我的生活倒影，有诗意地记录自己的生活。
@@ -19,7 +19,7 @@ ps: 虽然我知道，大部分人都是来了直接下载源代码后就潇洒�
 ## 技术栈
 前端技术：Vue2（博客系统），Vue3（IM 聊天室系统），Element UI（Vue2），Element-Plus UI（Vue3），Naive UI（Vue3）
 
-后端技术：Java，SpringBoot，spring-boot-starter-mail，MySQL，Mybatis-Plus，t-io，qiniu-java-sdk
+后端技术：Java，SpringBoot，MySQL，Redis，Mybatis-Plus，t-io，qiniu-java-sdk，spring-boot-starter-mail
 
 ## 网站简介
 这是一个 SpringBoot + Vue2 + Vue3 的产物，支持移动端自适应，配有完备的前台和后台管理功能。
@@ -30,7 +30,7 @@ ps: 虽然我知道，大部分人都是来了直接下载源代码后就潇洒�
 
 本网站采用前后端分离进行实现，两个前端项目通过Nginx代理，后端使用Java。
 
-启动网站需要安装Nginx、Java、MySQL，然后打包前后端项目并部署。
+启动网站需要安装Nginx、Java、MySQL、Redis，然后打包前后端项目并部署。
 
 文件服务可以使用七牛云，也可以使用服务器。
 
@@ -38,31 +38,33 @@ Vue3（IM 聊天室系统）是非必须的，如果部署需要依赖博客，�
 
 ## 网站示例
 
-### 文章速览、文章分类
+### 博客
+
+#### 文章速览、文章分类
 ![首页文章速览](poetize_picture/首页文章速览.png)
 
 ![分类页面](poetize_picture/分类页面.png)
 
-### 文章详情页：文章、视频功能与留言
+#### 文章详情页：文章、视频功能与留言
 ![文章详情页](poetize_picture/文章详情页.png)
 
 ![文章视频功能](poetize_picture/文章视频功能.png)
 
 ![文章留言区域](poetize_picture/文章留言区域.png)
 
-### 恋爱笔记与旅拍
+#### 恋爱笔记与旅拍
 ![恋爱笔记页面](poetize_picture/恋爱笔记页面.png)
 
 ![旅拍页面](poetize_picture/旅拍页面.png)
 
-### 百宝箱、弹幕墙与友人帐
+#### 百宝箱、弹幕墙与友人帐
 ![百宝箱](poetize_picture/百宝箱.png)
 
 ![弹幕墙](poetize_picture/弹幕墙.png)
 
 ![友人帐](poetize_picture/友人帐.png)
 
-### 聊天室与朋友圈
+#### 聊天室与朋友圈
 ![聊天室](poetize_picture/聊天室.png)
 
 ![朋友圈](poetize_picture/朋友圈.png)
@@ -134,39 +136,30 @@ Vue3（IM 聊天室系统）是非必须的，如果部署需要依赖博客，�
 - 新增：上传进度条与原始文件名记录
 - 优化：百宝箱及其他模块样式调整
 
+========================================================================================================================
+
+### 2024年1月24日更新
+- 三个项目合并到一个仓库
+- 开放PR权限，欢迎提交代码
+
 ## 配置
-全局搜索`$$$$`，配置邮箱、MySQL、访问路径等。
+全局搜索`$$$$`，配置邮箱、MySQL、Redis、访问路径等。
 
 全局搜索`https://`，将图片资源替换成自己自定义的内容，提高网站美化度。
 
-- 博客：https://gitee.com/littledokey/poetize-vue2.git
-- 聊天室：https://gitee.com/littledokey/poetize-im-vue3.git
-- 后端：https://gitee.com/littledokey/poetize.git
-- 七牛云登录/注册地址（文件服务器，CDN）：https://s.qiniu.com/Mz6Z32
+- 项目地址：https://gitee.com/littledokey/poetize.git
+- 七牛云登录/注册地址（文件服务器/CDN）：https://s.qiniu.com/Mz6Z32
 
-## 开源不易，欢迎赞助这个项目，让这个项目越来越好
-感谢您【V 29.9￥】支持该项目，您将获得：
-1. 学习交流群
-2. 在线答疑
-3. 详细部署文档：[https://poetize.cn/article/26](https://poetize.cn/article/26)
-
-如果需要，请联系作者【微信号：poetize-sara】（备注来意）
-
+## POETIZE交流群、PR，请加作者WX好友
 ![个人名片](poetize_picture/一只小毛驴.jpg)
 
-## 收费服务
-- 部署服务
-- 新版本更新服务
-- 搭建全流程教学
-- 前后端技术教学
-
-如果需要，请联系作者【微信号：poetize-sara】（备注来意）
-
 ## 欢迎关注作者B站
-B站搜索用户【寻国记】，博客介绍与搭建教程简介。
+B站搜索用户【寻国记】。
 
 【挑战最美博客！个人博客网站食用教程。这是一个 SpringBoot 与 Vue 的产物，在此公开，一起学习，共同成长。】
 https://www.bilibili.com/video/BV1eM41167Ks/?share_source=copy_web
+
+## 开源不易，欢迎赞助这个项目维持网站运行，您将获得[部署文档：https://poetize.cn/article/26](https://poetize.cn/article/26)
 
 ## nginx配置示例
 ```
