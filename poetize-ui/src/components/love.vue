@@ -19,7 +19,7 @@
           </div>
         </div>
         <div>
-          <img class="love-img" :src="$constant.loveLike" alt="心心">
+          <img class="love-img" :src="$store.state.sysConfig['webStaticResourcePrefix'] + 'assets/loveLike.svg'" alt="心心">
         </div>
         <div>
           <el-avatar class="love-avatar" :src="love.womanCover"></el-avatar>
@@ -113,7 +113,7 @@
           <div class="card-content shadow-box-mini" @click="changeCard(1)">
             <div>
               <el-avatar :size="100"
-                         :src="$constant.loveWeiYan">
+                         :src="$store.state.sysConfig['webStaticResourcePrefix'] + 'assets/loveWeiYan.jpeg'">
               </el-avatar>
             </div>
             <div class="card-right">
@@ -129,7 +129,7 @@
           <div class="card-content shadow-box-mini" @click="changeCard(2)">
             <div>
               <el-avatar :size="100"
-                         :src="$constant.lovePhoto">
+                         :src="$store.state.sysConfig['webStaticResourcePrefix'] + 'assets/lovePhoto.png'">
               </el-avatar>
             </div>
             <div class="card-right">
@@ -145,7 +145,7 @@
           <div class="card-content shadow-box-mini" @click="changeCard(3)">
             <div>
               <el-avatar :size="100"
-                         :src="$constant.loveMessage">
+                         :src="$store.state.sysConfig['webStaticResourcePrefix'] + 'assets/loveMessage.jpeg'">
               </el-avatar>
             </div>
             <div class="card-right">
@@ -212,7 +212,7 @@
                   </div>
                 </div>
                 <div>
-                  <img class="family-img" :src="$constant.loveLike" alt="心心">
+                  <img class="family-img" :src="$store.state.sysConfig['webStaticResourcePrefix'] + 'assets/loveLike.svg'" alt="心心">
                 </div>
                 <div>
                   <el-avatar class="family-avatar" :src="item.womanCover"></el-avatar>
@@ -265,7 +265,7 @@
                  center>
         <div>
           <div class="form-main">
-            <img :src="$constant.friendLetterMiddle" style="width: 100%"/>
+            <img :src="$store.state.sysConfig['webStaticResourcePrefix'] + 'assets/friendLetterMiddle.png'" style="width: 100%"/>
             <div>
               <div>
                 <div class="myCenter form-friend">
@@ -389,7 +389,7 @@
                 </div>
               </div>
               <div>
-                <img :src="$constant.friendLetterBiLi" style="width: 100%;margin: 5px auto"/>
+                <img :src="$store.state.sysConfig['webStaticResourcePrefix'] + 'assets/friendLetterBiLi.png'" style="width: 100%;margin: 5px auto"/>
               </div>
               <p style="font-size: 12px;text-align: center;color: #999">欢迎入住表白墙</p>
             </div>

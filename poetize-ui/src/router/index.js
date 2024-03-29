@@ -21,7 +21,7 @@ const routes = [
       name: "sort",
       component: () => import('../components/sort')
     }, {
-      path: "/article",
+      path: "/article/:id",
       name: "article",
       component: () => import('../components/article')
     }, {
@@ -44,10 +44,6 @@ const routes = [
       path: "/message",
       name: "message",
       component: () => import('../components/message')
-    }, {
-      path: "/friend",
-      name: "friend",
-      component: () => import('../components/friend')
     }, {
       path: "/about",
       name: "about",

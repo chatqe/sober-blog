@@ -1,10 +1,15 @@
 <template>
   <div class="sidebar">
+    <div @click="collapse()" style="color: rgb(96, 98, 102);cursor: pointer;background-color: #ebf1f6;display: flex">
+      <i class="el-icon-menu" style="margin: 14px;font-size: 17px"></i>
+      <div style="font-size: 15px;margin-top: 13px">折叠</div>
+    </div>
     <el-menu class="sidebar-el-menu"
              background-color="#ebf1f6"
              text-color="#606266"
              active-text-color="#20a0ff"
              unique-opened
+             :default-active="$router.currentRoute.path"
              router>
       <template v-for="item in items">
         <template v-if="isBoss || !item.isBoss">
@@ -45,6 +50,7 @@
   export default {
     data() {
       return {
+        isCollapse: true,
         isBoss: this.$store.state.currentAdmin.isBoss,
         items: [{
           icon: "el-icon-s-home",
@@ -89,12 +95,12 @@
         }, {
           icon: "el-icon-bank-card",
           index: "/resourcePathList",
-          title: "资源路径管理",
+          title: "资源聚合",
           isBoss: true
         }, {
           icon: "el-icon-sugar",
           index: "/loveList",
-          title: "表白墙管理",
+          title: "表白墙",
           isBoss: true
         }]
       }
@@ -112,7 +118,18 @@
 
     },
 
-    methods: {}
+    methods: {
+      collapse() {
+        if (this.isCollapse) {
+          $(".sidebar").css("width", "45px");
+          $(".content-box").css("left", "45px");
+        } else {
+          $(".sidebar").css("width", "130px");
+          $(".content-box").css("left", "130px");
+        }
+        this.isCollapse = !this.isCollapse;
+      }
+    }
   }
 </script>
 
@@ -125,17 +142,19 @@
     top: 70px;
     bottom: 0;
     overflow-y: scroll;
+    width: 130px;
+    user-select: none;
   }
 
   .sidebar::-webkit-scrollbar {
     width: 0;
   }
 
-  .sidebar-el-menu {
-    width: 200px;
-  }
-
   .sidebar > ul {
     height: 100%;
+  }
+
+  .sidebar-el-menu .el-menu-item {
+    padding: 0 10px !important;
   }
 </style>

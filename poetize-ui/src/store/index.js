@@ -9,6 +9,7 @@ export default new Vuex.Store({
     sortInfo: JSON.parse(localStorage.getItem("sortInfo") || '[]'),
     currentUser: JSON.parse(localStorage.getItem("currentUser") || '{}'),
     currentAdmin: JSON.parse(localStorage.getItem("currentAdmin") || '{}'),
+    sysConfig: JSON.parse(localStorage.getItem("sysConfig") || '{}'),
     webInfo: JSON.parse(localStorage.getItem("webInfo") || '{"webName": "", "webTitle": [], "notices": [], "footer": "", "backgroundImage": "", "avatar": ""}')
   },
   getters: {
@@ -51,6 +52,10 @@ export default new Vuex.Store({
     loadCurrentUser(state, user) {
       state.currentUser = user;
       localStorage.setItem("currentUser", JSON.stringify(user));
+    },
+    loadSysConfig(state, sysConfig) {
+      state.sysConfig = sysConfig;
+      localStorage.setItem("sysConfig", JSON.stringify(sysConfig));
     },
     loadCurrentAdmin(state, user) {
       state.currentAdmin = user;

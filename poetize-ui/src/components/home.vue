@@ -45,19 +45,19 @@
               </el-dropdown-menu>
             </el-dropdown>
 
-            <!-- 爱情买卖 -->
+            <!-- 恋爱笔记 -->
             <li @click="$router.push({path: '/love'})">
               <div class="my-menu">
-                💋 <span>爱情买卖</span>
+                💘 <span>恋爱笔记</span>
               </div>
             </li>
 
-            <!-- 旅拍 -->
-            <li @click="$router.push({path: '/travel'})">
-              <div class="my-menu">
-                🌏 <span>旅拍</span>
-              </div>
-            </li>
+<!--            &lt;!&ndash; 旅拍 &ndash;&gt;-->
+<!--            <li @click="$router.push({path: '/travel'})">-->
+<!--              <div class="my-menu">-->
+<!--                🌏 <span>旅拍</span>-->
+<!--              </div>-->
+<!--            </li>-->
 
             <!-- 百宝箱 -->
             <li @click="$router.push({path: '/favorite'})">
@@ -66,31 +66,20 @@
               </div>
             </li>
 
-            <!-- 聊天室 -->
-            <li @click="goIm()">
-              <div class="my-menu">
-                💬 <span>非礼勿言</span>
-              </div>
-            </li>
             <!-- 留言 -->
             <li @click="$router.push({path: '/message'})">
               <div class="my-menu">
                 📪 <span>留言</span>
               </div>
             </li>
-            <!-- 友人帐 -->
-            <li @click="$router.push({path: '/friend'})">
+
+            <!-- 聊天室 -->
+            <li @click="goIm()">
               <div class="my-menu">
-                💃 <span>友人帐</span>
+                💬 <span>联系我</span>
               </div>
             </li>
 
-            <!-- 关于 -->
-            <li @click="$router.push({path: '/about'})">
-              <div class="my-menu">
-                🐟 <span>关于</span>
-              </div>
-            </li>
             <!-- 个人中心 -->
             <li>
               <el-dropdown placement="bottom">
@@ -199,19 +188,19 @@
             </div>
           </li>
 
-          <!-- 爱情买卖 -->
+          <!-- 恋爱笔记 -->
           <li @click="smallMenu({path: '/love'})">
             <div>
-              💋 <span>爱情买卖</span>
+              💘 <span>恋爱笔记</span>
             </div>
           </li>
 
-          <!-- 旅拍 -->
-          <li @click="smallMenu({path: '/travel'})">
-            <div>
-              🌏 <span>旅拍</span>
-            </div>
-          </li>
+<!--          &lt;!&ndash; 旅拍 &ndash;&gt;-->
+<!--          <li @click="smallMenu({path: '/travel'})">-->
+<!--            <div>-->
+<!--              🌏 <span>旅拍</span>-->
+<!--            </div>-->
+<!--          </li>-->
 
           <!-- 百宝箱 -->
           <li @click="smallMenu({path: '/favorite'})">
@@ -220,29 +209,17 @@
             </div>
           </li>
 
-          <!-- 聊天室 -->
-          <li @click="goIm()">
-            <div>
-              💬 <span>非礼勿言</span>
-            </div>
-          </li>
           <!-- 留言 -->
           <li @click="smallMenu({path: '/message'})">
             <div>
               📪 <span>留言</span>
             </div>
           </li>
-          <!-- 友人帐 -->
-          <li @click="smallMenu({path: '/friend'})">
-            <div>
-              💃 <span>友人帐</span>
-            </div>
-          </li>
 
-          <!-- 关于 -->
-          <li @click="smallMenu({path: '/about'})">
+          <!-- 聊天室 -->
+          <li @click="goIm()">
             <div>
-              🐟 <span>关于</span>
+              💬 <span>联系我</span>
             </div>
           </li>
 
@@ -276,7 +253,6 @@
 
 <script>
   import mousedown from '../utils/mousedown';
-  import constant from "../utils/constant";
 
   export default {
     data() {
@@ -343,13 +319,14 @@
       };
       this.$store.commit("changeToolbarStatus", toolbarStatus);
       this.getWebInfo();
+      this.getSysConfig();
       this.getSortInfo();
 
       this.mobile = document.body.clientWidth < 1100;
 
       window.addEventListener('resize', () => {
         let docWidth = document.body.clientWidth;
-        if (docWidth < 1100) {
+        if (docWidth < 800) {
           this.mobile = true;
         } else {
           this.mobile = false;
@@ -414,6 +391,37 @@
               type: "error"
             });
           });
+      },
+      getSysConfig() {
+        this.$http.get(this.$constant.baseURL + "/sysConfig/listSysConfig")
+          .then((res) => {
+            if (!this.$common.isEmpty(res.data)) {
+              this.$store.commit("loadSysConfig", res.data);
+              this.buildCssPicture();
+            }
+          })
+          .catch((error) => {
+            this.$message({
+              message: error.message,
+              type: "error"
+            });
+          });
+      },
+      buildCssPicture() {
+        let root = document.querySelector(":root");
+        let webStaticResourcePrefix = this.$store.state.sysConfig['webStaticResourcePrefix'];
+        root.style.setProperty("--commentURL", "url(" + webStaticResourcePrefix + "assets/commentURL.png)");
+        root.style.setProperty("--springBg", "url(" + webStaticResourcePrefix + "assets/springBg.png)");
+        root.style.setProperty("--admireImage", "url(" + webStaticResourcePrefix + "assets/admireImage.jpg)");
+        root.style.setProperty("--toTop", "url(" + webStaticResourcePrefix + "assets/toTop.png)");
+        root.style.setProperty("--bannerWave1", "url(" + webStaticResourcePrefix + "assets/bannerWave1.png) repeat-x");
+        root.style.setProperty("--bannerWave2", "url(" + webStaticResourcePrefix + "assets/bannerWave2.png) repeat-x");
+        root.style.setProperty("--backgroundPicture", "url(" + webStaticResourcePrefix + "assets/backgroundPicture.jpg)");
+        root.style.setProperty("--toolbar", "url(" + webStaticResourcePrefix + "assets/toolbar.webp)");
+        root.style.setProperty("--love", "url(" + webStaticResourcePrefix + "assets/love.jpeg)");
+        const font = new FontFace("poetize-font", "url(" + webStaticResourcePrefix + "assets/font.woff2)");
+        font.load();
+        document.fonts.add(font);
       },
       getSortInfo() {
         this.$http.get(this.$constant.baseURL + "/webInfo/getSortInfo")

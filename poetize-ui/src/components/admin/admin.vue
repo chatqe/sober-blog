@@ -29,7 +29,13 @@
     watch: {},
 
     created() {
-
+      let sysConfig = this.$store.state.sysConfig;
+      if (!this.$common.isEmpty(sysConfig) && !this.$common.isEmpty(sysConfig['webStaticResourcePrefix'])) {
+        let webStaticResourcePrefix = sysConfig['webStaticResourcePrefix'];
+        const font = new FontFace("poetize-font", "url(" + webStaticResourcePrefix + "assets/font.woff2)");
+        font.load();
+        document.fonts.add(font);
+      }
     },
 
     mounted() {
@@ -44,7 +50,7 @@
 
   .content-box {
     position: absolute;
-    left: 200px;
+    left: 130px;
     right: 0;
     top: 70px;
     bottom: 0;
