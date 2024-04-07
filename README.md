@@ -27,7 +27,7 @@ ps: 虽然我知道，大部分人都是来了直接下载源代码后就潇洒�
 - 后端：https://gitee.com/littledokey/poetize-server.git
 - 博客前端、聊天室前端、后端汇总版（上述三个仓库放在一个仓库里，代码无差别）：https://gitee.com/littledokey/poetize
 - 七牛云登录/注册地址（文件服务器/CDN）：https://s.qiniu.com/Mz6Z32
-- 部署文档：https://poetize.cn/article/26
+- 部署文档和静态资源：https://poetize.cn/article/26
 
 ## 网站简介
 这是一个 SpringBoot + Vue2 + Vue3 的产物，支持移动端自适应，配有完备的前台和后台管理功能。
@@ -38,7 +38,7 @@ ps: 虽然我知道，大部分人都是来了直接下载源代码后就潇洒�
 
 本网站采用前后端分离进行实现，两个前端项目通过Nginx代理，后端使用Java。
 
-启动网站需要安装Nginx、Java、MySQL，然后打包前后端项目并部署，详细部署流程请见[部署文档：https://poetize.cn/article/26](https://poetize.cn/article/26)。
+启动网站需要安装Nginx、Java、MySQL，然后打包前后端项目并部署，详细部署流程请见[部署文档和静态资源：https://poetize.cn/article/26](https://poetize.cn/article/26)。
 
 文件服务可以使用七牛云，也可以使用服务器。默认使用服务器。
 
@@ -154,10 +154,10 @@ Vue3（IM 聊天室系统）是非必须的。如果部署，则需要依赖博�
 ## 作者微信
 ![个人名片](poetize_picture/一只小毛驴.jpg)
 
-- 接收付费服务（定制开发、部署）混口饭
-- 失业ing，有上海、苏州的内推吗
+- 接收付费服务（定制开发、部署）
+- 接收毕业设计指导
 
-## 开源不易，欢迎赞助这个项目维持网站运行，您将获得[部署文档：https://poetize.cn/article/26](https://poetize.cn/article/26)
+## 开源不易，欢迎赞助这个项目维持网站运行，您将获得[部署文档和静态资源：https://poetize.cn/article/26](https://poetize.cn/article/26)
 
 ## 欢迎关注作者B站
 B站搜索用户【寻国记】。
