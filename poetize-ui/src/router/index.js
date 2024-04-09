@@ -92,6 +92,10 @@ const routes = [
       name: 'sortList',
       component: () => import('../components/admin/sortList')
     }, {
+      path: '/configList',
+      name: 'configList',
+      component: () => import('../components/admin/configList')
+    }, {
       path: '/commentList',
       name: 'commentList',
       component: () => import('../components/admin/commentList')

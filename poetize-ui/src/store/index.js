@@ -10,7 +10,7 @@ export default new Vuex.Store({
     currentUser: JSON.parse(localStorage.getItem("currentUser") || '{}'),
     currentAdmin: JSON.parse(localStorage.getItem("currentAdmin") || '{}'),
     sysConfig: JSON.parse(localStorage.getItem("sysConfig") || '{}'),
-    webInfo: JSON.parse(localStorage.getItem("webInfo") || '{"webName": "", "webTitle": [], "notices": [], "footer": "", "backgroundImage": "", "avatar": ""}')
+    webInfo: JSON.parse(localStorage.getItem("webInfo") || '{"webName": "", "webTitle": [], "notices": [], "randomCover": [], "footer": "", "backgroundImage": "", "avatar": ""}')
   },
   getters: {
     articleTotal: state => {
@@ -64,6 +64,7 @@ export default new Vuex.Store({
     loadWebInfo(state, webInfo) {
       webInfo.webTitle = webInfo.webTitle.split('');
       webInfo.notices = JSON.parse(webInfo.notices);
+      webInfo.randomCover = JSON.parse(webInfo.randomCover);
       state.webInfo = webInfo;
       localStorage.setItem("webInfo", JSON.stringify(webInfo));
     }

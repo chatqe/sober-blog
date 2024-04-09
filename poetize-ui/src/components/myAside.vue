@@ -190,7 +190,7 @@
         return this.$store.state.webInfo;
       },
       sortInfo() {
-        return this.$store.state.sortInfo;
+        return this.$store.getters.navigationBar;
       }
     },
     created() {

@@ -8,7 +8,6 @@ import com.ld.poetry.dao.LabelMapper;
 import com.ld.poetry.dao.SortMapper;
 import com.ld.poetry.entity.Label;
 import com.ld.poetry.entity.Sort;
-import com.ld.poetry.enums.PoetryEnum;
 import com.ld.poetry.utils.CommonQuery;
 import com.ld.poetry.utils.cache.PoetryCache;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,8 +57,8 @@ public class SortLabelController {
             return PoetryResult.fail("分类名称和分类描述不能为空！");
         }
 
-        if (sort.getSortType() != null && sort.getSortType() == PoetryEnum.SORT_TYPE_BAR.getCode() && sort.getPriority() == null) {
-            return PoetryResult.fail("导航栏分类必须配置优先级！");
+        if (sort.getPriority() == null) {
+            return PoetryResult.fail("分类必须配置优先级！");
         }
 
         sortMapper.insert(sort);

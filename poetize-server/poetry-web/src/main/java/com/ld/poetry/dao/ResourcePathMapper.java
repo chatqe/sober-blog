@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
  * <p>
- * 资源路径 Mapper 接口
+ * 资源聚合 Mapper 接口
  * </p>
  *
  * @author sara

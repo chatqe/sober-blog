@@ -2,15 +2,14 @@ package com.ld.poetry.controller;
 
 
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
+import com.ld.poetry.aop.LoginCheck;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.entity.SysConfig;
 import com.ld.poetry.enums.PoetryEnum;
 import com.ld.poetry.service.SysConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -41,5 +40,44 @@ public class SysConfigController {
                 .list();
         Map<String, String> collect = sysConfigs.stream().collect(Collectors.toMap(SysConfig::getConfigKey, SysConfig::getConfigValue));
         return PoetryResult.success(collect);
+    }
+
+    /**
+     * 保存或更新
+     */
+    @PostMapping("/saveOrUpdateConfig")
+    @LoginCheck(0)
+    public PoetryResult saveConfig(@RequestBody SysConfig sysConfig) {
+        if (!StringUtils.hasText(sysConfig.getConfigName()) ||
+                !StringUtils.hasText(sysConfig.getConfigKey()) ||
+                !StringUtils.hasText(sysConfig.getConfigType())) {
+            return PoetryResult.fail("请完善所有配置信息！");
+        }
+        String configType = sysConfig.getConfigType();
+        if (!Integer.toString(PoetryEnum.SYS_CONFIG_PUBLIC.getCode()).equals(configType) &&
+                !Integer.toString(PoetryEnum.SYS_CONFIG_PRIVATE.getCode()).equals(configType)) {
+            return PoetryResult.fail("配置类型不正确！");
+        }
+        sysConfigService.saveOrUpdate(sysConfig);
+        return PoetryResult.success();
+    }
+
+    /**
+     * 删除
+     */
+    @GetMapping("/deleteConfig")
+    @LoginCheck(0)
+    public PoetryResult deleteConfig(@RequestParam("id") Integer id) {
+        sysConfigService.removeById(id);
+        return PoetryResult.success();
+    }
+
+    /**
+     * 查询
+     */
+    @GetMapping("/listConfig")
+    @LoginCheck(0)
+    public PoetryResult<List<SysConfig>> listConfig() {
+        return PoetryResult.success(new LambdaQueryChainWrapper<>(sysConfigService.getBaseMapper()).list());
     }
 }

@@ -50,7 +50,7 @@ public class Sort implements Serializable {
     private Integer sortType;
 
     /**
-     * 导航栏分类优先级：数字小的在前面
+     * 分类优先级：数字小的在前面
      */
     @TableField("priority")
     private Integer priority;

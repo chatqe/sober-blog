@@ -7,7 +7,7 @@
         <el-image class="article-image my-el-image"
                   v-once
                   lazy
-                  :src="!$common.isEmpty(article.articleCover)?article.articleCover:$constant.random_image+new Date()+Math.floor(Math.random()*10)"
+                  :src="article.articleCover"
                   fit="cover">
           <div slot="error" class="image-slot">
             <div class="article-image"></div>
@@ -118,7 +118,7 @@
         <div class="article-container my-animation-slide-bottom">
           <div v-if="!$common.isEmpty(article.videoUrl)" style="margin-bottom: 20px">
             <videoPlayer :url="{src: $common.decrypt(article.videoUrl)}"
-                         :cover="!$common.isEmpty(article.articleCover)?article.articleCover:$constant.random_image+new Date()+Math.floor(Math.random()*10)">
+                         :cover="article.articleCover">
             </videoPlayer>
           </div>
 
@@ -335,7 +335,7 @@
       scrollTop(scrollTop, oldScrollTop) {
         let isShow = scrollTop - window.innerHeight > 30;
         if (isShow) {
-          $("#toc-button").css("bottom", "14vh");
+          $("#toc-button").css("bottom", "14.1vh");
         } else {
           $("#toc-button").css("bottom", "8vh");
         }
@@ -504,6 +504,9 @@
             hasInnerContainers: false
           });
         }
+        if (this.$common.mobile()) {
+          $(".toc").css("display", "none");
+        }
       },
       addId() {
         let headings = $(".entry-content").find("h1, h2, h3, h4, h5, h6");
@@ -518,6 +521,7 @@
               const md = new MarkdownIt({breaks: true}).use(require('markdown-it-multimd-table'));
               this.articleContentHtml = md.render(this.article.articleContent);
               this.$nextTick(() => {
+                this.$common.imgShow(".entry-content img");
                 this.highlight();
                 this.addId();
                 this.getTocbot();

@@ -75,7 +75,6 @@ public class WebInfoController {
             WebInfo result = new WebInfo();
             BeanUtils.copyProperties(webInfo, result);
             result.setRandomAvatar(null);
-            result.setRandomCover(null);
             result.setRandomName(null);
             result.setWaifuJson(null);
 

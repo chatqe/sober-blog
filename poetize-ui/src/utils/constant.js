@@ -1,12 +1,13 @@
 export default {
   // 测试环境
-  // baseURL: "http://localhost:8081",
-  // imBaseURL: "http://localhost:81",
-  // webURL: "http://localhost",
+  baseURL: "http://localhost:8081",
+  imBaseURL: "http://localhost:81/im",
+  webURL: "http://localhost",
 
-  webURL: location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : ''),
-  baseURL: location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : '') + "/api",
-  imBaseURL: location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : '') + "/im",
+  // 生产环境
+  // webURL: location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : ''),
+  // baseURL: location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : '') + "/api",
+  // imBaseURL: location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : '') + "/im",
 
   host: location.hostname + (location.port ? ':' + location.port : ''),
 
@@ -17,7 +18,6 @@ export default {
   shehui: "https://api.oick.cn/yulu/api.php",
   tocbot: "https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.18.2/tocbot.min.js",
   jinrishici: "https://v1.jinrishici.com/all.json",
-  random_image: "https://s1.ax1x.com/2022/12/04/zsKgDs.jpg?",
   //前后端定义的密钥，AES使用16位
   cryptojs_key: "sarasarasarasara",
 

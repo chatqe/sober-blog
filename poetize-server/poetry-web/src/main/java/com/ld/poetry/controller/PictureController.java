@@ -13,12 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
  * <p>
- * 资源聚合里的恋爱图片，其他接口在ResourceAggregationController
+ * 资源聚合里的图片，其他接口在ResourceAggregationController
  * </p>
  *
  * @author sara

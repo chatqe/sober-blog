@@ -225,7 +225,7 @@ public class CommonConst {
     public static final String PATH_TYPE_ASSETS = "assets";
 
     /**
-     * 资源路径
+     * 资源聚合
      */
     public static final String RESOURCE_PATH_TYPE_FRIEND = "friendUrl";
     public static final String RESOURCE_PATH_TYPE_FUNNY = "funny";

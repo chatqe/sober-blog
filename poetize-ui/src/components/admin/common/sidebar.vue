@@ -78,6 +78,11 @@
           title: "分类管理",
           isBoss: true
         }, {
+          icon: "el-icon-notebook-1",
+          index: "/configList",
+          title: "配置管理",
+          isBoss: true
+        }, {
           icon: "el-icon-edit-outline",
           index: "/commentList",
           title: "评论管理",

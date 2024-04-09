@@ -83,7 +83,7 @@ CREATE TABLE `poetize`.`sort` (
   `sort_name` varchar(32) NOT NULL COMMENT '分类名称',
   `sort_description` varchar(256) NOT NULL COMMENT '分类描述',
   `sort_type` tinyint(2) NOT NULL DEFAULT 1 COMMENT '分类类型[0:导航栏分类，1:普通分类]',
-  `priority` int DEFAULT NULL COMMENT '导航栏分类优先级：数字小的在前面',
+  `priority` int DEFAULT NULL COMMENT '分类优先级：数字小的在前面',
 
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分类';
@@ -163,7 +163,7 @@ CREATE TABLE `poetize`.`resource_path` (
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='资源路径';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='资源聚合';
 
 DROP TABLE IF EXISTS `poetize`.`resource`;
 
@@ -312,6 +312,8 @@ CREATE TABLE `poetize`.`im_chat_user_group_message` (
 INSERT INTO `poetize`.`user`(`id`, `username`, `password`, `phone_number`, `email`, `user_status`, `gender`, `open_id`, `admire`, `subscribe`, `avatar`, `introduction`, `user_type`, `update_by`, `deleted`) VALUES (1, 'Sara', '47bce5c74f589f4867dbd57e9ca9f808', '', '', 1, 1, '', '', '', '', '', 0, 'Sara', 0);
 
 INSERT INTO `poetize`.`web_info`(`id`, `web_name`, `web_title`, `notices`, `footer`, `background_image`, `avatar`, `random_avatar`, `random_name`, `random_cover`, `waifu_json`, `status`) VALUES (1, 'Sara', 'POETIZE', '[]', '云想衣裳花想容， 春风拂槛露华浓。', '', '', '[]', '[]', '[]', '{}', 1);
+
+INSERT INTO `poetize`.`family` (`id`, `user_id`, `bg_cover`, `man_cover`, `woman_cover`, `man_name`, `woman_name`, `timing`, `countdown_title`, `countdown_time`, `status`, `family_info`, `like_count`, `create_time`, `update_time`) VALUES (1, 1, '背景封面', '男生头像', '女生头像', 'Sara', 'Abby', '2000-01-01 00:00:00', '春节倒计时', '2025-01-29 00:00:00', 1, '', 0, '2000-01-01 00:00:00', '2000-01-01 00:00:00');
 
 INSERT INTO `poetize`.`im_chat_group` (`id`, `group_name`, `master_user_id`, `introduction`, `notice`, `in_type`) VALUES(-1, '公共聊天室', 1, '公共聊天室', '欢迎光临！', 0);
 

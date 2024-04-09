@@ -115,7 +115,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
 
         if (baseRequestVO.getFloorCommentId() == null) {
-            lambdaQuery().eq(Comment::getSource, baseRequestVO.getSource()).eq(Comment::getType, baseRequestVO.getCommentType()).eq(Comment::getParentCommentId, CommonConst.FIRST_COMMENT).orderByAsc(Comment::getCreateTime).page(baseRequestVO);
+            lambdaQuery().eq(Comment::getSource, baseRequestVO.getSource()).eq(Comment::getType, baseRequestVO.getCommentType()).eq(Comment::getParentCommentId, CommonConst.FIRST_COMMENT).orderByDesc(Comment::getCreateTime).page(baseRequestVO);
             List<Comment> comments = baseRequestVO.getRecords();
             if (CollectionUtils.isEmpty(comments)) {
                 return PoetryResult.success(baseRequestVO);

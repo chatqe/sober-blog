@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- * 资源路径
+ * 资源聚合
  * </p>
  *
  * @author sara

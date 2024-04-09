@@ -1,21 +1,21 @@
 export default {
   // 测试环境
-  // baseURL: "http://localhost:8081",
-  // webBaseURL: "http://localhost",
-  // imURL: "http://localhost:81",
-  // imBaseURL: "localhost",
-  // webHistory: "",
-  // wsProtocol: "ws",
-  // wsPort: "9324",
+  baseURL: "http://localhost:8081",
+  webBaseURL: "http://localhost",
+  imURL: "http://localhost:81/im",
+  imBaseURL: "localhost",
+  wsProtocol: "ws",
+  wsPort: "9324",
 
-  baseURL: location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : '') + "/api",
-  webBaseURL: location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : ''),
-  imURL: location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : '') + "/im",
-  imBaseURL: location.hostname + (location.port ? ':' + location.port : ''),
+  // 生产环境
+  // baseURL: location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : '') + "/api",
+  // webBaseURL: location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : ''),
+  // imURL: location.protocol + "//" + location.hostname + (location.port ? ':' + location.port : '') + "/im",
+  // imBaseURL: location.hostname + (location.port ? ':' + location.port : ''),
+  // wsProtocol: location.protocol === "http:" ? "ws" : "wss",
+  // wsPort: "",
+
   webHistory: "/im/",
-  wsProtocol: location.protocol === "http:" ? "ws" : "wss",
-  wsPort: "",
-
   hitokoto: "https://v1.hitokoto.cn",
   jinrishici: "https://v1.jinrishici.com/all.json",
   jitang: "https://api.oick.cn/dutang/api.php",

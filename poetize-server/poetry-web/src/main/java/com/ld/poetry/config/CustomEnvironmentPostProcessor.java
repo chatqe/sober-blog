@@ -1,6 +1,7 @@
 package com.ld.poetry.config;
 
 import com.ld.poetry.handle.PoetryRuntimeException;
+import lombok.SneakyThrows;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
@@ -9,6 +10,9 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
 import java.sql.*;
 import java.util.HashMap;
@@ -21,6 +25,8 @@ public class CustomEnvironmentPostProcessor implements EnvironmentPostProcessor 
 
     private static final String SOURCE_SQL = "select * from sys_config";
 
+    private static final String DATABASE = "poetize";
+
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         try {
@@ -32,6 +38,9 @@ public class CustomEnvironmentPostProcessor implements EnvironmentPostProcessor 
             String driver = environment.getProperty("spring.datasource.driver-class-name");
             Class.forName(driver);
             try (Connection connection = DriverManager.getConnection(url, username, password)) {
+                //初始化数据库
+                initDb(connection);
+                //加载配置文件
                 try (Statement statement = connection.createStatement()) {
                     try (ResultSet resultSet = statement.executeQuery(SOURCE_SQL)) {
                         while (resultSet.next()) {
@@ -46,6 +55,20 @@ public class CustomEnvironmentPostProcessor implements EnvironmentPostProcessor 
             propertySources.addFirst(source);
         } catch (Exception e) {
             throw new PoetryRuntimeException(e);
+        }
+    }
+
+    @SneakyThrows
+    private void initDb(Connection connection) {
+        try (Statement statement = connection.createStatement()) {
+            try (ResultSet resultSet = statement.executeQuery("SHOW DATABASES LIKE '" + DATABASE + "'")) {
+                if (!resultSet.next()) {
+                    ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+                    ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+                    populator.addScripts(resolver.getResources("file:/home/poetry.sql"));
+                    populator.populate(connection);
+                }
+            }
         }
     }
 }

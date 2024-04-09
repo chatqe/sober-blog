@@ -9,7 +9,7 @@
           <!-- 信 -->
           <div class="envelope" style="animation: hideToShow 2s">
             <div class="form-main">
-              <img :src="$store.state.sysConfig['webStaticResourcePrefix'] + 'assets/friendLetterMiddle.png'" style="width: 100%"/>
+              <img :src="$store.state.sysConfig['webStaticResourcePrefix'] + 'assets/friendLetterMiddle.jpg'" style="width: 100%"/>
               <div>
                 <h3 style="text-align: center">有朋自远方来</h3>
                 <div>

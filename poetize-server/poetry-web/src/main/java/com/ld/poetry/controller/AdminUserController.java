@@ -11,6 +11,7 @@ import com.ld.poetry.enums.PoetryEnum;
 import com.ld.poetry.im.websocket.TioUtil;
 import com.ld.poetry.im.websocket.TioWebsocketStarter;
 import com.ld.poetry.service.UserService;
+import com.ld.poetry.utils.PoetryUtil;
 import com.ld.poetry.utils.cache.PoetryCache;
 import com.ld.poetry.vo.BaseRequestVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,10 @@ public class AdminUserController {
     @GetMapping("/user/changeUserStatus")
     @LoginCheck(0)
     public PoetryResult changeUserStatus(@RequestParam("userId") Integer userId, @RequestParam("flag") Boolean flag) {
+        if (userId.intValue() == PoetryUtil.getAdminUser().getId().intValue()) {
+            return PoetryResult.fail("站长状态不能修改！");
+        }
+
         LambdaUpdateChainWrapper<User> updateChainWrapper = userService.lambdaUpdate().eq(User::getId, userId);
         if (flag) {
             updateChainWrapper.eq(User::getUserStatus, PoetryEnum.STATUS_DISABLE.getCode()).set(User::getUserStatus, PoetryEnum.STATUS_ENABLE.getCode()).update();
@@ -80,6 +85,10 @@ public class AdminUserController {
     @GetMapping("/user/changeUserType")
     @LoginCheck(0)
     public PoetryResult changeUserType(@RequestParam("userId") Integer userId, @RequestParam("userType") Integer userType) {
+        if (userId.intValue() == PoetryUtil.getAdminUser().getId().intValue()) {
+            return PoetryResult.fail("站长类型不能修改！");
+        }
+
         if (userType != 0 && userType != 1 && userType != 2) {
             return PoetryResult.fail(CodeMsg.PARAMETER_ERROR);
         }

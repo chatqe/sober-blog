@@ -499,7 +499,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (StringUtils.hasText(baseRequestVO.getSearchKey())) {
             lambdaQuery.and(lq -> lq.like(User::getUsername, baseRequestVO.getSearchKey())
                     .or()
-                    .eq(User::getEmail, baseRequestVO.getSearchKey()));
+                    .like(User::getPhoneNumber, baseRequestVO.getSearchKey())
+                    .or()
+                    .like(User::getEmail, baseRequestVO.getSearchKey()));
         }
 
         lambdaQuery.orderByDesc(User::getCreateTime).page(baseRequestVO);
