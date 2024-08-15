@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 18081
   tomcat:
     threads.max: 50
     max-connections: 100
@@ -23,8 +23,8 @@ spring:
 
   mail:
     host: smtp.qq.com
-    username:
-    password:
+    username: 918906714@qq.com
+    password: jqs112706,
     default-encoding: utf-8
     protocol: smtp
     port: 465
@@ -38,9 +38,10 @@ spring:
             enable: true
 
   datasource:
-    username:
-    password:
-    url: jdbc:mysql://localhost:3306/poetize?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: daxiongroot
+  #  url: jdbc:mysql://localhost:3306/poetize?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://121.36.82.27:3306/poetize?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
 
@@ -60,7 +61,7 @@ local:
 
 qiniu:
   enable:
-  accessKey:
-  secretKey:
-  bucket:
-  downloadUrl:
+  accessKey: j1zZHKcq4AXt7_mxWJT61-z3f6jHiNs98QCdcuH2
+  secretKey: 676CvJ7NYNwOLoqkSnfK5Fc_7X-xW9GTmKle2dPs
+  bucket: pb-buckets
+  downloadUrl: "https://upload.qiniup.com"
