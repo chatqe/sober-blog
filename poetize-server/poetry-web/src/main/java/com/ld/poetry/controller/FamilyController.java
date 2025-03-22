@@ -1,6 +1,8 @@
 package com.ld.poetry.controller;
 
 
+import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ld.poetry.aop.LoginCheck;
 import com.ld.poetry.config.PoetryResult;
@@ -10,6 +12,7 @@ import com.ld.poetry.constants.CommonConst;
 import com.ld.poetry.utils.CommonQuery;
 import com.ld.poetry.utils.cache.PoetryCache;
 import com.ld.poetry.utils.PoetryUtil;
+import com.ld.poetry.utils.cache.QingSiCache;
 import com.ld.poetry.vo.BaseRequestVO;
 import com.ld.poetry.vo.FamilyVO;
 import org.springframework.beans.BeanUtils;
@@ -17,8 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * <p>
@@ -37,6 +42,9 @@ public class FamilyController {
 
     @Autowired
     private CommonQuery commonQuery;
+
+    @Resource
+    private QingSiCache qingSiCache;
 
     /**
      * 保存
@@ -102,9 +110,15 @@ public class FamilyController {
      */
     @GetMapping("/getAdminFamily")
     public PoetryResult<FamilyVO> getAdminFamily() {
-        Family family = (Family) PoetryCache.get(CommonConst.ADMIN_FAMILY);
-        if (family == null) {
-            return PoetryResult.fail("请初始化表白墙");
+        // Family family = (Family) PoetryCache.get(CommonConst.ADMIN_FAMILY);
+        Family family = JSON.parseObject(qingSiCache.get(CommonConst.ADMIN_FAMILY), Family.class) ;
+        if (Objects.isNull(family)) {
+            // 查数据库
+            family= familyService.getOne(Wrappers.<Family>lambdaQuery().eq(Family::getUserId, PoetryUtil.getAdminUser().getId()));
+            if (Objects.isNull(family)) {
+                return PoetryResult.fail("请初始化表白墙");
+            }
+            qingSiCache.put(CommonConst.ADMIN_FAMILY, JSON.toJSONString(family));
         }
         FamilyVO familyVO = new FamilyVO();
         BeanUtils.copyProperties(family, familyVO);

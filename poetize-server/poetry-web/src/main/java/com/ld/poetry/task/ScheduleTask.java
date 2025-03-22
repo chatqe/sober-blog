@@ -1,4 +1,4 @@
-package com.ld.poetry.handle;
+package com.ld.poetry.task;
 
 import com.ld.poetry.dao.HistoryInfoMapper;
 import com.ld.poetry.constants.CommonConst;
@@ -22,7 +22,7 @@ public class ScheduleTask {
     @Autowired
     private HistoryInfoMapper historyInfoMapper;
 
-    @Scheduled(cron = "0 0 0 * * ?")
+    // @Scheduled(cron = "0 0 0 * * ?")
     public void cleanIpHistory() {
         CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
         if (ipHistory == null) {

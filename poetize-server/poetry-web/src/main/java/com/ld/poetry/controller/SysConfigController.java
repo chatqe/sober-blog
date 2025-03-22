@@ -7,10 +7,12 @@ import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.entity.SysConfig;
 import com.ld.poetry.enums.PoetryEnum;
 import com.ld.poetry.service.SysConfigService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
  * @author sara
  * @since 2024-03-23
  */
+@Slf4j
 @RestController
 @RequestMapping("/sysConfig")
 public class SysConfigController {
@@ -34,7 +37,8 @@ public class SysConfigController {
      * 查询系统参数
      */
     @GetMapping("/listSysConfig")
-    public PoetryResult<Map<String, String>> listSysConfig() {
+    public PoetryResult<Map<String, String>> listSysConfig(HttpServletRequest request) {
+        log.info("{} 访问listSysConfig()",request.getRequestURI());
         LambdaQueryChainWrapper<SysConfig> wrapper = new LambdaQueryChainWrapper<>(sysConfigService.getBaseMapper());
         List<SysConfig> sysConfigs = wrapper.eq(SysConfig::getConfigType, Integer.toString(PoetryEnum.SYS_CONFIG_PUBLIC.getCode()))
                 .list();

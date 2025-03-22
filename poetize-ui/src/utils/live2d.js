@@ -222,6 +222,9 @@ function loadWidget(config) {
             after = date.split("-")[0],
             before = date.split("-")[1] || after;
           if ((after.split("/")[0] <= now.getMonth() + 1 && now.getMonth() + 1 <= before.split("/")[0]) && (after.split("/")[1] <= now.getDate() && now.getDate() <= before.split("/")[1])) {
+
+
+
             text = randomSelection(text);
             text = text.replace("{year}", now.getFullYear());
             messageArray.push(text);

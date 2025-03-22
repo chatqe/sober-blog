@@ -38,7 +38,16 @@ public enum PoetryEnum {
      */
     USER_TYPE_ADMIN(0, "站长"),
     USER_TYPE_DEV(1, "管理员"),
-    USER_TYPE_USER(2, "用户");
+    USER_TYPE_USER(2, "用户"),
+
+    /**
+     * 点赞资源类型
+     */
+    LIKE_TARGET_ARTICLE(1, "文章"),
+    LIKE_TARGET_COMMENT(2, "评论"),
+    LIKE_TARGET_VIDEO(3, "视频"),
+    LIKE_TARGET_MUSIC(4, "音乐");
+
 
 
     private int code;

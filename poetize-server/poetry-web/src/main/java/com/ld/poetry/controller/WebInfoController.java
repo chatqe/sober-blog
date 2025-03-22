@@ -1,15 +1,21 @@
 package com.ld.poetry.controller;
 
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.ld.poetry.aop.LoginCheck;
 import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.constants.CommonConst;
-import com.ld.poetry.dao.*;
-import com.ld.poetry.entity.*;
+import com.ld.poetry.dao.HistoryInfoMapper;
+import com.ld.poetry.entity.HistoryInfo;
+import com.ld.poetry.entity.User;
+import com.ld.poetry.entity.WebInfo;
 import com.ld.poetry.service.WebInfoService;
-import com.ld.poetry.utils.*;
+import com.ld.poetry.utils.CommonQuery;
 import com.ld.poetry.utils.cache.PoetryCache;
+import com.ld.poetry.utils.cache.QingSiCache;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,9 +23,13 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -30,6 +40,7 @@ import java.util.stream.Collectors;
  * @author sara
  * @since 2021-09-14
  */
+@Slf4j
 @RestController
 @RequestMapping("/webInfo")
 public class WebInfoController {
@@ -46,6 +57,9 @@ public class WebInfoController {
     @Autowired
     private CommonQuery commonQuery;
 
+    @Resource
+    private QingSiCache qingSiCache;
+
 
     /**
      * 更新网站信息
@@ -60,6 +74,7 @@ public class WebInfoController {
         if (!CollectionUtils.isEmpty(list)) {
             list.get(0).setDefaultStoreType(defaultType);
             PoetryCache.put(CommonConst.WEB_INFO, list.get(0));
+            qingSiCache.put(CommonConst.WEB_INFO, list.get(0));
         }
         return PoetryResult.success();
     }
@@ -70,7 +85,61 @@ public class WebInfoController {
      */
     @GetMapping("/getWebInfo")
     public PoetryResult<WebInfo> getWebInfo() {
-        WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+        // WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
+        //
+        // if (webInfo != null) {
+        //     WebInfo result = new WebInfo();
+        //     BeanUtils.copyProperties(webInfo, result);
+        //     result.setRandomAvatar(null);
+        //     result.setRandomName(null);
+        //     result.setWaifuJson(null);
+        //
+        //
+        //     Map<String, Object> historyMap = JSON.parseObject(
+        //             qingSiCache.get(CommonConst.IP_HISTORY_STATISTICS), new TypeReference<Map<String, Object>>() {
+        //             });
+        //     // 总访问数
+        //     result.setHistoryAllCount( historyMap.getOrDefault(CommonConst.IP_HISTORY_COUNT, 1168).toString());
+        //
+        //     // 24小时内访问数
+        //    Object historyDayData = historyMap.get(CommonConst.IP_HISTORY_HOUR);
+        //     String dayHistoryStr =Objects.isNull(historyDayData)?"168":String.valueOf(JSON.parseObject(historyDayData.toString(), new TypeReference<List<HistoryInfo>>() {}).size());
+        //
+        //     result.setHistoryDayCount(dayHistoryStr);
+        //     log.info("result:{}", result);
+        //     return PoetryResult.success(result);
+        // }
+        // // 为空 查数据库
+        // webInfo = webInfoService.list().get(0);
+        //
+        // Map<String, Object> history = new HashMap<>();
+        // history.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
+        // history.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
+        // history.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
+        // history.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount()+1168);
+        // // PoetryCache.put(CommonConst.IP_HISTORY_STATISTICS, history);
+        // qingSiCache.put(CommonConst.IP_HISTORY_STATISTICS, history);
+        //
+        // qingSiCache.put(CommonConst.WEB_INFO, webInfo);
+        //
+        // Map<String, Object> historyMap = JSON.parseObject(
+        //         qingSiCache.get(CommonConst.IP_HISTORY_STATISTICS), new TypeReference<Map<String, Object>>() {
+        //         });
+        // // 总访问数
+        // webInfo.setHistoryAllCount( historyMap.getOrDefault(CommonConst.IP_HISTORY_COUNT, 1168).toString());
+        //
+        // // 24小时内访问数
+        // Object historyDayData = historyMap.get(CommonConst.IP_HISTORY_HOUR);
+        // String dayHistoryStr =Objects.isNull(historyDayData)?"168":String.valueOf(JSON.parseObject(historyDayData.toString(), new TypeReference<List<HistoryInfo>>() {}).size());
+        //
+        // webInfo.setHistoryDayCount(dayHistoryStr);
+        // return PoetryResult.success(webInfo);
+
+        // 从缓存获取 WebInfo 对象
+        WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
+
+        // 如果缓存中有 WebInfo，则直接处理
         if (webInfo != null) {
             WebInfo result = new WebInfo();
             BeanUtils.copyProperties(webInfo, result);
@@ -78,11 +147,18 @@ public class WebInfoController {
             result.setRandomName(null);
             result.setWaifuJson(null);
 
-            webInfo.setHistoryAllCount(((Long) ((Map<String, Object>) PoetryCache.get(CommonConst.IP_HISTORY_STATISTICS)).get(CommonConst.IP_HISTORY_COUNT)).toString());
-            webInfo.setHistoryDayCount(Integer.toString(((List<Map<String, Object>>) ((Map<String, Object>) PoetryCache.get(CommonConst.IP_HISTORY_STATISTICS)).get(CommonConst.IP_HISTORY_HOUR)).size()));
+            // 获取并设置访问历史统计数据
+            getHistoryCache(result);
+            log.info("result:{}", result);
             return PoetryResult.success(result);
         }
-        return PoetryResult.success();
+
+        // 缓存中没有 WebInfo，查询数据库
+        webInfo = webInfoService.list().get(0);
+        qingSiCache.put(CommonConst.WEB_INFO, webInfoService.list().get(0));
+        // 设置并返回 WebInfo
+        getHistoryCache(webInfo);
+        return PoetryResult.success(webInfo);
     }
 
     /**
@@ -93,7 +169,10 @@ public class WebInfoController {
     public PoetryResult<Map<String, Object>> getHistoryInfo() {
         Map<String, Object> result = new HashMap<>();
 
-        Map<String, Object> history = (Map<String, Object>) PoetryCache.get(CommonConst.IP_HISTORY_STATISTICS);
+        // Map<String, Object> history = (Map<String, Object>) PoetryCache.get(CommonConst.IP_HISTORY_STATISTICS);
+        Map<String, Object> history = JSON.parseObject(
+                qingSiCache.get(CommonConst.IP_HISTORY_STATISTICS), new TypeReference<Map<String, Object>>() {
+                });
         List<HistoryInfo> infoList = new LambdaQueryChainWrapper<>(historyInfoMapper)
                 .select(HistoryInfo::getIp, HistoryInfo::getUserId, HistoryInfo::getNation, HistoryInfo::getProvince, HistoryInfo::getCity)
                 .ge(HistoryInfo::getCreateTime, LocalDateTime.now().with(LocalTime.MIN))
@@ -151,7 +230,7 @@ public class WebInfoController {
     }
 
     /**
-     * 获取赞赏
+     * 获取用户信息 获取赞赏
      */
     @GetMapping("/getAdmire")
     public PoetryResult<List<User>> getAdmire() {
@@ -163,11 +242,63 @@ public class WebInfoController {
      */
     @GetMapping("/getWaifuJson")
     public String getWaifuJson() {
+
+        log.info("进入看板娘消息管理");
+
         WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+
+        // log.info("获取到的看板娘配置为：{}", webInfo.getWaifuJson());
+
         if (webInfo != null && StringUtils.hasText(webInfo.getWaifuJson())) {
             return webInfo.getWaifuJson();
         }
         return "{}";
+    }
+
+
+    /**
+     * 获取缓存中的 history 数据追加到 webInfo中 为空更新缓存
+     * @param webInfo
+     */
+    private void getHistoryCache(WebInfo webInfo) {
+
+        Map<String, Object> historyMap = new HashMap<>();
+        // 缓存中没有
+        if (!StringUtils.hasText(qingSiCache.get(CommonConst.IP_HISTORY_STATISTICS))) {
+            historyMap.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
+            historyMap.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
+            historyMap.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
+            historyMap.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount() + 1168);
+            // 缓存
+            qingSiCache.put(CommonConst.IP_HISTORY_STATISTICS, JSON.toJSONString(historyMap));
+        }else {
+            historyMap = JSON.parseObject(qingSiCache.get(CommonConst.IP_HISTORY_STATISTICS), new TypeReference<Map<String, Object>>() {});
+        }
+
+
+        // 设置总访问数
+        webInfo.setHistoryAllCount(historyMap.getOrDefault(CommonConst.IP_HISTORY_COUNT, 1168).toString());
+
+        // 设置24小时内访问数
+        Object historyDayData = historyMap.get(CommonConst.IP_HISTORY_HOUR);
+        String dayHistoryStr = Objects.isNull(historyDayData)
+                ? "168"
+                : String.valueOf(JSON.parseObject(historyDayData.toString(), new TypeReference<List<HistoryInfo>>() {}).size());
+
+        webInfo.setHistoryDayCount(dayHistoryStr);
+    }
+
+
+    // 更新历史统计数据到缓存
+    private void updateHistoryCache() {
+        Map<String, Object> history = new HashMap<>();
+        history.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
+        history.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
+        history.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
+        history.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount() + 1168);
+
+        qingSiCache.put(CommonConst.IP_HISTORY_STATISTICS, history);
+        qingSiCache.put(CommonConst.WEB_INFO, webInfoService.list().get(0));
     }
 }
 

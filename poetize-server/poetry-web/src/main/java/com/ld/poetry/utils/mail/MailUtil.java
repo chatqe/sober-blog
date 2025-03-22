@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.mail.MessagingException;
 import java.util.Date;
 import java.util.List;
@@ -45,7 +46,7 @@ public class MailUtil {
     public static final String imMail = "你收到来自 %s 的消息";
     public static final String notificationMail = "你收到来自 %s 的订阅";
 
-    @Autowired
+    @Resource
     private JavaMailSender mailSender;
 
     @Value("${spring.mail.username}")
@@ -86,7 +87,7 @@ public class MailUtil {
                 "            </div>\n" +
                 "            %s\n" +
                 "            <a style=\"width: 150px;height: 38px;background: #ef859d38;border-radius: 32px;display: flex;align-items: center;justify-content: center;text-decoration: none;margin: 40px auto 0\"\n" +
-                "               href=\"https://poetize.cn\" target=\"_blank\">\n" +
+                "               href=\"https://youngwanton.top\" target=\"_blank\">\n" +
                 "                <span style=\"color: #DB214B\">有朋自远方来</span>\n" +
                 "            </a>\n" +
                 "        </div>\n" +

@@ -1,24 +1,31 @@
 package com.ld.poetry.service.impl;
 
 import cn.hutool.crypto.SecureUtil;
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.TypeReference;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.aop.ResourceCheck;
+import com.ld.poetry.config.PoetryResult;
 import com.ld.poetry.constants.CommonConst;
 import com.ld.poetry.dao.ArticleMapper;
 import com.ld.poetry.dao.LabelMapper;
 import com.ld.poetry.dao.SortMapper;
+import com.ld.poetry.dto.ArticleDTO;
 import com.ld.poetry.entity.*;
 import com.ld.poetry.enums.CommentTypeEnum;
 import com.ld.poetry.enums.PoetryEnum;
+import com.ld.poetry.handle.ServiceException;
 import com.ld.poetry.service.ArticleService;
+import com.ld.poetry.service.LikeService;
 import com.ld.poetry.service.UserService;
-import com.ld.poetry.utils.*;
+import com.ld.poetry.utils.CommonQuery;
+import com.ld.poetry.utils.PoetryUtil;
 import com.ld.poetry.utils.cache.PoetryCache;
+import com.ld.poetry.utils.cache.QingSiCache;
 import com.ld.poetry.utils.mail.MailUtil;
 import com.ld.poetry.vo.ArticleVO;
 import com.ld.poetry.vo.BaseRequestVO;
@@ -29,6 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -63,8 +71,16 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Autowired
     private LabelMapper labelMapper;
 
+    @Resource
+    private QingSiCache qingSiCache;
+
+
+    @Resource
+    private LikeService likeService;
+
     @Value("${user.subscribe.format}")
     private String subscribeFormat;
+
 
     @Override
     public PoetryResult saveArticle(ArticleVO articleVO) {
@@ -315,13 +331,16 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Override
     public PoetryResult<Map<Integer, List<ArticleVO>>> listSortArticle() {
-        Map<Integer, List<ArticleVO>> result = (Map<Integer, List<ArticleVO>>) PoetryCache.get(CommonConst.SORT_ARTICLE_LIST);
+        // Map<Integer, List<ArticleVO>> result = (Map<Integer, List<ArticleVO>>) PoetryCache.get(CommonConst.SORT_ARTICLE_LIST);
+        Map<Integer, List<ArticleVO>> result = JSON.parseObject(qingSiCache.get(CommonConst.SORT_ARTICLE_LIST), new TypeReference<Map<Integer, List<ArticleVO>>>() {
+        });
         if (result != null) {
             return PoetryResult.success(result);
         }
 
         synchronized (CommonConst.SORT_ARTICLE_LIST.intern()) {
-            result = (Map<Integer, List<ArticleVO>>) PoetryCache.get(CommonConst.SORT_ARTICLE_LIST);
+            result = JSON.parseObject(qingSiCache.get(CommonConst.SORT_ARTICLE_LIST), new TypeReference<Map<Integer, List<ArticleVO>>>() {
+            });
             if (result == null) {
                 Map<Integer, List<ArticleVO>> map = new HashMap<>();
 
@@ -350,12 +369,80 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                     map.put(sort.getId(), articleVOList);
                 }
 
-                PoetryCache.put(CommonConst.SORT_ARTICLE_LIST, map, CommonConst.TOKEN_INTERVAL);
+                // PoetryCache.put(CommonConst.SORT_ARTICLE_LIST, map, CommonConst.TOKEN_INTERVAL);
+                qingSiCache.put(CommonConst.SORT_ARTICLE_LIST, map, CommonConst.TOKEN_INTERVAL);
                 return PoetryResult.success(map);
             } else {
                 return PoetryResult.success(result);
             }
         }
+    }
+
+    /**
+     * 添加点赞数
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public String addArticleLikeCount(ArticleDTO dto) {
+        // 文章判空
+        Article byId = getById(dto.getArticleId());
+        if (Objects.isNull(byId)) {
+            throw new ServiceException("文章不存在");
+        }
+        // 如果用户id不为空,点赞表新增记录
+        if (Objects.nonNull(dto.getUserId())) {
+            // 判断用户是否已经点赞
+            Boolean hasLike = qingSiCache.hasHashKey(CommonConst.USER_LIKES.concat(dto.getArticleId().toString()), dto.getUserId().toString());
+            // 点赞
+            if (dto.getOperation() == 1 && !hasLike) {
+                // 点赞
+                Like like = new Like();
+                like.setUserId(dto.getUserId());
+                like.setTargetType(PoetryEnum.LIKE_TARGET_ARTICLE.getCode());
+                like.setTargetId(dto.getArticleId());
+                like.setCreateTime(new Date());
+                likeService.save(like);
+            }
+            // 取消点赞
+            if (dto.getOperation() == 0 && hasLike) {
+                qingSiCache.delHashKey(CommonConst.USER_LIKES.concat(dto.getArticleId().toString()), dto.getUserId().toString());
+                // 删除点赞记录
+                likeService.remove(Wrappers.<Like>lambdaQuery()
+                        .eq(Like::getUserId, dto.getUserId())
+                        .eq(Like::getTargetId, dto.getArticleId())
+                        .eq(Like::getTargetType, PoetryEnum.LIKE_TARGET_ARTICLE.getCode()));
+
+                this.update(Wrappers.<Article>lambdaUpdate().
+                        eq(Article::getId, dto.getArticleId())
+                        .set(Article::getLikeCount, byId.getLikeCount() - 1));
+                return "取消点赞成功";
+            }
+
+        }
+
+        // 更新点赞数
+        this.update(Wrappers.<Article>lambdaUpdate().
+                eq(Article::getId, dto.getArticleId())
+                .set(Article::getLikeCount, byId.getLikeCount() + 1)
+        );
+        return "点赞成功";
+    }
+
+    /**
+     * 判断用户是否已经点赞
+     * @param articleId
+     * @return
+     */
+    @Override
+    public boolean checkHasLike(String articleId) {
+        Article byId = getById(Long.valueOf(articleId));
+        if (Objects.isNull(byId)){
+            throw new ServiceException("文章不存在");
+        }
+
+        return false;
     }
 
     private ArticleVO buildArticleVO(Article article, Boolean isAdmin) {

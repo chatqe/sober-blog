@@ -10,10 +10,13 @@ import com.ld.poetry.entity.Label;
 import com.ld.poetry.entity.Sort;
 import com.ld.poetry.utils.CommonQuery;
 import com.ld.poetry.utils.cache.PoetryCache;
+import com.ld.poetry.utils.cache.QingSiCache;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +29,7 @@ import java.util.Map;
  * @author sara
  * @since 2021-09-14
  */
+@Slf4j
 @RestController
 @RequestMapping("/webInfo")
 public class SortLabelController {
@@ -38,6 +42,9 @@ public class SortLabelController {
 
     @Autowired
     private CommonQuery commonQuery;
+
+    @Resource
+    private QingSiCache qingSiCache;
 
     /**
      * 获取分类标签信息
@@ -62,7 +69,8 @@ public class SortLabelController {
         }
 
         sortMapper.insert(sort);
-        PoetryCache.remove(CommonConst.SORT_INFO);
+        // PoetryCache.remove(CommonConst.SORT_INFO);
+        qingSiCache.delete(CommonConst.SORT_INFO);
         return PoetryResult.success();
     }
 
@@ -75,6 +83,7 @@ public class SortLabelController {
     public PoetryResult deleteSort(@RequestParam("id") Integer id) {
         sortMapper.deleteById(id);
         PoetryCache.remove(CommonConst.SORT_INFO);
+        qingSiCache.delete(CommonConst.SORT_INFO);
         return PoetryResult.success();
     }
 
@@ -87,8 +96,11 @@ public class SortLabelController {
     public PoetryResult updateSort(@RequestBody Sort sort) {
         sortMapper.updateById(sort);
         PoetryCache.remove(CommonConst.SORT_INFO);
+        qingSiCache.delete(CommonConst.SORT_INFO);
         return PoetryResult.success();
     }
+
+
 
 
     /**
@@ -110,7 +122,8 @@ public class SortLabelController {
             return PoetryResult.fail("标签名称和标签描述和分类Id不能为空！");
         }
         labelMapper.insert(label);
-        PoetryCache.remove(CommonConst.SORT_INFO);
+        // PoetryCache.remove(CommonConst.SORT_INFO);
+        qingSiCache.delete(CommonConst.SORT_INFO);
         return PoetryResult.success();
     }
 
@@ -122,7 +135,8 @@ public class SortLabelController {
     @LoginCheck(0)
     public PoetryResult deleteLabel(@RequestParam("id") Integer id) {
         labelMapper.deleteById(id);
-        PoetryCache.remove(CommonConst.SORT_INFO);
+        // PoetryCache.remove(CommonConst.SORT_INFO);
+        qingSiCache.delete(CommonConst.SORT_INFO);
         return PoetryResult.success();
     }
 
@@ -134,7 +148,8 @@ public class SortLabelController {
     @LoginCheck(0)
     public PoetryResult updateLabel(@RequestBody Label label) {
         labelMapper.updateById(label);
-        PoetryCache.remove(CommonConst.SORT_INFO);
+        // PoetryCache.remove(CommonConst.SORT_INFO);
+        qingSiCache.delete(CommonConst.SORT_INFO);
         return PoetryResult.success();
     }
 

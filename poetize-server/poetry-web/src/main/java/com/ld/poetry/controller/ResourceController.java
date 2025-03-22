@@ -8,12 +8,14 @@ import com.ld.poetry.constants.CommonConst;
 import com.ld.poetry.entity.Resource;
 import com.ld.poetry.enums.PoetryEnum;
 import com.ld.poetry.service.ResourceService;
-import com.ld.poetry.utils.storage.StoreService;
-import com.ld.poetry.utils.*;
+import com.ld.poetry.utils.PoetryUtil;
 import com.ld.poetry.utils.storage.FileStorageService;
+import com.ld.poetry.utils.storage.StoreService;
 import com.ld.poetry.vo.BaseRequestVO;
 import com.ld.poetry.vo.FileVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
  * @author sara
  * @since 2022-03-06
  */
+@Slf4j
 @RestController
 @RequestMapping("/resource")
 public class ResourceController {
@@ -39,6 +42,8 @@ public class ResourceController {
 
     @Autowired
     private FileStorageService fileStorageService;
+    @Value("${qiniu.downloadUrl}")
+    private String downloadUrl;
 
     /**
      * 保存
@@ -67,10 +72,12 @@ public class ResourceController {
     @PostMapping("/upload")
     @LoginCheck
     public PoetryResult<String> upload(@RequestParam("file") MultipartFile file, FileVO fileVO) {
+
+        log.info("========================> /resource/upload 接口调用");
+
         if (file == null || !StringUtils.hasText(fileVO.getType()) || !StringUtils.hasText(fileVO.getRelativePath())) {
             return PoetryResult.fail("文件和资源类型和资源路径不能为空！");
         }
-
         fileVO.setFile(file);
         StoreService storeService = fileStorageService.getFileStorage(fileVO.getStoreType());
         FileVO result = storeService.saveFile(fileVO);
@@ -99,7 +106,8 @@ public class ResourceController {
         }
 
         StoreService storeService = fileStorageService.getFileStorageByStoreType(resource.getStoreType());
-        storeService.deleteFile(Collections.singletonList(path));
+        String replace = path.replace(downloadUrl, "");
+        storeService.deleteFile(Collections.singletonList(replace));
         return PoetryResult.success();
     }
 

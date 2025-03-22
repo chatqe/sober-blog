@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 @ControllerAdvice
 @Slf4j
-public class PoetryExceptionHandler {
+public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     @ResponseBody
@@ -44,6 +44,16 @@ public class PoetryExceptionHandler {
             return PoetryResult.fail(CodeMsg.PARAMETER_ERROR);
         }
 
+        if (ex instanceof ServiceException) {
+            ServiceException e = (ServiceException) ex;
+            Integer code = e.getCode() == null ? CodeMsg.FAIL.getCode() : e.getCode();
+            String msg = e.getMsg() == null ? CodeMsg.FAIL.getMsg() : e.getMsg();
+            return PoetryResult.fail(code, msg);
+        }
+
         return PoetryResult.fail(CodeMsg.FAIL);
     }
+
+
+
 }

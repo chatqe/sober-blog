@@ -1,6 +1,8 @@
 package com.ld.poetry.service.impl;
 
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.SecureUtil;
+import cn.hutool.extra.qrcode.QrCodeUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -22,8 +24,10 @@ import com.ld.poetry.im.websocket.TioUtil;
 import com.ld.poetry.im.websocket.TioWebsocketStarter;
 import com.ld.poetry.service.UserService;
 import com.ld.poetry.service.WeiYanService;
-import com.ld.poetry.utils.*;
+import com.ld.poetry.utils.PoetryUtil;
+import com.ld.poetry.utils.QingsiUtil;
 import com.ld.poetry.utils.cache.PoetryCache;
+import com.ld.poetry.utils.cache.QingSiCache;
 import com.ld.poetry.utils.mail.MailUtil;
 import com.ld.poetry.vo.BaseRequestVO;
 import com.ld.poetry.vo.UserVO;
@@ -37,6 +41,7 @@ import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 import org.tio.core.Tio;
 
+import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +62,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
+
     @Autowired
     private WeiYanService weiYanService;
 
@@ -69,12 +75,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Autowired
     private MailUtil mailUtil;
 
+    @Resource
+    private QingSiCache qingSiCache;
+
+    @Resource
+    private QingsiUtil qingsiUtil;
+
     @Value("${user.code.format}")
     private String codeFormat;
 
+
     @Override
     public PoetryResult<UserVO> login(String account, String password, Boolean isAdmin) {
-        password = new String(SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt(password));
+        password = new String(
+                // 解密网页密码
+                SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt(password));
 
         User one = lambdaQuery().and(wrapper -> wrapper
                         .eq(User::getUsername, account)
@@ -82,6 +97,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                         .eq(User::getEmail, account)
                         .or()
                         .eq(User::getPhoneNumber, account))
+                // 传入密码解密之后 进行MD5字符串加密 同数据库密码进行比对
                 .eq(User::getPassword, DigestUtils.md5DigestAsHex(password.getBytes()))
                 .one();
 
@@ -109,7 +125,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         }
 
-
+        UUID.randomUUID().toString().replaceAll("-", "");
         if (isAdmin && !StringUtils.hasText(adminToken)) {
             String uuid = UUID.randomUUID().toString().replaceAll("-", "");
             adminToken = CommonConst.ADMIN_ACCESS_TOKEN + uuid;
@@ -155,8 +171,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return PoetryResult.success();
     }
 
+
     @Override
     public PoetryResult<UserVO> regist(UserVO user) {
+        // 正则表达式 用于校验手机号(11位数字)
         String regex = "\\d{11}";
         if (user.getUsername().matches(regex)) {
             return PoetryResult.fail("用户名不能为11位数字！");
@@ -177,11 +195,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
             PoetryCache.remove(CommonConst.FORGET_PASSWORD + user.getPhoneNumber() + "_1");
         } else if (StringUtils.hasText(user.getEmail())) {
-            Integer codeCache = (Integer) PoetryCache.get(CommonConst.FORGET_PASSWORD + user.getEmail() + "_2");
+            // Integer codeCache = (Integer) PoetryCache.get(CommonConst.FORGET_PASSWORD + user.getEmail() + "_2");
+            Integer codeCache =JSON.parseObject(qingSiCache.get(CommonConst.CODE_MAIL + user.getEmail() + "_2"), Integer.class) ;
             if (codeCache == null || codeCache != Integer.parseInt(user.getCode())) {
                 return PoetryResult.fail("验证码错误！");
             }
-            PoetryCache.remove(CommonConst.FORGET_PASSWORD + user.getEmail() + "_2");
+            // PoetryCache.remove(CommonConst.FORGET_PASSWORD + user.getEmail() + "_2");
+            qingSiCache.delete(CommonConst.FORGET_PASSWORD + user.getEmail() + "_2");
         } else {
             return PoetryResult.fail("请输入邮箱或手机号！");
         }
@@ -210,12 +230,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         u.setPhoneNumber(user.getPhoneNumber());
         u.setEmail(user.getEmail());
         u.setPassword(DigestUtils.md5DigestAsHex(user.getPassword().getBytes()));
-        u.setAvatar(PoetryUtil.getRandomAvatar(null));
+        // u.setAvatar(PoetryUtil.getRandomAvatar(null));
+        u.setAvatar(qingsiUtil.getRandomAvatar());
         save(u);
 
         User one = lambdaQuery().eq(User::getId, u.getId()).one();
 
         String userToken = CommonConst.USER_ACCESS_TOKEN + UUID.randomUUID().toString().replaceAll("-", "");
+        // PoetryCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
+        // PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
         PoetryCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
         PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
 
@@ -291,6 +314,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public PoetryResult getCode(Integer flag) {
         User user = PoetryUtil.getCurrentUser();
+        // 生成六位随机数(100000~ 900000)
         int i = new Random().nextInt(900000) + 100000;
         if (flag == 1) {
             if (!StringUtils.hasText(user.getPhoneNumber())) {
@@ -312,7 +336,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
             AtomicInteger count = (AtomicInteger) PoetryCache.get(CommonConst.CODE_MAIL + mail.get(0));
             if (count == null || count.get() < CommonConst.CODE_MAIL_COUNT) {
-                mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? "POETIZE" : webInfo.getWebName()) + "的回执！", text);
+                mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName()) + "的回执！", text);
                 if (count == null) {
                     PoetryCache.put(CommonConst.CODE_MAIL + mail.get(0), new AtomicInteger(1), CommonConst.CODE_EXPIRE);
                 } else {
@@ -340,7 +364,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
             AtomicInteger count = (AtomicInteger) PoetryCache.get(CommonConst.CODE_MAIL + mail.get(0));
             if (count == null || count.get() < CommonConst.CODE_MAIL_COUNT) {
-                mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? "POETIZE" : webInfo.getWebName()) + "的回执！", text);
+                mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName()) + "的回执！", text);
                 if (count == null) {
                     PoetryCache.put(CommonConst.CODE_MAIL + mail.get(0), new AtomicInteger(1), CommonConst.CODE_EXPIRE);
                 } else {
@@ -415,6 +439,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return PoetryResult.success(userVO);
     }
 
+    public static void main(String[] args) {
+        String pwd = "charqe123123";
+        String encryptionPwd = DigestUtils.md5DigestAsHex(pwd.getBytes());
+        log.info("加密后密码: {}", encryptionPwd);
+    }
+
     @Override
     public PoetryResult getCodeForForgetPassword(String place, Integer flag) {
         int i = new Random().nextInt(900000) + 100000;
@@ -430,7 +460,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
             AtomicInteger count = (AtomicInteger) PoetryCache.get(CommonConst.CODE_MAIL + mail.get(0));
             if (count == null || count.get() < CommonConst.CODE_MAIL_COUNT) {
-                mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? "POETIZE" : webInfo.getWebName()) + "的回执！", text);
+                mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName()) + "的回执！", text);
                 if (count == null) {
                     PoetryCache.put(CommonConst.CODE_MAIL + mail.get(0), new AtomicInteger(1), CommonConst.CODE_EXPIRE);
                 } else {
@@ -443,6 +473,51 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         PoetryCache.put(CommonConst.FORGET_PASSWORD + place + "_" + flag, Integer.valueOf(i), 300);
         return PoetryResult.success();
     }
+
+
+    /**
+     * 注册 获取验证码
+     *
+     * @param place
+     * @param flag
+     * @return
+     */
+    @Override
+    public PoetryResult getCodeByRegister(String place, Integer flag) {
+
+        // 随机6位数字 字符串
+        String code = RandomUtil.randomNumbers(6);
+        if (flag == 1) {
+            log.info(place + "---" + "手机验证码---" + code);
+        } else if (flag == 2) {
+            log.info(place + "---" + "邮箱验证码---" + code);
+
+            List<String> mail = new ArrayList<>();
+            mail.add(place);
+            String text = getCodeMail(code);
+            // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+            WebInfo webInfo = com.alibaba.fastjson2.JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class) ;
+
+            // AtomicInteger count = (AtomicInteger) PoetryCache.get(CommonConst.CODE_MAIL + mail.get(0));
+            AtomicInteger count = com.alibaba.fastjson2.JSON.parseObject(qingSiCache.get(CommonConst.CODE_MAIL + mail.get(0)), AtomicInteger.class);
+            if (count == null || count.get() < CommonConst.CODE_MAIL_COUNT) {
+                mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName()) + "的回执！", text);
+                if (count == null) {
+                    // PoetryCache.put(CommonConst.CODE_MAIL + mail.get(0), new AtomicInteger(1), CommonConst.CODE_EXPIRE);
+                    qingSiCache.put(CommonConst.CODE_MAIL + mail.get(0), new AtomicInteger(1).toString(), CommonConst.CODE_EXPIRE);
+                } else {
+                    count.incrementAndGet();
+                }
+            } else {
+                return PoetryResult.fail("验证码发送次数过多，请明天再试！");
+            }
+        }
+        // PoetryCache.put(CommonConst.FORGET_PASSWORD + place + "_" + flag, Integer.valueOf(i), 300);
+        qingSiCache.put(CommonConst.CODE_MAIL + place + "_" + flag, code, 300);
+
+        return PoetryResult.success();
+    }
+
 
     @Override
     public PoetryResult updateForForgetPassword(String place, Integer flag, String code, String password) {
@@ -592,9 +667,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return PoetryResult.success(userVO);
     }
 
+    /**
+     * @param i
+     * @return
+     */
     private String getCodeMail(int i) {
-        WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
-        String webName = (webInfo == null ? "POETIZE" : webInfo.getWebName());
+        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+        WebInfo webInfo = com.alibaba.fastjson2.JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
+        String webName = (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName());
+        String m = mailUtil.getMailText();
+        return String.format(mailUtil.getMailText(),
+                webName,
+                String.format(MailUtil.imMail, PoetryUtil.getAdminUser().getUsername()),
+                PoetryUtil.getAdminUser().getUsername(),
+                String.format(codeFormat, i),
+                "",
+                webName);
+    }
+
+    private String getCodeMail(String i) {
+        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+        WebInfo webInfo = com.alibaba.fastjson2.JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
+        String webName = (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName());
+
+        // 【Corrain】218360为本次验证的验证码，请在5分钟内完成验证。为保证账号安全，请勿泄漏此验证码。
         return String.format(mailUtil.getMailText(),
                 webName,
                 String.format(MailUtil.imMail, PoetryUtil.getAdminUser().getUsername()),

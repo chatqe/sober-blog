@@ -1,11 +1,15 @@
 package com.ld.poetry.utils;
 
+
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.ld.poetry.constants.CommonConst;
 import com.ld.poetry.dao.*;
 import com.ld.poetry.entity.*;
 import com.ld.poetry.service.UserService;
 import com.ld.poetry.utils.cache.PoetryCache;
+import com.ld.poetry.utils.cache.QingSiCache;
 import com.ld.poetry.vo.FamilyVO;
 import org.apache.commons.io.IOUtils;
 import org.lionsoul.ip2region.xdb.Searcher;
@@ -16,6 +20,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -45,6 +50,9 @@ public class CommonQuery {
     @Autowired
     private FamilyMapper familyMapper;
 
+    @Resource
+    private QingSiCache qingSiCache;
+
     private Searcher searcher;
 
     @PostConstruct
@@ -57,7 +65,7 @@ public class CommonQuery {
 
     public void saveHistory(String ip) {
         Integer userId = PoetryUtil.getUserId();
-        String ipUser = ip + (userId != null ? "_" + userId.toString() : "");
+        String ipUser = ip + (userId != null ? "_" + userId : "");
 
         CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
         if (!ipHistory.contains(ipUser)) {
@@ -90,14 +98,16 @@ public class CommonQuery {
     }
 
     public User getUser(Integer userId) {
-        User user = (User) PoetryCache.get(CommonConst.USER_CACHE + userId.toString());
+        // User user = (User) PoetryCache.get(CommonConst.USER_CACHE + userId.toString());
+        User user = JSON.parseObject(qingSiCache.get(CommonConst.USER_CACHE + userId), User.class);
         if (user != null) {
             return user;
         }
-        User u = userService.getById(userId);
-        if (u != null) {
-            PoetryCache.put(CommonConst.USER_CACHE + userId.toString(), u, CommonConst.EXPIRE);
-            return u;
+        user = userService.getById(userId);
+        if (user != null) {
+            // PoetryCache.put(CommonConst.USER_CACHE + userId.toString(), u, CommonConst.EXPIRE);
+            qingSiCache.put(CommonConst.USER_CACHE + userId.toString(), JSON.toJSONString(user), CommonConst.EXPIRE);
+            return user;
         }
         return null;
     }
@@ -152,13 +162,15 @@ public class CommonQuery {
     }
 
     public Integer getCommentCount(Integer source, String type) {
-        Integer count = (Integer) PoetryCache.get(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type);
+        // Integer count = (Integer) PoetryCache.get(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type);
+        Integer count = JSON.parseObject(qingSiCache.get(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type), Integer.class);
         if (count != null) {
             return count;
         }
         LambdaQueryChainWrapper<Comment> wrapper = new LambdaQueryChainWrapper<>(commentMapper);
         Integer c = wrapper.eq(Comment::getSource, source).eq(Comment::getType, type).count();
-        PoetryCache.put(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type, c, CommonConst.EXPIRE);
+        // PoetryCache.put(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type, c, CommonConst.EXPIRE);
+        qingSiCache.put(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type, c, CommonConst.EXPIRE);
         return c;
     }
 
@@ -183,16 +195,21 @@ public class CommonQuery {
     }
 
     public List<List<Integer>> getArticleIds(String searchText) {
-        List<Article> articles = (List<Article>) PoetryCache.get(CommonConst.ARTICLE_LIST);
+        // List<Article> articles = (List<Article>) PoetryCache.get(CommonConst.ARTICLE_LIST);
+
+        List<Article> articles = JSON.parseObject(qingSiCache.get(CommonConst.ARTICLE_LIST), new TypeReference<List<Article>>() {
+        });
         if (articles == null) {
             synchronized (CommonConst.ARTICLE_LIST.intern()) {
-                articles = (List<Article>) PoetryCache.get(CommonConst.ARTICLE_LIST);
+                articles = JSON.parseObject(qingSiCache.get(CommonConst.ARTICLE_LIST), new TypeReference<List<Article>>() {
+                });
                 if (articles == null) {
                     LambdaQueryChainWrapper<Article> wrapper = new LambdaQueryChainWrapper<>(articleMapper);
                     articles = wrapper.select(Article::getId, Article::getArticleTitle, Article::getArticleContent)
                             .orderByDesc(Article::getCreateTime)
                             .list();
-                    PoetryCache.put(CommonConst.ARTICLE_LIST, articles);
+                    // PoetryCache.put(CommonConst.ARTICLE_LIST, articles);
+                    qingSiCache.put(CommonConst.ARTICLE_LIST, articles);
                 }
             }
         }
@@ -215,13 +232,16 @@ public class CommonQuery {
     }
 
     public List<Sort> getSortInfo() {
-        List<Sort> sortInfo = (List<Sort>) PoetryCache.get(CommonConst.SORT_INFO);
+        // List<Sort> sortInfo = (List<Sort>) PoetryCache.get(CommonConst.SORT_INFO);
+        List<Sort> sortInfo = JSON.parseObject(qingSiCache.get(CommonConst.SORT_INFO), new TypeReference<List<Sort>>() {
+        });
         if (sortInfo != null) {
             return sortInfo;
         }
 
         synchronized (CommonConst.SORT_INFO.intern()) {
-            sortInfo = (List<Sort>) PoetryCache.get(CommonConst.SORT_INFO);
+            sortInfo = JSON.parseObject(qingSiCache.get(CommonConst.SORT_INFO), new TypeReference<List<Sort>>() {
+            });
             if (sortInfo == null) {
                 List<Sort> sorts = new LambdaQueryChainWrapper<>(sortMapper).list();
                 if (!CollectionUtils.isEmpty(sorts)) {
@@ -242,7 +262,8 @@ public class CommonQuery {
                         }
                     });
                 }
-                PoetryCache.put(CommonConst.SORT_INFO, sorts);
+                // PoetryCache.put(CommonConst.SORT_INFO, sorts);
+                qingSiCache.put(CommonConst.SORT_INFO, sorts);
                 return sorts;
             } else {
                 return sortInfo;

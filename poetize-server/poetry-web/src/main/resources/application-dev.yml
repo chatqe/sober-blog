@@ -1,0 +1,114 @@
+server:
+  port: 18081
+  tomcat:
+    threads.max: 50
+    max-connections: 100
+    max-http-form-post-size: 120MB
+    connection-timeout: 60000
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  #  configuration:
+  #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+  mail:
+    host: smtp.qq.com
+    username: 918906714@qq.com
+    password: hrbrcvqrbcvubbde
+    default-encoding: utf-8
+    protocol: smtp
+    port: 465
+    properties:
+      mail:
+        smtp:
+          socketFactory:
+            port: 465
+            class: javax.net.ssl.SSLSocketFactory
+          ssl:
+            enable: true
+
+  redis:
+#    host: 192.168.30.100
+#    port: 6379
+#    database: 8
+#    password: daxiongroot
+    host: 121.36.82.27
+    port: 6379
+    database: 8
+    password: daxiongroot
+    lettuce:
+      pool:
+        max-active: 25 # 最大连接数
+        max-wait: -1ms # 最大阻塞等待 负值无限制
+        min-idle: 0   # 最小空闲连接
+        max-idle: 8   # 最大空闲连接
+
+  datasource:
+    username: root
+    password: daxiongroot
+#    url: jdbc:mysql://192.168.30.100:3306/poetize?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://121.36.82.27:3306/poetize?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+#    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # Druid 数据源专有配置
+    initial-size: 5
+    min-idle: 5
+    max-active: 20
+    max-wait: 60000
+    time-between-eviction-runs-millis: 60000
+    min-evictable-idle-time-millis: 300000
+    validation-query: SELECT 1
+    test-while-idle: true
+    test-on-borrow: false
+    test-on-return: false
+    pool-prepared-statements: true
+    max-pool-prepared-statement-per-connection-size: 20
+
+
+# 是否从数据库加载环境配置
+custom:
+  environment:
+    processor:
+      enabled: false
+
+user:
+  code:
+#    %06d String.format()占位符 0 表示 不足6位前面补0 6表示位数 d表示十进制整数
+    format: "【青肆博客】本次验证码 %s，请在5分钟内完成验证。为保证账号安全，请勿泄漏此验证码。"
+  subscribe:
+    format:
+
+store:
+  type: qiniu
+
+local:
+  enable:
+  uploadUrl:
+  downloadUrl:
+
+qiniu:
+  enable: true
+  accessKey: j1zZHKcq4AXt7_mxWJT61-z3f6jHiNs98QCdcuH2
+  secretKey: 676CvJ7NYNwOLoqkSnfK5Fc_7X-xW9GTmKle2dPs
+  bucket: pb-buckets
+  downloadUrl: "https://cdn.youngwanton.top/"
+
+im:
+#  enable: true
+  enable: false
+
+
+########################定时任务配置########################
+scheduling:
+  enabled: false
+

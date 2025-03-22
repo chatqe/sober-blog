@@ -114,6 +114,8 @@ public class CommonConst {
      */
     public static final String WEB_INFO = "webInfo";
 
+    public static final String WEB_DEFAULT_TITLE = "YoungWanton";
+
     /**
      * 分类信息
      */
@@ -127,7 +129,7 @@ public class CommonConst {
     /**
      * 密钥
      */
-    public static final String CRYPOTJS_KEY = "sarasarasarasara";
+    public static final String CRYPOTJS_KEY = "huo!!!jiuzhegeya";
 
     /**
      * 根据用户ID获取用户信息
@@ -153,6 +155,11 @@ public class CommonConst {
      * 文章缓存，用于首页
      */
     public static final String SORT_ARTICLE_LIST = "sort_article_list";
+
+    /**
+     * 用户点赞缓存
+     */
+    public static final String USER_LIKES = "user_likes_";
 
     /**
      * 默认缓存过期时间
@@ -248,4 +255,6 @@ public class CommonConst {
      * 资源校验
      */
     public static final String RESOURCE_ARTICLE_DOC = "resource_article_doc";
+
+
 }

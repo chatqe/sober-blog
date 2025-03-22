@@ -3,6 +3,7 @@ package com.ld.poetry.config;
 import com.ld.poetry.handle.PoetryRuntimeException;
 import lombok.SneakyThrows;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -14,11 +15,22 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 在应用启动时从数据库加载配置，并将这些配置添加到 Spring Boot 应用的环境配置中。
+ * 此外，它还负责检查数据库是否存在，并在不存在时初始化数据库。
+ *
+ * @author Upjqs
+ * @since 2024-08-19 14:25
+ */
 @Order(Ordered.LOWEST_PRECEDENCE)
+@ConditionalOnProperty(name = "custom.environment.processor.enabled", havingValue = "true")
 public class CustomEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
     private static final String SOURCE_NAME = "sys_config";
@@ -31,6 +43,8 @@ public class CustomEnvironmentPostProcessor implements EnvironmentPostProcessor 
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+
+        System.out.println("==============> 进入了 CustomEnvironmentPostProcessor");
         try {
             Map<String, Object> map = new HashMap<>();
 

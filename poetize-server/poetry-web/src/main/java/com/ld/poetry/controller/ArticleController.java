@@ -4,16 +4,20 @@ package com.ld.poetry.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ld.poetry.aop.LoginCheck;
 import com.ld.poetry.config.PoetryResult;
-import com.ld.poetry.service.ArticleService;
 import com.ld.poetry.constants.CommonConst;
-import com.ld.poetry.utils.cache.PoetryCache;
+import com.ld.poetry.dto.ArticleDTO;
+import com.ld.poetry.service.ArticleService;
 import com.ld.poetry.utils.PoetryUtil;
+import com.ld.poetry.utils.cache.PoetryCache;
+import com.ld.poetry.utils.cache.QingSiCache;
 import com.ld.poetry.vo.ArticleVO;
 import com.ld.poetry.vo.BaseRequestVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 
@@ -26,12 +30,16 @@ import java.util.Map;
  * @author sara
  * @since 2021-08-13
  */
+@Slf4j
 @RestController
 @RequestMapping("/article")
 public class ArticleController {
 
     @Autowired
     private ArticleService articleService;
+
+    @Resource
+    private QingSiCache qingSiCache;
 
 
     /**
@@ -66,8 +74,10 @@ public class ArticleController {
     @PostMapping("/updateArticle")
     @LoginCheck(1)
     public PoetryResult updateArticle(@Validated @RequestBody ArticleVO articleVO) {
-        PoetryCache.remove(CommonConst.ARTICLE_LIST);
-        PoetryCache.remove(CommonConst.SORT_ARTICLE_LIST);
+        // PoetryCache.remove(CommonConst.ARTICLE_LIST);
+        // PoetryCache.remove(CommonConst.SORT_ARTICLE_LIST);
+        qingSiCache.delete(CommonConst.ARTICLE_LIST);
+        qingSiCache.delete(CommonConst.SORT_ARTICLE_LIST);
         return articleService.updateArticle(articleVO);
     }
 
@@ -95,5 +105,26 @@ public class ArticleController {
     public PoetryResult<ArticleVO> getArticleById(@RequestParam("id") Integer id, @RequestParam(value = "password", required = false) String password) {
         return articleService.getArticleById(id, password);
     }
+
+    /**
+     * 点赞添加
+     */
+    @PostMapping("/addArticleLikeCount")
+    public PoetryResult addArticleLikeCount(@RequestBody ArticleDTO dto) {
+        log.info("{}", dto);
+
+        return PoetryResult.success(articleService.addArticleLikeCount(dto)) ;
+    }
+
+    /**
+     * 点赞添加
+     */
+    @GetMapping("/checkHasLike")
+    public PoetryResult checkHasLike(@RequestParam String articleId) {
+        log.info("articleId:{}", articleId);
+
+        return PoetryResult.success(articleService.checkHasLike(articleId)) ;
+    }
+
 }
 

@@ -2,6 +2,7 @@ package com.ld.poetry.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ld.poetry.config.PoetryResult;
+import com.ld.poetry.dto.ArticleDTO;
 import com.ld.poetry.entity.Article;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.ld.poetry.vo.ArticleVO;
@@ -35,4 +36,8 @@ public interface ArticleService extends IService<Article> {
     PoetryResult<ArticleVO> getArticleByIdForUser(Integer id);
 
     PoetryResult<Map<Integer, List<ArticleVO>>> listSortArticle();
+
+    String addArticleLikeCount(ArticleDTO dto);
+
+    boolean checkHasLike(String articleId);
 }

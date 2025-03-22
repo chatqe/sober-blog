@@ -94,6 +94,19 @@ public class UserController {
     }
 
     /**
+     * 忘记密码 获取验证码
+     * <p>
+     * 1 手机号
+     * 2 邮箱
+     */
+    @GetMapping("/getCodeByRegister")
+    @SaveCheck
+    public PoetryResult getCodeByRegister(@RequestParam("place") String place, @RequestParam("flag") Integer flag) {
+        return userService.getCodeByRegister(place, flag);
+    }
+
+
+    /**
      * 绑定手机号或者邮箱
      * <p>
      * 1 手机号
@@ -131,6 +144,9 @@ public class UserController {
     public PoetryResult getCodeForForgetPassword(@RequestParam("place") String place, @RequestParam("flag") Integer flag) {
         return userService.getCodeForForgetPassword(place, flag);
     }
+
+
+
 
     /**
      * 忘记密码 更新密码

@@ -61,6 +61,7 @@ public class LocalUtil implements StoreService {
             throw new PoetryRuntimeException("文件路径不合法！");
         }
 
+        // E:\idea\poetize-vue2\src\assets\file
         String path = fileVO.getRelativePath();
         if (path.contains("/")) {
             String[] split = path.split("/");
