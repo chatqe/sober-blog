@@ -3,8 +3,8 @@ package com.ld.poetry.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import com.ld.poetry.dao.LikeMapper;
-import com.ld.poetry.entity.Like;
-import com.ld.poetry.service.LikeService;
+import com.ld.poetry.entity.LikeRecord;
+import com.ld.poetry.service.LikeRecordService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
  * @since 2025-03-21 14:37:09
  */
 @Service
-public class LikeServiceImpl extends ServiceImpl<LikeMapper, Like> implements LikeService {
+public class LikeRecordServiceImpl extends ServiceImpl<LikeMapper, LikeRecord> implements LikeRecordService {
 
 }
 

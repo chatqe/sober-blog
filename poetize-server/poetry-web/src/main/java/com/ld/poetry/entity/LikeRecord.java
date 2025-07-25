@@ -1,8 +1,8 @@
 package com.ld.poetry.entity;
 
 import java.util.Date;
-import java.io.Serializable;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 /**
@@ -13,7 +13,8 @@ import lombok.Data;
  */
 @Data
 @SuppressWarnings("serial")
-public class Like {
+@TableName("like_record")
+public class LikeRecord {
     /**
      * 主键
      */

@@ -138,4 +138,7 @@ public class Article implements Serializable {
     private Boolean deleted;
 
 
+    public Integer getWeight() {
+        return viewCount + likeCount * 2;
+    }
 }

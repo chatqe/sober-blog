@@ -28,6 +28,7 @@ public class PoetryFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, FilterChain filterChain) throws ServletException, IOException {
         if (!"OPTIONS".equals(httpServletRequest.getMethod())) {
             try {
+                // 保存访问记录
                 commonQuery.saveHistory(PoetryUtil.getIpAddr(httpServletRequest));
             } catch (Exception e) {
             }

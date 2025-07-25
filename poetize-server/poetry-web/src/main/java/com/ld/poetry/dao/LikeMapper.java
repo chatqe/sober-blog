@@ -1,7 +1,7 @@
 package com.ld.poetry.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.ld.poetry.entity.Like;
+import com.ld.poetry.entity.LikeRecord;
 
 
 /**
@@ -10,7 +10,7 @@ import com.ld.poetry.entity.Like;
  * @author shenjiaqi
  * @since 2025-03-21 13:53:10
  */
-public interface LikeMapper extends BaseMapper<Like> {
+public interface LikeMapper extends BaseMapper<LikeRecord> {
 
 }
 

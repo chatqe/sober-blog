@@ -63,6 +63,12 @@ public class CommonQuery {
         }
     }
 
+
+    /**
+     * 根据本地文件 查询ip对应省市区信息 保存到DB
+     *
+     * @param ip
+     */
     public void saveHistory(String ip) {
         Integer userId = PoetryUtil.getUserId();
         String ipUser = ip + (userId != null ? "_" + userId : "");
@@ -96,6 +102,47 @@ public class CommonQuery {
             }
         }
     }
+
+
+    /**
+     * baidu 查询ip对应省市区信息 保存到DB
+     *
+     * @param ip
+     */
+    public void saveHistoryByBaidu(String ip) {
+        Integer userId = PoetryUtil.getUserId();
+        String ipUser = ip + (userId != null ? "_" + userId : "");
+
+        CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
+        if (!ipHistory.contains(ipUser)) {
+            synchronized (ipUser.intern()) {
+                if (!ipHistory.contains(ipUser)) {
+                    ipHistory.add(ipUser);
+                    HistoryInfo historyInfo = new HistoryInfo();
+                    historyInfo.setIp(ip);
+                    historyInfo.setUserId(userId);
+                    if (searcher != null) {
+                        try {
+                            String search = searcher.search(ip);
+                            String[] region = search.split("\\|");
+                            if (!"0".equals(region[0])) {
+                                historyInfo.setNation(region[0]);
+                            }
+                            if (!"0".equals(region[2])) {
+                                historyInfo.setProvince(region[2]);
+                            }
+                            if (!"0".equals(region[3])) {
+                                historyInfo.setCity(region[3]);
+                            }
+                        } catch (Exception e) {
+                        }
+                    }
+                    historyInfoMapper.insert(historyInfo);
+                }
+            }
+        }
+    }
+
 
     public User getUser(Integer userId) {
         // User user = (User) PoetryCache.get(CommonConst.USER_CACHE + userId.toString());

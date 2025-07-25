@@ -62,6 +62,10 @@ public class TaskSchedule {
     private QingSiCache qingSiCache;
 
 
+    /**
+     * 定时创建 ipHistory 相关数据
+     * @throws Exception
+     */
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateBaseData() throws Exception {
         log.info("--------------->开始更新基础数据");
@@ -88,7 +92,8 @@ public class TaskSchedule {
                 .ge(HistoryInfo::getCreateTime, LocalDateTime.now().with(LocalTime.MIN))
                 .list();
 
-        CopyOnWriteArraySet<String> strings = new CopyOnWriteArraySet<>(infoList.stream().map(info -> info.getIp() + (info.getUserId() != null ? "_" + info.getUserId().toString() : "")).collect(Collectors.toList()));
+        CopyOnWriteArraySet<String> strings = new CopyOnWriteArraySet<>(
+                infoList.stream().map(info -> info.getIp() + (info.getUserId() != null ? "_" + info.getUserId().toString() : "")).collect(Collectors.toList()));
 
         PoetryCache.put(CommonConst.IP_HISTORY, strings);
 

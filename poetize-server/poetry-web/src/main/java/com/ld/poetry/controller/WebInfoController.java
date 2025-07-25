@@ -182,6 +182,8 @@ public class WebInfoController {
         result.put(CommonConst.IP_HISTORY_IP, history.get(CommonConst.IP_HISTORY_IP));
         result.put(CommonConst.IP_HISTORY_COUNT, history.get(CommonConst.IP_HISTORY_COUNT));
         List<Map<String, Object>> ipHistoryCount = (List<Map<String, Object>>) history.get(CommonConst.IP_HISTORY_HOUR);
+
+        // 昨日访问数
         result.put("ip_count_yest", ipHistoryCount.stream().map(m -> m.get("ip")).distinct().count());
         result.put("username_yest", ipHistoryCount.stream().map(m -> {
             Object userId = m.get("user_id");
@@ -196,7 +198,11 @@ public class WebInfoController {
             }
             return null;
         }).filter(Objects::nonNull).collect(Collectors.toList()));
+
+        // 今日访问数
         result.put("ip_count_today", infoList.stream().map(HistoryInfo::getIp).distinct().count());
+
+        // 今日访问用户
         result.put("username_today", infoList.stream().map(m -> {
             Integer userId = m.getUserId();
             if (userId != null) {
@@ -224,7 +230,11 @@ public class WebInfoController {
                 .sorted((o1, o2) -> Long.valueOf(o2.get("num").toString()).compareTo(Long.valueOf(o1.get("num").toString())))
                 .collect(Collectors.toList());
 
-        result.put("province_today", list);
+        // 今日访问省份统计
+        result.put(CommonConst.PROVINCE_TODAY, list);
+
+        // 获取今日IP访问详情
+        result.put(CommonConst.IP_DETAIL_TODAY,null);
 
         return PoetryResult.success(result);
     }

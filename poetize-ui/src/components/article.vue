@@ -157,8 +157,8 @@
             </div>
           </blockquote>
           <!-- 订阅 -->
-          <div class="myCenter" id="article-like" @click="subscribeLabel()">
-            <i class="el-icon-thumb article-like-icon" :class="{'article-like': subscribe}"></i>
+          <div class="myCenter" id="article-likeRecord" @click="subscribeLabel()">
+            <i class="el-icon-thumb article-likeRecord-icon" :class="{'article-likeRecord': subscribe}"></i>
           </div>
 
           <!-- 评论 -->
@@ -721,11 +721,11 @@
     background-color: var(--red);
   }
 
-  .article-like {
+  .article-likeRecord {
     color: var(--red) !important;
   }
 
-  .article-like-icon {
+  .article-likeRecord-icon {
     font-size: 60px;
     cursor: pointer;
     color: var(--greyFont);
@@ -734,7 +734,7 @@
     margin-bottom: 20px;
   }
 
-  .article-like-icon:hover {
+  .article-likeRecord-icon:hover {
     transform: rotate(360deg);
   }
 

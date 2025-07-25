@@ -44,10 +44,28 @@ public class CommonConst {
      */
     public static final String IP_HISTORY = "ip_history";
     public static final String IP_HISTORY_STATISTICS = "ip_history_statistics";
+    /**
+     * 省份访问TOP10
+     */
     public static final String IP_HISTORY_PROVINCE = "ip_history_province";
+    /**
+     * IP访问TOP10
+     */
     public static final String IP_HISTORY_IP = "ip_history_ip";
     public static final String IP_HISTORY_HOUR = "ip_history_hour";
+
+    /**
+     * 总访问量（每个IP每天记一次）
+     */
     public static final String IP_HISTORY_COUNT = "ip_history_count";
+    /**
+     * 今日访问IP详细信息 省市区
+     */
+    public static final String IP_DETAIL_TODAY = "ip_detail_today";
+    /**
+     * 今日访问省份统计
+     */
+    public static final String PROVINCE_TODAY = "province_today";
 
     /**
      * Token过期时间：10天

@@ -20,7 +20,7 @@ import com.ld.poetry.enums.CommentTypeEnum;
 import com.ld.poetry.enums.PoetryEnum;
 import com.ld.poetry.handle.ServiceException;
 import com.ld.poetry.service.ArticleService;
-import com.ld.poetry.service.LikeService;
+import com.ld.poetry.service.LikeRecordService;
 import com.ld.poetry.service.UserService;
 import com.ld.poetry.utils.CommonQuery;
 import com.ld.poetry.utils.PoetryUtil;
@@ -29,6 +29,7 @@ import com.ld.poetry.utils.cache.QingSiCache;
 import com.ld.poetry.utils.mail.MailUtil;
 import com.ld.poetry.vo.ArticleVO;
 import com.ld.poetry.vo.BaseRequestVO;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -76,7 +77,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
 
     @Resource
-    private LikeService likeService;
+    private LikeRecordService likeRecordService;
 
     @Value("${user.subscribe.format}")
     private String subscribeFormat;
@@ -329,6 +330,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         return PoetryResult.success(articleVO);
     }
 
+    /**
+     * 主页文章展示
+     * @return
+     */
     @Override
     public PoetryResult<Map<Integer, List<ArticleVO>>> listSortArticle() {
         // Map<Integer, List<ArticleVO>> result = (Map<Integer, List<ArticleVO>>) PoetryCache.get(CommonConst.SORT_ARTICLE_LIST);
@@ -344,17 +349,21 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             if (result == null) {
                 Map<Integer, List<ArticleVO>> map = new HashMap<>();
 
-                List<Sort> sorts = new LambdaQueryChainWrapper<>(sortMapper).select(Sort::getId).list();
-                for (Sort sort : sorts) {
-                    LambdaQueryChainWrapper<Article> lambdaQuery = lambdaQuery()
-                            .eq(Article::getSortId, sort.getId())
-                            .orderByDesc(Article::getCreateTime)
-                            .last("limit 6");
-                    List<Article> articleList = lambdaQuery.list();
-                    if (CollectionUtils.isEmpty(articleList)) {
-                        continue;
-                    }
+                // 获取所有展示分类
+                List<Sort> sorts = new LambdaQueryChainWrapper<>(sortMapper)
+                        .eq(Sort::getStatus,1)
+                        .select(Sort::getId).list();
 
+                List<Article> articles = list(Wrappers.<Article>lambdaQuery()
+                        .eq(Article::getDeleted, 0));
+
+                // stream 分组
+                Map<Integer, List<Article>> sortArticleMap = articles.stream().collect(Collectors.groupingBy(Article::getSortId));
+                sortArticleMap.forEach((sortId, articleList) -> {
+                    // 根据权重计算倒序排序
+                    articleList.sort(Comparator.comparing(Article::getWeight).reversed());
+                    // 获取前6条数据
+                    articleList=   articleList.stream().limit(6).collect(Collectors.toList());
                     List<ArticleVO> articleVOList = articleList.stream().map(article -> {
                         if (article.getArticleContent().length() > CommonConst.SUMMARY) {
                             article.setArticleContent(article.getArticleContent().substring(0, CommonConst.SUMMARY).replace("`", "").replace("#", "").replace(">", ""));
@@ -366,8 +375,32 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                         vo.setVideoUrl(null);
                         return vo;
                     }).collect(Collectors.toList());
-                    map.put(sort.getId(), articleVOList);
-                }
+                    map.put(sortId, articleVOList);
+                });
+
+                // for (Sort sort : sorts) {
+                //     LambdaQueryChainWrapper<Article> lambdaQuery = lambdaQuery()
+                //             .eq(Article::getSortId, sort.getId())
+                //             .orderByDesc(Article::getCreateTime)
+                //             .last("limit 6");
+                //     List<Article> articleList = lambdaQuery.list();
+                //     if (CollectionUtils.isEmpty(articleList)) {
+                //         continue;
+                //     }
+                //
+                //     List<ArticleVO> articleVOList = articleList.stream().map(article -> {
+                //         if (article.getArticleContent().length() > CommonConst.SUMMARY) {
+                //             article.setArticleContent(article.getArticleContent().substring(0, CommonConst.SUMMARY).replace("`", "").replace("#", "").replace(">", ""));
+                //         }
+                //
+                //         ArticleVO vo = buildArticleVO(article, false);
+                //         vo.setHasVideo(StringUtils.hasText(article.getVideoUrl()));
+                //         vo.setPassword(null);
+                //         vo.setVideoUrl(null);
+                //         return vo;
+                //     }).collect(Collectors.toList());
+                //     map.put(sort.getId(), articleVOList);
+                // }
 
                 // PoetryCache.put(CommonConst.SORT_ARTICLE_LIST, map, CommonConst.TOKEN_INTERVAL);
                 qingSiCache.put(CommonConst.SORT_ARTICLE_LIST, map, CommonConst.TOKEN_INTERVAL);
@@ -398,21 +431,21 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             // 点赞
             if (dto.getOperation() == 1 && !hasLike) {
                 // 点赞
-                Like like = new Like();
-                like.setUserId(dto.getUserId());
-                like.setTargetType(PoetryEnum.LIKE_TARGET_ARTICLE.getCode());
-                like.setTargetId(dto.getArticleId());
-                like.setCreateTime(new Date());
-                likeService.save(like);
+                LikeRecord likeRecord = new LikeRecord();
+                likeRecord.setUserId(dto.getUserId());
+                likeRecord.setTargetType(PoetryEnum.LIKE_TARGET_ARTICLE.getCode());
+                likeRecord.setTargetId(dto.getArticleId());
+                likeRecord.setCreateTime(new Date());
+                likeRecordService.save(likeRecord);
             }
             // 取消点赞
             if (dto.getOperation() == 0 && hasLike) {
                 qingSiCache.delHashKey(CommonConst.USER_LIKES.concat(dto.getArticleId().toString()), dto.getUserId().toString());
                 // 删除点赞记录
-                likeService.remove(Wrappers.<Like>lambdaQuery()
-                        .eq(Like::getUserId, dto.getUserId())
-                        .eq(Like::getTargetId, dto.getArticleId())
-                        .eq(Like::getTargetType, PoetryEnum.LIKE_TARGET_ARTICLE.getCode()));
+                likeRecordService.remove(Wrappers.<LikeRecord>lambdaQuery()
+                        .eq(LikeRecord::getUserId, dto.getUserId())
+                        .eq(LikeRecord::getTargetId, dto.getArticleId())
+                        .eq(LikeRecord::getTargetType, PoetryEnum.LIKE_TARGET_ARTICLE.getCode()));
 
                 this.update(Wrappers.<Article>lambdaUpdate().
                         eq(Article::getId, dto.getArticleId())
@@ -441,7 +474,15 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         if (Objects.isNull(byId)){
             throw new ServiceException("文章不存在");
         }
+        Integer userId = PoetryUtil.getUserId();
 
+        LikeRecord one = likeRecordService.getOne(Wrappers.<LikeRecord>lambdaQuery()
+                .eq(LikeRecord::getUserId, userId)
+                .eq(LikeRecord::getTargetId, articleId)
+                .eq(LikeRecord::getTargetType, PoetryEnum.LIKE_TARGET_ARTICLE.getCode()));
+        if (Objects.nonNull(one)){
+            return true;
+        }
         return false;
     }
 

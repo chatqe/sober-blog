@@ -1,7 +1,7 @@
 package com.ld.poetry.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.ld.poetry.entity.Like;
+import com.ld.poetry.entity.LikeRecord;
 
 
 /**
@@ -10,7 +10,7 @@ import com.ld.poetry.entity.Like;
  * @author shenjiaqi
  * @since 2025-03-21 14:37:09
  */
-public interface LikeService extends IService<Like> {
+public interface LikeRecordService extends IService<LikeRecord> {
 
 }
 
