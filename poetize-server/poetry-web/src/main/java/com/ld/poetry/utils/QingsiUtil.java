@@ -30,7 +30,7 @@ public class QingsiUtil {
         List<String> randomAvatars = JSON.parseObject(qingSiCache.get(CommonConst.PATH_TYPE_RANDOM_AVATAR), new TypeReference<List<String>>() {
         });
         if (CollectionUtils.isEmpty(randomAvatars)) {
-            return "https://cdn.youngwanton.top/qingsi/static/avatar/XHS_15938521174586a979a11-1705-3f46-8be9-e2cff0c1c564.jpg";
+            return "https://cdn.youngwanton.top/qingsi/static/avatar/11747635931168666.jpg";
         }
         return randomAvatars.get(RandomUtil.randomInt(0, randomAvatars.size()));
     }

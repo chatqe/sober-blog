@@ -139,6 +139,8 @@ public class Article implements Serializable {
 
 
     public Integer getWeight() {
-        return viewCount + likeCount * 2;
+        // return this.viewCount + this.likeCount * 2;
+        // return viewCount + likeCount * 2;
+        return (viewCount == null ? 0 : viewCount) + (likeCount == null ? 0 : likeCount) * 2;
     }
 }

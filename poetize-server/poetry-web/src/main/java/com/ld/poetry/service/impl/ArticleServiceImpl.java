@@ -207,23 +207,31 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             }
         }
 
-        LambdaQueryChainWrapper<Article> lambdaQuery = lambdaQuery();
-        lambdaQuery.in(!CollectionUtils.isEmpty(ids), Article::getId, ids);
-        lambdaQuery.like(StringUtils.hasText(baseRequestVO.getSearchKey()), Article::getArticleTitle, baseRequestVO.getSearchKey());
-        lambdaQuery.eq(baseRequestVO.getRecommendStatus() != null && baseRequestVO.getRecommendStatus(), Article::getRecommendStatus, PoetryEnum.STATUS_ENABLE.getCode());
+        // LambdaQueryChainWrapper<Article> lambdaQuery = lambdaQuery();
+        // lambdaQuery.in(!CollectionUtils.isEmpty(ids), Article::getId, ids);
+        // lambdaQuery.like(StringUtils.hasText(baseRequestVO.getSearchKey()), Article::getArticleTitle, baseRequestVO.getSearchKey());
+        // lambdaQuery.eq(baseRequestVO.getRecommendStatus() != null && baseRequestVO.getRecommendStatus(), Article::getRecommendStatus, PoetryEnum.STATUS_ENABLE.getCode());
+        //
+        //
+        // if (baseRequestVO.getLabelId() != null) {
+        //     lambdaQuery.eq(Article::getLabelId, baseRequestVO.getLabelId());
+        // } else if (baseRequestVO.getSortId() != null) {
+        //     lambdaQuery.eq(Article::getSortId, baseRequestVO.getSortId());
+        // }
+        //
+        // lambdaQuery.orderByDesc(Article::getCreateTime);
+        //
+        // lambdaQuery.page(baseRequestVO);
+        BaseRequestVO articlePage = articleMapper.selectPage(baseRequestVO, Wrappers.<Article>lambdaQuery()
+                .in(!CollectionUtils.isEmpty(ids), Article::getId, ids)
+                .like(StringUtils.hasText(baseRequestVO.getSearchKey()), Article::getArticleTitle, baseRequestVO.getArticleSearch())
+                .eq(baseRequestVO.getRecommendStatus() != null && baseRequestVO.getRecommendStatus(), Article::getRecommendStatus, PoetryEnum.STATUS_ENABLE.getCode())
+                .eq(baseRequestVO.getLabelId() != null, Article::getLabelId, baseRequestVO.getLabelId())
+                .orderByDesc(Article::getCreateTime));
 
 
-        if (baseRequestVO.getLabelId() != null) {
-            lambdaQuery.eq(Article::getLabelId, baseRequestVO.getLabelId());
-        } else if (baseRequestVO.getSortId() != null) {
-            lambdaQuery.eq(Article::getSortId, baseRequestVO.getSortId());
-        }
-
-        lambdaQuery.orderByDesc(Article::getCreateTime);
-
-        lambdaQuery.page(baseRequestVO);
-
-        List<Article> records = baseRequestVO.getRecords();
+        // List<Article> records = baseRequestVO.getRecords();
+        List<Article> records = articlePage.getRecords();
         if (!CollectionUtils.isEmpty(records)) {
             List<ArticleVO> articles = new ArrayList<>();
             List<ArticleVO> titles = new ArrayList<>();
@@ -250,9 +258,11 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             collect.addAll(articles);
             collect.addAll(titles);
             collect.addAll(contents);
-            baseRequestVO.setRecords(collect);
+            // baseRequestVO.setRecords(collect);
+            articlePage.setRecords(collect);
         }
-        return PoetryResult.success(baseRequestVO);
+        // return PoetryResult.success(baseRequestVO);
+        return PoetryResult.success(articlePage);
     }
 
     @Override

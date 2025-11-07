@@ -3,6 +3,7 @@ package com.ld.poetry.utils;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.ld.poetry.constants.CommonConst;
 import com.ld.poetry.dao.*;
@@ -244,18 +245,25 @@ public class CommonQuery {
     public List<List<Integer>> getArticleIds(String searchText) {
         // List<Article> articles = (List<Article>) PoetryCache.get(CommonConst.ARTICLE_LIST);
 
-        List<Article> articles = JSON.parseObject(qingSiCache.get(CommonConst.ARTICLE_LIST), new TypeReference<List<Article>>() {
+        List<Article> articles = qingSiCache.get(CommonConst.ARTICLE_LIST) == null ?
+                null : JSON.parseObject(qingSiCache.get(CommonConst.ARTICLE_LIST), new TypeReference<List<Article>>() {
         });
         if (articles == null) {
             synchronized (CommonConst.ARTICLE_LIST.intern()) {
                 articles = JSON.parseObject(qingSiCache.get(CommonConst.ARTICLE_LIST), new TypeReference<List<Article>>() {
                 });
                 if (articles == null) {
-                    LambdaQueryChainWrapper<Article> wrapper = new LambdaQueryChainWrapper<>(articleMapper);
-                    articles = wrapper.select(Article::getId, Article::getArticleTitle, Article::getArticleContent)
-                            .orderByDesc(Article::getCreateTime)
-                            .list();
+                    // LambdaQueryChainWrapper<Article> wrapper = new LambdaQueryChainWrapper<>(articleMapper);
+                    // articles = wrapper.select(Article::getId, Article::getArticleTitle, Article::getArticleContent)
+                    //         .orderByDesc(Article::getCreateTime)
+                    //         .list();
+                    articles = articleMapper.selectList(Wrappers.<Article>lambdaQuery()
+                            .orderByDesc(Article::getCreateTime));
                     // PoetryCache.put(CommonConst.ARTICLE_LIST, articles);
+                    if (CollectionUtils.isEmpty(articles)) {
+                        // 为空直接返回
+                        return new ArrayList<>();
+                    }
                     qingSiCache.put(CommonConst.ARTICLE_LIST, articles);
                 }
             }
@@ -263,18 +271,19 @@ public class CommonQuery {
 
         List<List<Integer>> ids = new ArrayList<>();
         List<Integer> titleIds = new ArrayList<>();
-        List<Integer> contentIds = new ArrayList<>();
+        // List<Integer> contentIds = new ArrayList<>(); 暂时不用内容匹配
 
         for (Article article : articles) {
             if (StringUtil.matchString(article.getArticleTitle(), searchText)) {
                 titleIds.add(article.getId());
-            } else if (StringUtil.matchString(article.getArticleContent(), searchText)) {
-                contentIds.add(article.getId());
             }
+            // else if (StringUtil.matchString(article.getArticleContent(), searchText)) {
+            //     contentIds.add(article.getId());
+            // }
         }
 
         ids.add(titleIds);
-        ids.add(contentIds);
+        // ids.add(contentIds);
         return ids;
     }
 

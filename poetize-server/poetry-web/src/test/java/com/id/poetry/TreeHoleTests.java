@@ -8,7 +8,9 @@ import com.ld.poetry.PoetryApplication;
 import com.ld.poetry.constants.CommonConst;
 import com.ld.poetry.entity.TreeHole;
 import com.ld.poetry.service.TreeHoleService;
+import com.ld.poetry.utils.QingsiUtil;
 import com.ld.poetry.utils.cache.QingSiCache;
+import com.ld.poetry.utils.storage.QiniuUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,6 +36,9 @@ public class TreeHoleTests {
 
     @Resource
     private QingSiCache qingSiCache;
+
+    @Resource
+    private QiniuUtil qiniuUtil;
 
     @Test
     void saveTreeHoleList() {
@@ -203,13 +208,21 @@ public class TreeHoleTests {
 
     @Test
     void updateTreeHoleUrl() {
-        List<String> randomAvatars = JSON.parseObject(qingSiCache.get(CommonConst.PATH_TYPE_RANDOM_AVATAR), new TypeReference<List<String>>() {
-        });
+        // List<String> randomAvatars = JSON.parseObject(qingSiCache.get(CommonConst.PATH_TYPE_RANDOM_AVATAR), new TypeReference<List<String>>() {
+        // });
 
-        List<TreeHole> needUpdateList = treeHoleService.list(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
+        List<String> randomAvatars = qiniuUtil.list("qingsi/static/avatar/");
+
+        // List<TreeHole> needUpdateList = treeHoleService.list(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
+        log.info("randomAvatars:{}",randomAvatars.size());
+
+        List<TreeHole> needUpdateList = treeHoleService.list(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "corrain"));
+        log.info("list:{}",needUpdateList.size());
         needUpdateList.forEach(treeHole -> {
             treeHole.setAvatar(randomAvatars.get(RandomUtil.randomInt(0, randomAvatars.size())));
         });
+        boolean b = treeHoleService.updateBatchById(needUpdateList);
+        log.info(b?"更新成功":"更新失败");
         // treeHoleService.remove(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
     }
 }
