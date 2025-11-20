@@ -4,14 +4,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>poetry</artifactId>
-        <groupId>com.ld</groupId>
+        <artifactId>qs</artifactId>
+        <groupId>com.joy</groupId>
         <version>2.0</version>
     </parent>
 
     <packaging>jar</packaging>
     <artifactId>poetry-web</artifactId>
-    <name>poetry-web</name>
+    <name>youth-web</name>
     <version>0.0.1-SNAPSHOT</version>
     <description>青肆博客</description>
 
@@ -66,11 +66,6 @@
             <artifactId>lombok</artifactId>
         </dependency>
 
-        <!--        <dependency>-->
-        <!--            <groupId>com.alibaba</groupId>-->
-        <!--            <artifactId>fastjson</artifactId>-->
-        <!--            <version>2.0.20</version>-->
-        <!--        </dependency>-->
 
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
@@ -182,7 +177,7 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <outputDirectory>.\docker</outputDirectory>
-                    <mainClass>com.ld.poetry.PoetryApplication</mainClass>
+                    <mainClass>com.joy.qs.YouthApplication</mainClass>
                     <!--是否 跳过 Spring Boot Maven 插件的执行-->
                     <!--<skip>true</skip>-->
                 </configuration>

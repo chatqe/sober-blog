@@ -1,0 +1,55 @@
+package com.joy.qs.service;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.joy.qs.common.R;
+import com.joy.qs.vo.BaseReqVO;
+import com.joy.qs.vo.UserVO;
+import com.joy.qs.entity.User;
+
+import java.util.List;
+
+/**
+ * <p>
+ * 用户信息表 服务类
+ * </p>
+ *
+ * @author sara
+ * @since 2021-08-12
+ */
+public interface UserService extends IService<User> {
+
+    /**
+     * 用户名、邮箱、手机号/密码登录
+     *
+     * @param account
+     * @param password
+     * @return
+     */
+    R<UserVO> login(String account, String password, Boolean isAdmin);
+
+    R exit();
+
+    R<UserVO> regist(UserVO user);
+
+    R<UserVO> updateUserInfo(UserVO user);
+
+    R getCode(Integer flag);
+
+    R getCodeForBind(String place, Integer flag);
+
+    R<UserVO> updateSecretInfo(String place, Integer flag, String code, String password);
+
+    R getCodeForForgetPassword(String place, Integer flag);
+    R getCodeByRegister(String place, Integer flag);
+
+    R updateForForgetPassword(String place, Integer flag, String code, String password);
+
+    R<Page> listUser(BaseReqVO baseReqVO);
+
+    R<List<UserVO>> getUserByUsername(String username);
+
+    R<UserVO> token(String userToken);
+
+    R<UserVO> subscribe(Integer labelId, Boolean flag);
+}
