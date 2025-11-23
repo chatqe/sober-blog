@@ -1,4 +1,4 @@
-package com.joy.qs.dto;
+package com.joy.qs.model.user.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

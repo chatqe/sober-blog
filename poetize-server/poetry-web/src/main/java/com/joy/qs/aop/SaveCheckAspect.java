@@ -1,7 +1,7 @@
 package com.joy.qs.aop;
 
-import com.joy.qs.entity.User;
-import com.joy.qs.handle.PoetryRuntimeException;
+import com.joy.qs.model.user.pojo.User;
+import com.joy.qs.handle.BlogRuntimeException;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.PoetryUtil;
@@ -60,7 +60,7 @@ public class SaveCheckAspect {
         }
 
         if (flag) {
-            throw new PoetryRuntimeException("今日提交次数已用尽，请一天后再来！");
+            throw new BlogRuntimeException("今日提交次数已用尽，请一天后再来！");
         }
 
         return joinPoint.proceed();

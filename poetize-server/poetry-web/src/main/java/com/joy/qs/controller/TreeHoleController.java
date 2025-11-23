@@ -6,7 +6,7 @@ import com.joy.qs.aop.SaveCheck;
 import com.joy.qs.common.R;
 import com.joy.qs.dao.TreeHoleMapper;
 import com.joy.qs.constants.CommonConst;
-import com.joy.qs.entity.TreeHole;
+import com.joy.qs.model.treehole.pojo.TreeHole;
 import com.joy.qs.service.TreeHoleService;
 import com.joy.qs.utils.PoetryUtil;
 import com.joy.qs.utils.QingsiUtil;

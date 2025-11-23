@@ -1,4 +1,4 @@
-package com.joy.qs.vo;
+package com.joy.qs.model;
 
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;

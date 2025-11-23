@@ -3,7 +3,7 @@
 <mapper namespace="com.joy.qs.dao.ResourcePathMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.joy.qs.entity.ResourcePath">
+    <resultMap id="BaseResultMap" type="com.joy.qs.model.resourcepath.pojo.ResourcePath">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
         <result column="classify" property="classify"/>

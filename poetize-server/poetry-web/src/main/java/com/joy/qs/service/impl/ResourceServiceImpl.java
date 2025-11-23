@@ -1,7 +1,7 @@
 package com.joy.qs.service.impl;
 
 import com.joy.qs.dao.ResourceMapper;
-import com.joy.qs.entity.Resource;
+import com.joy.qs.model.resource.pojo.Resource;
 import com.joy.qs.service.ResourceService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;

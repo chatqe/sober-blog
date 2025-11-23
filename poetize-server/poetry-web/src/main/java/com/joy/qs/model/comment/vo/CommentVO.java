@@ -1,4 +1,4 @@
-package com.joy.qs.vo;
+package com.joy.qs.model.comment.vo;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

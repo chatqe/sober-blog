@@ -24,13 +24,13 @@ public class GlobalExceptionHandler {
     public R handlerException(Exception ex) {
         log.error("请求URL-----------------" + PoetryUtil.getRequest().getRequestURL());
         log.error("出错啦------------------", ex);
-        if (ex instanceof PoetryRuntimeException) {
-            PoetryRuntimeException e = (PoetryRuntimeException) ex;
+        if (ex instanceof BlogRuntimeException) {
+            BlogRuntimeException e = (BlogRuntimeException) ex;
             return R.fail(e.getMessage());
         }
 
-        if (ex instanceof PoetryLoginException) {
-            PoetryLoginException e = (PoetryLoginException) ex;
+        if (ex instanceof LoginException) {
+            LoginException e = (LoginException) ex;
             return R.fail(300, e.getMessage());
         }
 

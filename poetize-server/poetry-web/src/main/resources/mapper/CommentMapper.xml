@@ -3,7 +3,7 @@
 <mapper namespace="com.joy.qs.dao.CommentMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.joy.qs.entity.Comment">
+    <resultMap id="BaseResultMap" type="com.joy.qs.model.comment.pojo.Comment">
         <id column="id" property="id"/>
         <result column="source" property="source"/>
         <result column="type" property="type"/>

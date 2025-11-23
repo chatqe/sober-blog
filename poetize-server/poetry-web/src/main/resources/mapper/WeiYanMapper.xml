@@ -3,7 +3,7 @@
 <mapper namespace="com.joy.qs.dao.WeiYanMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.joy.qs.entity.WeiYan">
+    <resultMap id="BaseResultMap" type="com.joy.qs.model.weiyan.pojo.WeiYan">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="like_count" property="likeCount"/>

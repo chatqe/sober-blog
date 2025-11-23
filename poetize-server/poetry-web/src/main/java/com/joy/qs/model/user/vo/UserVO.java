@@ -1,4 +1,4 @@
-package com.joy.qs.vo;
+package com.joy.qs.model.user.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

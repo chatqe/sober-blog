@@ -17,12 +17,12 @@ import com.joy.qs.im.http.entity.ImChatUserFriend;
 import com.joy.qs.im.websocket.ImConfigConst;
 import com.joy.qs.im.websocket.TioUtil;
 import com.joy.qs.im.websocket.TioWebsocketStarter;
-import com.joy.qs.vo.BaseReqVO;
-import com.joy.qs.vo.UserVO;
-import com.joy.qs.entity.User;
-import com.joy.qs.entity.WebInfo;
-import com.joy.qs.entity.WeiYan;
-import com.joy.qs.handle.PoetryRuntimeException;
+import com.joy.qs.model.BaseReqVO;
+import com.joy.qs.model.user.vo.UserVO;
+import com.joy.qs.model.user.pojo.User;
+import com.joy.qs.model.webinfo.pojo.WebInfo;
+import com.joy.qs.model.weiyan.pojo.WeiYan;
+import com.joy.qs.handle.BlogRuntimeException;
 import com.joy.qs.service.UserService;
 import com.joy.qs.service.WeiYanService;
 import com.joy.qs.utils.PoetryUtil;
@@ -610,13 +610,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userToken = new String(SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt(userToken));
 
         if (!StringUtils.hasText(userToken)) {
-            throw new PoetryRuntimeException("未登陆，请登陆后再进行操作！");
+            throw new BlogRuntimeException("未登陆，请登陆后再进行操作！");
         }
 
         User user = (User) PoetryCache.get(userToken);
 
         if (user == null) {
-            throw new PoetryRuntimeException("登录已过期，请重新登陆！");
+            throw new BlogRuntimeException("登录已过期，请重新登陆！");
         }
 
         UserVO userVO = new UserVO();

@@ -1,6 +1,6 @@
 package com.joy.qs.service;
 
-import com.joy.qs.entity.HistoryInfo;
+import com.joy.qs.model.historyinfo.pojo.HistoryInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

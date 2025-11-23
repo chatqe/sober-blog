@@ -1,6 +1,6 @@
 package com.joy.qs.utils.storage;
 
-import com.joy.qs.vo.FileVO;
+import com.joy.qs.model.FileVO;
 
 import java.util.List;
 

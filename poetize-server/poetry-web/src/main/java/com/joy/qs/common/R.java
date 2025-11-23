@@ -15,7 +15,8 @@ import java.io.Serializable;
 @Data
 public class R<T> implements Serializable {
 
-    private static final long serialVersionUI = 1L;
+    // 显式声明序列化版本号（建议用 IDE 自动生成，如 Alt+Insert → SerialVersionUID）
+    private static final long serialVersionUID = 1L;
 
     private int code;
     private String message;

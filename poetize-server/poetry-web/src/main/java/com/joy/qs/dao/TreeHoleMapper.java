@@ -1,6 +1,6 @@
 package com.joy.qs.dao;
 
-import com.joy.qs.entity.TreeHole;
+import com.joy.qs.model.treehole.pojo.TreeHole;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
 

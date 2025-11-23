@@ -1,6 +1,6 @@
 package com.joy.qs.service;
 
-import com.joy.qs.entity.Family;
+import com.joy.qs.model.family.pojo.Family;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

@@ -1,25 +1,25 @@
 package com.joy.qs.handle;
 
-public class PoetryRuntimeException extends RuntimeException {
+public class BlogRuntimeException extends RuntimeException {
 
     private String msg;
 
-    public PoetryRuntimeException() {
+    public BlogRuntimeException() {
         super();
     }
 
-    public PoetryRuntimeException(String msg) {
+    public BlogRuntimeException(String msg) {
         super(msg);
         this.msg = msg;
     }
 
 
-    public PoetryRuntimeException(Throwable cause) {
+    public BlogRuntimeException(Throwable cause) {
         super(cause);
         this.msg = cause.getMessage();
     }
 
-    public PoetryRuntimeException(String msg, Throwable cause) {
+    public BlogRuntimeException(String msg, Throwable cause) {
         super(msg, cause);
         this.msg = msg;
     }

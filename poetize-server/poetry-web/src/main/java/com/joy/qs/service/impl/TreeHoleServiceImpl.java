@@ -3,7 +3,7 @@ package com.joy.qs.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.joy.qs.dao.TreeHoleMapper;
-import com.joy.qs.entity.TreeHole;
+import com.joy.qs.model.treehole.pojo.TreeHole;
 import com.joy.qs.service.TreeHoleService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;

@@ -177,7 +177,7 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <outputDirectory>.\docker</outputDirectory>
-                    <mainClass>com.joy.qs.YouthApplication</mainClass>
+                    <mainClass>com.joy.qs.BlogApplication</mainClass>
                     <!--是否 跳过 Spring Boot Maven 插件的执行-->
                     <!--<skip>true</skip>-->
                 </configuration>

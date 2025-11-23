@@ -4,7 +4,7 @@ import cn.hutool.core.util.RandomUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.joy.qs.entity.TreeHole;
+import com.joy.qs.model.treehole.pojo.TreeHole;
 import com.joy.qs.service.TreeHoleService;
 import com.joy.qs.utils.cache.QingSiCache;
 import com.joy.qs.utils.storage.QiniuUtil;
@@ -22,7 +22,7 @@ import java.util.List;
  * @author sjq
  * @since 2025-03-03 17:22
  */
-@SpringBootTest(classes = YouthApplication.class)
+@SpringBootTest(classes = BlogApplication.class)
 @ActiveProfiles("dev")
 @Slf4j
 public class TreeHoleTests {

@@ -6,6 +6,7 @@ import org.hibernate.validator.constraints.Range;
 import org.springframework.data.domain.Sort;
 
 import javax.validation.constraints.Min;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,13 +15,15 @@ import java.util.stream.Collectors;
  * 分页入参
  * 分页查询基础类（所有分页入参需继承此类）
  * 注：兼容HTTP参数（page/pageNum 均可）、RPC参数透传
- *
+ * Serializable 是 Java 的「标记接口」（无任何抽象方法），作用是告诉 JVM：这个类的对象可以被「序列化」（将对象转换为字节流）和「反序列化」（将字节流恢复为对象），用于 跨进程 / 跨介质的数据传输（如网络传输、文件存储、缓存写入）。
  * @author sjq
  * @since 2025-11-20 20:50
  */
 @Data
-public class PageQuery {
+public class PageQuery implements Serializable {
 
+    // 显式声明序列化版本号（建议用 IDE 自动生成，如 Alt+Insert → SerialVersionUID）
+    private static final long serialVersionUID = 1L;
     /**
      * 当前页码：默认1，支持前端传 page 或 pageNum（通过@AliasFor兼容）
      * 校验：最小为1，防止负数/0页码

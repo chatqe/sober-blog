@@ -1,6 +1,6 @@
 package com.joy.qs.config;
 
-import com.joy.qs.handle.PoetryRuntimeException;
+import com.joy.qs.handle.BlogRuntimeException;
 import lombok.SneakyThrows;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -70,7 +70,7 @@ public class CustomEnvironmentPostProcessor implements EnvironmentPostProcessor 
             PropertySource<?> source = new MapPropertySource(SOURCE_NAME, map);
             propertySources.addFirst(source);
         } catch (Exception e) {
-            throw new PoetryRuntimeException(e);
+            throw new BlogRuntimeException(e);
         }
     }
 

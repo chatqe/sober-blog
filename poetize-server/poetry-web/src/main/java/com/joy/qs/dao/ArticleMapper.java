@@ -1,6 +1,6 @@
 package com.joy.qs.dao;
 
-import com.joy.qs.entity.Article;
+import com.joy.qs.model.article.pojo.Article;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;

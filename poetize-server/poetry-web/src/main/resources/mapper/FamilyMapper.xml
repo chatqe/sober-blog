@@ -3,7 +3,7 @@
 <mapper namespace="com.joy.qs.dao.FamilyMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.joy.qs.entity.Family">
+    <resultMap id="BaseResultMap" type="com.joy.qs.model.family.pojo.Family">
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="bg_cover" property="bgCover"/>

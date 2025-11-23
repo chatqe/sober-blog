@@ -2,7 +2,7 @@ package com.joy.qs.im.websocket;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
-import com.joy.qs.entity.User;
+import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.im.http.entity.ImChatGroupUser;
 import com.joy.qs.im.http.entity.ImChatUserGroupMessage;
 import com.joy.qs.im.http.entity.ImChatUserMessage;

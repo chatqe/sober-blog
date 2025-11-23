@@ -2,9 +2,9 @@ package com.joy.qs.utils;
 
 import com.alibaba.fastjson.JSON;
 import com.joy.qs.constants.CommonConst;
-import com.joy.qs.entity.User;
-import com.joy.qs.entity.WebInfo;
-import com.joy.qs.handle.PoetryRuntimeException;
+import com.joy.qs.model.user.pojo.User;
+import com.joy.qs.model.webinfo.pojo.WebInfo;
+import com.joy.qs.handle.BlogRuntimeException;
 import com.joy.qs.utils.cache.PoetryCache;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -24,7 +24,7 @@ public class PoetryUtil {
     public static void checkEmail() {
         User user = (User) PoetryCache.get(PoetryUtil.getToken());
         if (!StringUtils.hasText(user.getEmail())) {
-            throw new PoetryRuntimeException("请先绑定邮箱！");
+            throw new BlogRuntimeException("请先绑定邮箱！");
         }
     }
 

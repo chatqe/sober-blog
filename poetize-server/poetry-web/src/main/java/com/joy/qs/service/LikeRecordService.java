@@ -1,7 +1,7 @@
 package com.joy.qs.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.joy.qs.entity.LikeRecord;
+import com.joy.qs.model.likerecord.pojo.LikeRecord;
 
 
 /**

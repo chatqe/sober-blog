@@ -1,6 +1,6 @@
 package com.joy.qs.dao;
 
-import com.joy.qs.entity.HistoryInfo;
+import com.joy.qs.model.historyinfo.pojo.HistoryInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Select;
 

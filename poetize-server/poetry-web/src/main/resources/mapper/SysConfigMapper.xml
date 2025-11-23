@@ -3,7 +3,7 @@
 <mapper namespace="com.joy.qs.dao.SysConfigMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.joy.qs.entity.SysConfig">
+    <resultMap id="BaseResultMap" type="com.joy.qs.model.sysconfig.pojo.SysConfig">
         <id column="id" property="id" />
         <result column="config_name" property="configName" />
         <result column="config_key" property="configKey" />

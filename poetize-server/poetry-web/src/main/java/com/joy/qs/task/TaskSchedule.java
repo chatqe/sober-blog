@@ -4,10 +4,10 @@ import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapp
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.dao.HistoryInfoMapper;
 import com.joy.qs.dao.WebInfoMapper;
-import com.joy.qs.entity.Family;
-import com.joy.qs.entity.HistoryInfo;
-import com.joy.qs.entity.User;
-import com.joy.qs.entity.WebInfo;
+import com.joy.qs.model.family.pojo.Family;
+import com.joy.qs.model.historyinfo.pojo.HistoryInfo;
+import com.joy.qs.model.user.pojo.User;
+import com.joy.qs.model.webinfo.pojo.WebInfo;
 import com.joy.qs.enums.YouthEnum;
 import com.joy.qs.service.FamilyService;
 import com.joy.qs.service.UserService;

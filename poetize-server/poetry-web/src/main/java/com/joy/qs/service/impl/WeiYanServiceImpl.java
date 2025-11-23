@@ -1,7 +1,7 @@
 package com.joy.qs.service.impl;
 
 import com.joy.qs.dao.WeiYanMapper;
-import com.joy.qs.entity.WeiYan;
+import com.joy.qs.model.weiyan.pojo.WeiYan;
 import com.joy.qs.service.WeiYanService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;

@@ -2,11 +2,11 @@ package com.joy.qs.aop;
 
 import com.joy.qs.common.R;
 import com.joy.qs.constants.CommonConst;
-import com.joy.qs.entity.User;
+import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.enums.CodeMsg;
 import com.joy.qs.enums.YouthEnum;
-import com.joy.qs.handle.PoetryLoginException;
-import com.joy.qs.handle.PoetryRuntimeException;
+import com.joy.qs.handle.LoginException;
+import com.joy.qs.handle.BlogRuntimeException;
 import com.joy.qs.utils.PoetryUtil;
 import com.joy.qs.utils.cache.PoetryCache;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +28,13 @@ public class LoginCheckAspect {
     public Object around(ProceedingJoinPoint joinPoint, LoginCheck loginCheck) throws Throwable {
         String token = PoetryUtil.getToken();
         if (!StringUtils.hasText(token)) {
-            throw new PoetryLoginException(CodeMsg.NOT_LOGIN.getMsg());
+            throw new LoginException(CodeMsg.NOT_LOGIN.getMsg());
         }
 
         User user = (User) PoetryCache.get(token);
 
         if (user == null) {
-            throw new PoetryLoginException(CodeMsg.LOGIN_EXPIRED.getMsg());
+            throw new LoginException(CodeMsg.LOGIN_EXPIRED.getMsg());
         }
 
         if (token.contains(CommonConst.USER_ACCESS_TOKEN)) {
@@ -47,11 +47,11 @@ public class LoginCheckAspect {
                 return R.fail("请输入管理员账号！");
             }
         } else {
-            throw new PoetryLoginException(CodeMsg.NOT_LOGIN.getMsg());
+            throw new LoginException(CodeMsg.NOT_LOGIN.getMsg());
         }
 
         if (loginCheck.value() < user.getUserType()) {
-            throw new PoetryRuntimeException("权限不足！");
+            throw new BlogRuntimeException("权限不足！");
         }
 
         //重置过期时间

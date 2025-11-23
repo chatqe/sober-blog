@@ -2,10 +2,11 @@ package com.joy.qs.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.joy.qs.common.R;
-import com.joy.qs.vo.BaseReqVO;
-import com.joy.qs.vo.CommentVO;
-import com.joy.qs.entity.Comment;
+
+import com.joy.qs.model.BaseReqVO;
+import com.joy.qs.model.comment.pojo.Comment;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.joy.qs.model.comment.vo.CommentVO;
 
 
 /**

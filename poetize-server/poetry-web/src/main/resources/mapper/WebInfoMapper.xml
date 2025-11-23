@@ -3,7 +3,7 @@
 <mapper namespace="com.joy.qs.dao.WebInfoMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.joy.qs.entity.WebInfo">
+    <resultMap id="BaseResultMap" type="com.joy.qs.model.webinfo.pojo.WebInfo">
         <id column="id" property="id"/>
         <result column="web_name" property="webName"/>
         <result column="web_title" property="webTitle"/>

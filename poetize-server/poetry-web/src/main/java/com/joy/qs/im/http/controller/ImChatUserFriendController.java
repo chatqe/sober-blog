@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapp
 import com.joy.qs.aop.LoginCheck;
 import com.joy.qs.common.R;
 import com.joy.qs.im.websocket.ImConfigConst;
-import com.joy.qs.entity.User;
+import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.im.http.entity.ImChatUserFriend;
 import com.joy.qs.im.http.service.ImChatUserFriendService;
 import com.joy.qs.im.http.vo.UserFriendVO;

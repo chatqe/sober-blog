@@ -4,9 +4,9 @@ import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWra
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.joy.qs.aop.LoginCheck;
 import com.joy.qs.common.R;
-import com.joy.qs.vo.ArticleVO;
-import com.joy.qs.vo.BaseReqVO;
-import com.joy.qs.entity.Article;
+import com.joy.qs.model.article.vo.ArticleVO;
+import com.joy.qs.model.BaseReqVO;
+import com.joy.qs.model.article.pojo.Article;
 import com.joy.qs.service.ArticleService;
 import com.joy.qs.utils.PoetryUtil;
 import org.springframework.beans.factory.annotation.Autowired;

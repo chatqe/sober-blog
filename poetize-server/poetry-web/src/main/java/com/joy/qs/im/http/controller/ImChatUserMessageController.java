@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.joy.qs.aop.LoginCheck;
 import com.joy.qs.common.R;
 import com.joy.qs.im.websocket.ImConfigConst;
-import com.joy.qs.entity.User;
+import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.im.http.entity.ImChatUserMessage;
 import com.joy.qs.im.http.service.ImChatUserMessageService;
 import com.joy.qs.im.http.vo.UserMessageVO;

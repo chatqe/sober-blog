@@ -1,25 +1,25 @@
 package com.joy.qs.handle;
 
-public class PoetryLoginException extends RuntimeException {
+public class LoginException extends RuntimeException {
 
     private String msg;
 
-    public PoetryLoginException() {
+    public LoginException() {
         super();
     }
 
-    public PoetryLoginException(String msg) {
+    public LoginException(String msg) {
         super(msg);
         this.msg = msg;
     }
 
 
-    public PoetryLoginException(Throwable cause) {
+    public LoginException(Throwable cause) {
         super(cause);
         this.msg = cause.getMessage();
     }
 
-    public PoetryLoginException(String msg, Throwable cause) {
+    public LoginException(String msg, Throwable cause) {
         super(msg, cause);
         this.msg = msg;
     }

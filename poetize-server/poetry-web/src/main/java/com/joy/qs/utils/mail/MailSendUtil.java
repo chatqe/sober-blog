@@ -1,15 +1,15 @@
 package com.joy.qs.utils.mail;
 
 import com.joy.qs.constants.CommonConst;
-import com.joy.qs.entity.Article;
-import com.joy.qs.entity.Comment;
-import com.joy.qs.entity.User;
-import com.joy.qs.entity.WebInfo;
+import com.joy.qs.model.article.pojo.Article;
+import com.joy.qs.model.comment.pojo.Comment;
+import com.joy.qs.model.user.pojo.User;
+import com.joy.qs.model.webinfo.pojo.WebInfo;
 import com.joy.qs.im.http.entity.ImChatUserMessage;
 import com.joy.qs.service.CommentService;
 import com.joy.qs.utils.CommonQuery;
 import com.joy.qs.utils.cache.PoetryCache;
-import com.joy.qs.vo.CommentVO;
+import com.joy.qs.model.comment.vo.CommentVO;
 import com.joy.qs.enums.CommentTypeEnum;
 import com.joy.qs.utils.PoetryUtil;
 import org.springframework.beans.factory.annotation.Autowired;

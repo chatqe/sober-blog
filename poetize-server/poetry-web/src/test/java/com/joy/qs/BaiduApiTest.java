@@ -13,7 +13,7 @@ import javax.annotation.Resource;
  * @author sjq
  * @since 2025-07-13 18:22
  */
-@SpringBootTest(classes = YouthApplication.class)
+@SpringBootTest(classes = BlogApplication.class)
 @Slf4j
 public class BaiduApiTest {
 

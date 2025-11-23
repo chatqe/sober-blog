@@ -1,4 +1,4 @@
-package com.joy.qs.dto;
+package com.joy.qs.model.article.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

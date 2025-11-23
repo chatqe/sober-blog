@@ -1,7 +1,7 @@
 package com.joy.qs.utils;
 
 
-import com.joy.qs.dto.LoginUserInfo;
+import com.joy.qs.model.user.dto.LoginUserInfo;
 
 /**
  * @author Upjqs

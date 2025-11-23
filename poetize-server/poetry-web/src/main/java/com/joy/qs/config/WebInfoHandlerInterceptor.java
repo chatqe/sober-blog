@@ -3,7 +3,7 @@ package com.joy.qs.config;
 import com.alibaba.fastjson.JSON;
 import com.joy.qs.common.R;
 import com.joy.qs.constants.CommonConst;
-import com.joy.qs.entity.WebInfo;
+import com.joy.qs.model.webinfo.pojo.WebInfo;
 import com.joy.qs.enums.CodeMsg;
 import com.joy.qs.utils.cache.QingSiCache;
 import org.springframework.stereotype.Component;

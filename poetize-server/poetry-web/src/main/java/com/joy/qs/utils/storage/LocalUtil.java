@@ -1,10 +1,10 @@
 package com.joy.qs.utils.storage;
 
 import cn.hutool.core.io.FileUtil;
-import com.joy.qs.entity.Resource;
-import com.joy.qs.handle.PoetryRuntimeException;
+import com.joy.qs.model.resource.pojo.Resource;
+import com.joy.qs.handle.BlogRuntimeException;
 import com.joy.qs.service.ResourceService;
-import com.joy.qs.vo.FileVO;
+import com.joy.qs.model.FileVO;
 import com.joy.qs.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +58,7 @@ public class LocalUtil implements StoreService {
         if (!StringUtils.hasText(fileVO.getRelativePath()) ||
                 fileVO.getRelativePath().startsWith("/") ||
                 fileVO.getRelativePath().endsWith("/")) {
-            throw new PoetryRuntimeException("文件路径不合法！");
+            throw new BlogRuntimeException("文件路径不合法！");
         }
 
         // E:\idea\poetize-vue2\src\assets\file
@@ -66,20 +66,20 @@ public class LocalUtil implements StoreService {
         if (path.contains("/")) {
             String[] split = path.split("/");
             if (split.length > 5) {
-                throw new PoetryRuntimeException("文件路径不合法！");
+                throw new BlogRuntimeException("文件路径不合法！");
             }
             for (int i = 0; i < split.length - 1; i++) {
                 if (!StringUtil.isValidDirectoryName(split[i])) {
-                    throw new PoetryRuntimeException("文件路径不合法！");
+                    throw new BlogRuntimeException("文件路径不合法！");
                 }
             }
             if (!StringUtil.isValidFileName(split[split.length - 1])) {
-                throw new PoetryRuntimeException("文件路径不合法！");
+                throw new BlogRuntimeException("文件路径不合法！");
             }
         }
         String absolutePath = uploadUrl + path;
         if (FileUtil.exist(absolutePath)) {
-            throw new PoetryRuntimeException("文件已存在！");
+            throw new BlogRuntimeException("文件已存在！");
         }
         try {
             File newFile = FileUtil.touch(absolutePath);
@@ -91,7 +91,7 @@ public class LocalUtil implements StoreService {
         } catch (IOException e) {
             log.error("文件上传失败：", e);
             FileUtil.del(absolutePath);
-            throw new PoetryRuntimeException("文件上传失败！");
+            throw new BlogRuntimeException("文件上传失败！");
         }
     }
 

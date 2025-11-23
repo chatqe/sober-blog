@@ -1,6 +1,6 @@
 package com.joy.qs.dao;
 
-import com.joy.qs.entity.Resource;
+import com.joy.qs.model.resource.pojo.Resource;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

@@ -3,11 +3,13 @@ package com.joy.qs.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.joy.qs.aop.LoginCheck;
+import com.joy.qs.common.PageResult;
 import com.joy.qs.common.R;
-import com.joy.qs.vo.ArticleVO;
-import com.joy.qs.vo.BaseReqVO;
 import com.joy.qs.constants.CommonConst;
-import com.joy.qs.dto.ArticleDTO;
+import com.joy.qs.model.BaseReqVO;
+import com.joy.qs.model.article.dto.ArticleDTO;
+import com.joy.qs.model.article.dto.ArticlePageDTO;
+import com.joy.qs.model.article.vo.ArticleVO;
 import com.joy.qs.service.ArticleService;
 import com.joy.qs.utils.PoetryUtil;
 import com.joy.qs.utils.cache.PoetryCache;
@@ -81,12 +83,20 @@ public class ArticleController {
     }
 
 
+    // /**
+    //  * 查询文章List
+    //  */
+    // @PostMapping("/listArticle")
+    // public R<Page> listArticle(@RequestBody BaseReqVO baseReqVO) {
+    //     return articleService.listArticle(baseReqVO);
+    // }
+
     /**
-     * 查询文章List
+     * 查询文章分页
      */
     @PostMapping("/listArticle")
-    public R<Page> listArticle(@RequestBody BaseReqVO baseReqVO) {
-        return articleService.listArticle(baseReqVO);
+    public R<PageResult> listPage(@RequestBody ArticlePageDTO dto) {
+        return R.success(articleService.listArticle(dto));
     }
 
     /**
@@ -112,7 +122,7 @@ public class ArticleController {
     public R addArticleLikeCount(@RequestBody ArticleDTO dto) {
         log.info("{}", dto);
 
-        return R.success(articleService.addArticleLikeCount(dto)) ;
+        return R.success(articleService.addArticleLikeCount(dto));
     }
 
     /**
@@ -122,7 +132,7 @@ public class ArticleController {
     public R checkHasLike(@RequestParam String articleId) {
         log.info("articleId:{}", articleId);
 
-        return R.success(articleService.checkHasLike(articleId)) ;
+        return R.success(articleService.checkHasLike(articleId));
     }
 
 }

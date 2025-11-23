@@ -3,7 +3,7 @@
 <mapper namespace="com.joy.qs.dao.SortMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.joy.qs.entity.Sort">
+    <resultMap id="BaseResultMap" type="com.joy.qs.model.sort.pojo.Sort">
         <id column="id" property="id"/>
         <result column="sort_name" property="sortName"/>
         <result column="sort_description" property="sortDescription"/>

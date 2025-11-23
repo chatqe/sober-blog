@@ -4,7 +4,7 @@ package com.joy.qs.controller;
 import com.joy.qs.aop.LoginCheck;
 import com.joy.qs.aop.SaveCheck;
 import com.joy.qs.common.R;
-import com.joy.qs.vo.UserVO;
+import com.joy.qs.model.user.vo.UserVO;
 import com.joy.qs.service.UserService;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.utils.cache.PoetryCache;

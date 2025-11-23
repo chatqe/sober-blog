@@ -1,6 +1,6 @@
 package com.joy.qs.dao;
 
-import com.joy.qs.entity.User;
+import com.joy.qs.model.user.pojo.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

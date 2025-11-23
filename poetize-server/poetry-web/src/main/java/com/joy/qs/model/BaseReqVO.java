@@ -1,4 +1,4 @@
-package com.joy.qs.vo;
+package com.joy.qs.model;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.Data;

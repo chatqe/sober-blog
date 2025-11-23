@@ -1,6 +1,6 @@
 package com.joy.qs.dao;
 
-import com.joy.qs.entity.Comment;
+import com.joy.qs.model.comment.pojo.Comment;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

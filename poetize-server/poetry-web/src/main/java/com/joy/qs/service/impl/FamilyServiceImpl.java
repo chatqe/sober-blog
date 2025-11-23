@@ -1,7 +1,7 @@
 package com.joy.qs.service.impl;
 
 import com.joy.qs.dao.FamilyMapper;
-import com.joy.qs.entity.Family;
+import com.joy.qs.model.family.pojo.Family;
 import com.joy.qs.service.FamilyService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;

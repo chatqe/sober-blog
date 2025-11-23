@@ -17,7 +17,7 @@ import java.util.List;
  * @author sjq
  * @since 2025-03-05 17:03
  */
-@SpringBootTest(classes = YouthApplication.class)
+@SpringBootTest(classes = BlogApplication.class)
 @ActiveProfiles("dev")
 @Slf4j
 public class QiniuUtilTest {

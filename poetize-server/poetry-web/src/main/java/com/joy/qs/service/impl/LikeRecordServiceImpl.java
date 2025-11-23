@@ -3,7 +3,7 @@ package com.joy.qs.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import com.joy.qs.dao.LikeMapper;
-import com.joy.qs.entity.LikeRecord;
+import com.joy.qs.model.likerecord.pojo.LikeRecord;
 import com.joy.qs.service.LikeRecordService;
 import org.springframework.stereotype.Service;
 

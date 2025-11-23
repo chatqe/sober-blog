@@ -1,7 +1,7 @@
 package com.joy.qs.service.impl;
 
 import com.joy.qs.dao.SysConfigMapper;
-import com.joy.qs.entity.SysConfig;
+import com.joy.qs.model.sysconfig.pojo.SysConfig;
 import com.joy.qs.service.SysConfigService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;

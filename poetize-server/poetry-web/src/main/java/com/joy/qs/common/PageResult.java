@@ -22,10 +22,12 @@ import java.util.List;
 @NoArgsConstructor
 public class PageResult<T> implements Serializable {
 
+    // 显式声明序列化版本号（建议用 IDE 自动生成，如 Alt+Insert → SerialVersionUID）
+    private static final long serialVersionUID = 1L;
     /**
      * 数据列表
      */
-    private List<T> list;
+    private List list = Collections.emptyList();
 
     /**
      * 总条数

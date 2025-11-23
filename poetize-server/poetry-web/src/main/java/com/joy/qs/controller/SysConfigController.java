@@ -4,7 +4,7 @@ package com.joy.qs.controller;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.joy.qs.aop.LoginCheck;
 import com.joy.qs.common.R;
-import com.joy.qs.entity.SysConfig;
+import com.joy.qs.model.sysconfig.pojo.SysConfig;
 import com.joy.qs.enums.YouthEnum;
 import com.joy.qs.service.SysConfigService;
 import lombok.extern.slf4j.Slf4j;

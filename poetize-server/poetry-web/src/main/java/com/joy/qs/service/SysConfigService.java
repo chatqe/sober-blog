@@ -1,6 +1,6 @@
 package com.joy.qs.service;
 
-import com.joy.qs.entity.SysConfig;
+import com.joy.qs.model.sysconfig.pojo.SysConfig;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

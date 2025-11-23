@@ -1,6 +1,6 @@
 package com.joy.qs.service;
 
-import com.joy.qs.entity.WeiYan;
+import com.joy.qs.model.weiyan.pojo.WeiYan;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**

@@ -3,9 +3,9 @@ package com.joy.qs.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.joy.qs.common.R;
-import com.joy.qs.vo.BaseReqVO;
-import com.joy.qs.vo.UserVO;
-import com.joy.qs.entity.User;
+import com.joy.qs.model.BaseReqVO;
+import com.joy.qs.model.user.vo.UserVO;
+import com.joy.qs.model.user.pojo.User;
 
 import java.util.List;
 

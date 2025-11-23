@@ -1,7 +1,7 @@
 package com.joy.qs.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.joy.qs.entity.LikeRecord;
+import com.joy.qs.model.likerecord.pojo.LikeRecord;
 
 
 /**

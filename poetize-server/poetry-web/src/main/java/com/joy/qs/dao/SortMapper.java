@@ -1,6 +1,6 @@
 package com.joy.qs.dao;
 
-import com.joy.qs.entity.Sort;
+import com.joy.qs.model.sort.pojo.Sort;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

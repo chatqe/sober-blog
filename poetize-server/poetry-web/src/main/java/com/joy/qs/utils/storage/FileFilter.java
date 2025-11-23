@@ -1,7 +1,7 @@
 package com.joy.qs.utils.storage;
 
 import com.joy.qs.constants.CommonConst;
-import com.joy.qs.entity.User;
+import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.utils.PoetryUtil;
 import com.joy.qs.utils.cache.PoetryCache;
 import lombok.extern.slf4j.Slf4j;

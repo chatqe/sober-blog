@@ -9,16 +9,26 @@ import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWra
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.joy.qs.aop.ResourceCheck;
+import com.joy.qs.common.PageResult;
 import com.joy.qs.common.R;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.dao.ArticleMapper;
 import com.joy.qs.dao.LabelMapper;
 import com.joy.qs.dao.SortMapper;
-import com.joy.qs.dto.ArticleDTO;
-import com.joy.qs.entity.*;
 import com.joy.qs.enums.CommentTypeEnum;
 import com.joy.qs.enums.YouthEnum;
 import com.joy.qs.handle.ServiceException;
+import com.joy.qs.model.BaseReqVO;
+import com.joy.qs.model.article.dto.ArticleDTO;
+import com.joy.qs.model.article.dto.ArticlePageDTO;
+import com.joy.qs.model.article.pojo.Article;
+import com.joy.qs.model.article.vo.ArticlePageVO;
+import com.joy.qs.model.article.vo.ArticleVO;
+import com.joy.qs.model.label.pojo.Label;
+import com.joy.qs.model.likerecord.pojo.LikeRecord;
+import com.joy.qs.model.sort.pojo.Sort;
+import com.joy.qs.model.user.pojo.User;
+import com.joy.qs.model.webinfo.pojo.WebInfo;
 import com.joy.qs.service.ArticleService;
 import com.joy.qs.service.LikeRecordService;
 import com.joy.qs.service.UserService;
@@ -27,9 +37,6 @@ import com.joy.qs.utils.PoetryUtil;
 import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.cache.QingSiCache;
 import com.joy.qs.utils.mail.MailUtil;
-import com.joy.qs.vo.ArticlePageRespVO;
-import com.joy.qs.vo.ArticleVO;
-import com.joy.qs.vo.BaseReqVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -194,77 +201,62 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         return R.success();
     }
 
-    @Override
-    public R<Page> listArticle(BaseReqVO baseReqVO) {
-        List<Integer> ids = null;
-        List<List<Integer>> idList = null;
-        if (StringUtils.hasText(baseReqVO.getArticleSearch())) {
-            idList = commonQuery.getArticleIds(baseReqVO.getArticleSearch());
-            ids = idList.stream().flatMap(Collection::stream).collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(ids)) {
-                baseReqVO.setRecords(new ArrayList<>());
-                return R.success(baseReqVO);
-            }
-        }
-
-        // LambdaQueryChainWrapper<Article> lambdaQuery = lambdaQuery();
-        // lambdaQuery.in(!CollectionUtils.isEmpty(ids), Article::getId, ids);
-        // lambdaQuery.like(StringUtils.hasText(baseReqVO.getSearchKey()), Article::getArticleTitle, baseReqVO.getSearchKey());
-        // lambdaQuery.eq(baseReqVO.getRecommendStatus() != null && baseReqVO.getRecommendStatus(), Article::getRecommendStatus, YouthEnum.STATUS_ENABLE.getCode());
-        //
-        //
-        // if (baseReqVO.getLabelId() != null) {
-        //     lambdaQuery.eq(Article::getLabelId, baseReqVO.getLabelId());
-        // } else if (baseReqVO.getSortId() != null) {
-        //     lambdaQuery.eq(Article::getSortId, baseReqVO.getSortId());
-        // }
-        //
-        // lambdaQuery.orderByDesc(Article::getCreateTime);
-        //
-        // lambdaQuery.page(baseReqVO);
-        ArticlePageRespVO articlePage = articleMapper.selectPage(new ArticlePageRespVO(), Wrappers.<Article>lambdaQuery()
-                .in(!CollectionUtils.isEmpty(ids), Article::getId, ids)
-                .like(StringUtils.hasText(baseReqVO.getSearchKey()), Article::getArticleTitle, baseReqVO.getArticleSearch())
-                .eq(baseReqVO.getRecommendStatus() != null && baseReqVO.getRecommendStatus(), Article::getRecommendStatus, YouthEnum.STATUS_ENABLE.getCode())
-                .eq(baseReqVO.getLabelId() != null, Article::getLabelId, baseReqVO.getLabelId())
-                .eq(baseReqVO.getSortId() != null, Article::getSortId, baseReqVO.getSortId())
-                .orderByDesc(Article::getCreateTime));
-
-
-        // List<Article> records = baseReqVO.getRecords();
-        List<Article> records = articlePage.getRecords();
-        if (!CollectionUtils.isEmpty(records)) {
-            List<ArticleVO> articles = new ArrayList<>();
-            List<ArticleVO> titles = new ArrayList<>();
-            List<ArticleVO> contents = new ArrayList<>();
-
-            for (Article article : records) {
-                if (article.getArticleContent().length() > CommonConst.SUMMARY) {
-                    article.setArticleContent(article.getArticleContent().substring(0, CommonConst.SUMMARY).replace("`", "").replace("#", "").replace(">", ""));
-                }
-                ArticleVO articleVO = buildArticleVO(article, false);
-                articleVO.setHasVideo(StringUtils.hasText(articleVO.getVideoUrl()));
-                articleVO.setPassword(null);
-                articleVO.setVideoUrl(null);
-                if (CollectionUtils.isEmpty(ids)) {
-                    articles.add(articleVO);
-                } else if (idList.get(0).contains(articleVO.getId())) {
-                    titles.add(articleVO);
-                } else if (idList.get(1).contains(articleVO.getId())) {
-                    contents.add(articleVO);
-                }
-            }
-
-            List<ArticleVO> collect = new ArrayList<>();
-            collect.addAll(articles);
-            collect.addAll(titles);
-            collect.addAll(contents);
-            // baseReqVO.setRecords(collect);
-            articlePage.setRecords(collect);
-        }
-        // return R.success(baseReqVO);
-        return R.success(articlePage);
-    }
+    // @Override
+    // public R<Page> listArticle(BaseReqVO baseReqVO) {
+    //     List<Integer> ids = null;
+    //     List<List<Integer>> idList = null;
+    //     if (StringUtils.hasText(baseReqVO.getArticleSearch())) {
+    //         idList = commonQuery.getArticleIds(baseReqVO.getArticleSearch());
+    //         ids = idList.stream().flatMap(Collection::stream).collect(Collectors.toList());
+    //         if (CollectionUtils.isEmpty(ids)) {
+    //             baseReqVO.setRecords(new ArrayList<>());
+    //             return R.success(baseReqVO);
+    //         }
+    //     }
+    //
+    //
+    //     ArticlePageDTO articlePage = articleMapper.selectPage(, Wrappers.<Article>lambdaQuery()
+    //             .in(!CollectionUtils.isEmpty(ids), Article::getId, ids)
+    //             .like(StringUtils.hasText(baseReqVO.getSearchKey()), Article::getArticleTitle, baseReqVO.getArticleSearch())
+    //             .eq(baseReqVO.getRecommendStatus() != null && baseReqVO.getRecommendStatus(), Article::getRecommendStatus, YouthEnum.STATUS_ENABLE.getCode())
+    //             .eq(baseReqVO.getLabelId() != null, Article::getLabelId, baseReqVO.getLabelId())
+    //             .eq(baseReqVO.getSortId() != null, Article::getSortId, baseReqVO.getSortId())
+    //             .orderByDesc(Article::getCreateTime));
+    //
+    //
+    //     List<Article> records = articlePage.getList();
+    //     if (!CollectionUtils.isEmpty(records)) {
+    //         List<ArticleVO> articles = new ArrayList<>();
+    //         List<ArticleVO> titles = new ArrayList<>();
+    //         List<ArticleVO> contents = new ArrayList<>();
+    //
+    //         for (Article article : records) {
+    //             if (article.getArticleContent().length() > CommonConst.SUMMARY) {
+    //                 article.setArticleContent(article.getArticleContent().substring(0, CommonConst.SUMMARY).replace("`", "").replace("#", "").replace(">", ""));
+    //             }
+    //             ArticleVO articleVO = buildArticleVO(article, false);
+    //             articleVO.setHasVideo(StringUtils.hasText(articleVO.getVideoUrl()));
+    //             articleVO.setPassword(null);
+    //             articleVO.setVideoUrl(null);
+    //             if (CollectionUtils.isEmpty(ids)) {
+    //                 articles.add(articleVO);
+    //             } else if (idList.get(0).contains(articleVO.getId())) {
+    //                 titles.add(articleVO);
+    //             } else if (idList.get(1).contains(articleVO.getId())) {
+    //                 contents.add(articleVO);
+    //             }
+    //         }
+    //
+    //         List<ArticleVO> collect = new ArrayList<>();
+    //         collect.addAll(articles);
+    //         collect.addAll(titles);
+    //         collect.addAll(contents);
+    //         // baseReqVO.setRecords(collect);
+    //         articlePage.setRecords(collect);
+    //     }
+    //     // return R.success(baseReqVO);
+    //     return R.success(articlePage);
+    // }
 
     @Override
     @ResourceCheck(CommonConst.RESOURCE_ARTICLE_DOC)
@@ -497,6 +489,69 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             return true;
         }
         return false;
+    }
+
+    /**
+     * 文章条件分页
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public ArticlePageVO listArticle(ArticlePageDTO dto) {
+
+        List<Integer> ids = null;
+        List<List<Integer>> idList = null;
+        if (StringUtils.hasText(dto.getArticleSearch())) {
+            idList = commonQuery.getArticleIds(dto.getArticleSearch());
+            ids = idList.stream().flatMap(Collection::stream).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(ids)) {
+                return new ArticlePageVO();
+            }
+        }
+
+
+        Page<Article> page = new Page<>(dto.getPageNum(), dto.getPageSize());
+        Page<Article> articlePage = articleMapper.selectPage(page, Wrappers.<Article>lambdaQuery()
+                .like(StringUtils.hasText(dto.getSearchKey()), Article::getArticleTitle, dto.getSearchKey())
+                .eq((Objects.nonNull(dto.getRecommendStatus()) && dto.getRecommendStatus()), Article::getRecommendStatus, YouthEnum.STATUS_ENABLE.getCode())
+                .eq(Objects.nonNull(dto.getSortId()), Article::getSortId, dto.getSortId())
+                .eq(Objects.nonNull(dto.getLabelId()), Article::getLabelId, dto.getLabelId())
+                .orderByDesc(Article::getCreateTime));
+
+        PageResult<Article> pageResult = PageResult.fromMpPage(articlePage);
+        ArticlePageVO articleListPage = ArticlePageVO.build(pageResult, dto.getDesc(), dto.getSearchKey(), dto.getSortId(), dto.getLabelId());
+        List<Article> records = pageResult.getList();
+        if (!CollectionUtils.isEmpty(records)) {
+            List<ArticleVO> articles = new ArrayList<>();
+            List<ArticleVO> titles = new ArrayList<>();
+            List<ArticleVO> contents = new ArrayList<>();
+
+            for (Article article : records) {
+                if (article.getArticleContent().length() > CommonConst.SUMMARY) {
+                    article.setArticleContent(article.getArticleContent().substring(0, CommonConst.SUMMARY).replace("`", "").replace("#", "").replace(">", ""));
+                }
+                ArticleVO articleVO = buildArticleVO(article, false);
+                articleVO.setHasVideo(StringUtils.hasText(articleVO.getVideoUrl()));
+                articleVO.setPassword(null);
+                articleVO.setVideoUrl(null);
+                if (CollectionUtils.isEmpty(ids)) {
+                    articles.add(articleVO);
+                } else if (idList.get(0).contains(articleVO.getId())) {
+                    titles.add(articleVO);
+                } else if (idList.get(1).contains(articleVO.getId())) {
+                    contents.add(articleVO);
+                }
+            }
+
+            List<ArticleVO> collect = new ArrayList<>();
+            collect.addAll(articles);
+            collect.addAll(titles);
+            collect.addAll(contents);
+            articleListPage.setList(collect);
+        }
+
+        return articleListPage;
     }
 
     private ArticleVO buildArticleVO(Article article, Boolean isAdmin) {

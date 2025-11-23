@@ -8,9 +8,9 @@ import com.joy.qs.aop.LoginCheck;
 import com.joy.qs.common.R;
 import com.joy.qs.dao.HistoryInfoMapper;
 import com.joy.qs.constants.CommonConst;
-import com.joy.qs.entity.HistoryInfo;
-import com.joy.qs.entity.User;
-import com.joy.qs.entity.WebInfo;
+import com.joy.qs.model.historyinfo.pojo.HistoryInfo;
+import com.joy.qs.model.user.pojo.User;
+import com.joy.qs.model.webinfo.pojo.WebInfo;
 import com.joy.qs.service.WebInfoService;
 import com.joy.qs.utils.CommonQuery;
 import com.joy.qs.utils.cache.PoetryCache;
@@ -149,7 +149,7 @@ public class WebInfoController {
 
             // 获取并设置访问历史统计数据
             getHistoryCache(result);
-            log.info("result:{}", result);
+            // log.info("result:{}", result);
             return R.success(result);
         }
 

@@ -1,7 +1,7 @@
 package com.joy.qs.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.joy.qs.entity.TreeHole;
+import com.joy.qs.model.treehole.pojo.TreeHole;
 
 import java.util.List;
 

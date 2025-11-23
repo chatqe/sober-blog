@@ -2,9 +2,9 @@ package com.joy.qs.utils.storage;
 
 import cn.hutool.core.util.StrUtil;
 import com.joy.qs.constants.CommonConst;
-import com.joy.qs.entity.Resource;
+import com.joy.qs.model.resource.pojo.Resource;
 import com.joy.qs.service.ResourceService;
-import com.joy.qs.vo.FileVO;
+import com.joy.qs.model.FileVO;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
 import com.qiniu.storage.BucketManager;

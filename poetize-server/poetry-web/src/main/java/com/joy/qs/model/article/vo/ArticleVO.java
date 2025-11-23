@@ -1,8 +1,8 @@
-package com.joy.qs.vo;
+package com.joy.qs.model.article.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.joy.qs.entity.Label;
-import com.joy.qs.entity.Sort;
+import com.joy.qs.model.label.pojo.Label;
+import com.joy.qs.model.sort.pojo.Sort;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
