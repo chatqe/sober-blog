@@ -20,8 +20,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class QingSiCache {
 
-    // @Resource
-    @Autowired
+    @Resource
     private StringRedisTemplate stringRedisTemplate;
 
 
@@ -94,9 +93,7 @@ public class QingSiCache {
     public String get(String key){
         return stringRedisTemplate.opsForValue().get(key);
     }
-    // public String get(String key){
-    //     return stringRedisTemplate.opsForValue().get(key);
-    // }
+
 
     /**
      * 持久缓存

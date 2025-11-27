@@ -4,11 +4,11 @@ package com.joy.qs.controller;
 import com.joy.qs.aop.LoginCheck;
 import com.joy.qs.aop.SaveCheck;
 import com.joy.qs.common.R;
+import com.joy.qs.constants.CommonConst;
 import com.joy.qs.model.user.vo.UserVO;
 import com.joy.qs.service.UserService;
-import com.joy.qs.constants.CommonConst;
-import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.cache.PoetryCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -146,8 +146,6 @@ public class UserController {
     }
 
 
-
-
     /**
      * 忘记密码 更新密码
      * <p>
@@ -179,6 +177,19 @@ public class UserController {
     public R<UserVO> subscribe(@RequestParam("labelId") Integer labelId, @RequestParam("flag") Boolean flag) {
         PoetryCache.remove(CommonConst.USER_CACHE + PoetryUtil.getUserId().toString());
         return userService.subscribe(labelId, flag);
+    }
+
+
+    /**
+     * 注册获取验证码
+     *
+     * @param flag
+     * @param email
+     * @return
+     */
+    @GetMapping("/captcha")
+    public R<String> getCaptcha(@RequestParam("flag") Boolean flag, @RequestParam("email") String email) {
+        return R.success(userService.getCaptcha(flag, email));
     }
 }
 

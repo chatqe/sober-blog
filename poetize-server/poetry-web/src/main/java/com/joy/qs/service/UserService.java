@@ -52,4 +52,12 @@ public interface UserService extends IService<User> {
     R<UserVO> token(String userToken);
 
     R<UserVO> subscribe(Integer labelId, Boolean flag);
+
+    /**
+     * 获取验证码
+     *
+     * @param flag
+     * @return
+     */
+    String getCaptcha(Boolean flag, String email);
 }

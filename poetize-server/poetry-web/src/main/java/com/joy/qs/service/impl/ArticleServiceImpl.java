@@ -514,6 +514,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         Page<Article> page = new Page<>(dto.getPageNum(), dto.getPageSize());
         Page<Article> articlePage = articleMapper.selectPage(page, Wrappers.<Article>lambdaQuery()
                 .like(StringUtils.hasText(dto.getSearchKey()), Article::getArticleTitle, dto.getSearchKey())
+                .like(StringUtils.hasText(dto.getArticleSearch()), Article::getArticleTitle, dto.getArticleSearch())
                 .eq((Objects.nonNull(dto.getRecommendStatus()) && dto.getRecommendStatus()), Article::getRecommendStatus, YouthEnum.STATUS_ENABLE.getCode())
                 .eq(Objects.nonNull(dto.getSortId()), Article::getSortId, dto.getSortId())
                 .eq(Objects.nonNull(dto.getLabelId()), Article::getLabelId, dto.getLabelId())
@@ -525,7 +526,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         if (!CollectionUtils.isEmpty(records)) {
             List<ArticleVO> articles = new ArrayList<>();
             List<ArticleVO> titles = new ArrayList<>();
-            List<ArticleVO> contents = new ArrayList<>();
+            // List<ArticleVO> contents = new ArrayList<>();
 
             for (Article article : records) {
                 if (article.getArticleContent().length() > CommonConst.SUMMARY) {
@@ -538,16 +539,21 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 if (CollectionUtils.isEmpty(ids)) {
                     articles.add(articleVO);
                 } else if (idList.get(0).contains(articleVO.getId())) {
+                    // 标题符合文章
                     titles.add(articleVO);
-                } else if (idList.get(1).contains(articleVO.getId())) {
-                    contents.add(articleVO);
                 }
+                // else if (idList.get(1).contains(articleVO.getId())) {
+                //     // 内容符合文章
+                //     contents.add(articleVO);
+                // }
             }
 
             List<ArticleVO> collect = new ArrayList<>();
             collect.addAll(articles);
             collect.addAll(titles);
-            collect.addAll(contents);
+            // if (!CollectionUtils.isEmpty(contents)) {
+            //     collect.addAll(contents);
+            // }
             articleListPage.setList(collect);
         }
 

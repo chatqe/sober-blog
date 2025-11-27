@@ -1,5 +1,7 @@
 package com.joy.qs.service.impl;
 
+import cn.hutool.captcha.CaptchaUtil;
+import cn.hutool.captcha.CircleCaptcha;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson.JSON;
@@ -10,6 +12,7 @@ import com.joy.qs.common.R;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.dao.UserMapper;
 import com.joy.qs.enums.YouthEnum;
+import com.joy.qs.handle.BlogRuntimeException;
 import com.joy.qs.im.http.dao.ImChatGroupUserMapper;
 import com.joy.qs.im.http.dao.ImChatUserFriendMapper;
 import com.joy.qs.im.http.entity.ImChatGroupUser;
@@ -18,11 +21,10 @@ import com.joy.qs.im.websocket.ImConfigConst;
 import com.joy.qs.im.websocket.TioUtil;
 import com.joy.qs.im.websocket.TioWebsocketStarter;
 import com.joy.qs.model.BaseReqVO;
-import com.joy.qs.model.user.vo.UserVO;
 import com.joy.qs.model.user.pojo.User;
+import com.joy.qs.model.user.vo.UserVO;
 import com.joy.qs.model.webinfo.pojo.WebInfo;
 import com.joy.qs.model.weiyan.pojo.WeiYan;
-import com.joy.qs.handle.BlogRuntimeException;
 import com.joy.qs.service.UserService;
 import com.joy.qs.service.WeiYanService;
 import com.joy.qs.utils.PoetryUtil;
@@ -42,10 +44,7 @@ import org.tio.core.Tio;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -97,16 +96,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                         .or()
                         .eq(User::getPhoneNumber, account))
                 // 传入密码解密之后 进行MD5字符串加密 同数据库密码进行比对
-                .eq(User::getPassword, DigestUtils.md5DigestAsHex(password.getBytes()))
+                // .eq(User::getPassword, DigestUtils.md5DigestAsHex(password.getBytes()))
                 .one();
 
         if (one == null) {
+            return R.fail("账号不存在! 请先注册");
+        } else if (!one.getUserStatus()) {
+            return R.fail("账号被冻结！");
+        } else if (StringUtils.hasText(one.getPassword()) &&
+                !DigestUtils.md5DigestAsHex(password.getBytes()).equals(one.getPassword())) {
             return R.fail("账号/密码错误，请重新输入！");
         }
 
-        if (!one.getUserStatus()) {
-            return R.fail("账号被冻结！");
-        }
 
         String adminToken = "";
         String userToken = "";
@@ -195,7 +196,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             PoetryCache.remove(CommonConst.FORGET_PASSWORD + user.getPhoneNumber() + "_1");
         } else if (StringUtils.hasText(user.getEmail())) {
             // Integer codeCache = (Integer) PoetryCache.get(CommonConst.FORGET_PASSWORD + user.getEmail() + "_2");
-            Integer codeCache =JSON.parseObject(qingSiCache.get(CommonConst.CODE_MAIL + user.getEmail() + "_2"), Integer.class) ;
+            Integer codeCache = JSON.parseObject(qingSiCache.get(CommonConst.CODE_MAIL + user.getEmail() + "_2"), Integer.class);
             if (codeCache == null || codeCache != Integer.parseInt(user.getCode())) {
                 return R.fail("验证码错误！");
             }
@@ -495,7 +496,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             mail.add(place);
             String text = getCodeMail(code);
             // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
-            WebInfo webInfo = com.alibaba.fastjson2.JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class) ;
+            WebInfo webInfo = com.alibaba.fastjson2.JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
 
             // AtomicInteger count = (AtomicInteger) PoetryCache.get(CommonConst.CODE_MAIL + mail.get(0));
             AtomicInteger count = com.alibaba.fastjson2.JSON.parseObject(qingSiCache.get(CommonConst.CODE_MAIL + mail.get(0)), AtomicInteger.class);
@@ -664,6 +665,46 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         }
         return R.success(userVO);
+    }
+
+    /**
+     * 获取图形验证码
+     *
+     * @param flag
+     * @param email
+     * @return
+     */
+    @Override
+    public String getCaptcha(Boolean flag, String email) {
+
+        // 1. 生成
+        CircleCaptcha captcha = CaptchaUtil.createCircleCaptcha(150, 48, 4, 2);
+        String code = captcha.getCode();
+
+        // 2. 缓存
+        String key = UUID.randomUUID().toString();
+        qingSiCache.put("captcha:" + key, code, 120);
+
+        // 3. 封装返回
+        // Map<String, String> vo = new HashMap<String, String>(){{
+        //     put("uuid", key);
+        //     put("captchaKey", "data:image/png;base64," + captcha.getImageBase64());
+        // }};
+        // vo.setCaptchaKey(key);
+        // vo.setCapt64("data:image/png;base64," + captcha.getImageBase64());
+
+        // if (flag) {
+        //     String code = RandomUtil.randomNumbers(4);
+        //     qingSiCache.put(code, email, 5, TimeUnit.MINUTES);
+        //     return code;
+        // } else {
+        //     String code = RandomUtil.randomNumbers(6);
+        //     qingSiCache.put(code, email, 5, TimeUnit.MINUTES);
+        //     return code;
+        // }
+
+
+        return "data:image/png;base64," + captcha.getImageBase64();
     }
 
     /**
