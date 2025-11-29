@@ -14,6 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -187,9 +188,25 @@ public class UserController {
      * @param email
      * @return
      */
+    // @GetMapping("/captcha")
+    // public R<String> getCaptcha(@RequestParam("flag") Boolean flag, @RequestParam("email") String email) {
+    //     return R.success(userService.getCaptcha(flag, email));
+    // }
     @GetMapping("/captcha")
-    public R<String> getCaptcha(@RequestParam("flag") Boolean flag, @RequestParam("email") String email) {
+    public R<Map<String, String>> getCaptcha(@RequestParam("flag") Boolean flag, @RequestParam("email") String email) {
         return R.success(userService.getCaptcha(flag, email));
+    }
+
+
+    /**
+     * 验证码校验
+     * @param uuid
+     * @param code
+     * @return
+     */
+    @PostMapping("/captchaCheck")
+    public R<Boolean> checkCaptcha(@RequestParam String uuid, @RequestParam String code) {
+        return R.success(userService.checkCaptcha(uuid, code));
     }
 }
 

@@ -1,7 +1,5 @@
 package com.joy.qs.service.impl;
 
-import cn.hutool.captcha.CaptchaUtil;
-import cn.hutool.captcha.CircleCaptcha;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson.JSON;
@@ -27,8 +25,10 @@ import com.joy.qs.model.webinfo.pojo.WebInfo;
 import com.joy.qs.model.weiyan.pojo.WeiYan;
 import com.joy.qs.service.UserService;
 import com.joy.qs.service.WeiYanService;
+import com.joy.qs.utils.CaptchaUtils;
 import com.joy.qs.utils.PoetryUtil;
 import com.joy.qs.utils.QingsiUtil;
+import com.joy.qs.utils.SvgCaptchaUtils;
 import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.cache.QingSiCache;
 import com.joy.qs.utils.mail.MailUtil;
@@ -78,6 +78,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Resource
     private QingsiUtil qingsiUtil;
+
+    @Resource
+    private CaptchaUtils captchaUtils;
+
+    @Resource
+    private SvgCaptchaUtils svgCaptchaUtils;
 
     @Value("${user.code.format}")
     private String codeFormat;
@@ -675,36 +681,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return
      */
     @Override
-    public String getCaptcha(Boolean flag, String email) {
+    public Map<String, String> getCaptcha(Boolean flag, String email) {
+        // String captcha = captchaUtils.getPngCaptcha(4);
+        Map<String, String> captcha = svgCaptchaUtils.getSvgBase64();
+        String code = captcha.get("code");
 
-        // 1. 生成
-        CircleCaptcha captcha = CaptchaUtil.createCircleCaptcha(150, 48, 4, 2);
-        String code = captcha.getCode();
-
-        // 2. 缓存
+        // // 2. 缓存
         String key = UUID.randomUUID().toString();
-        qingSiCache.put("captcha:" + key, code, 120);
-
+        qingSiCache.put(CommonConst.CAPTCHA_PREFIX + key, code, 120);
         // 3. 封装返回
-        // Map<String, String> vo = new HashMap<String, String>(){{
-        //     put("uuid", key);
-        //     put("captchaKey", "data:image/png;base64," + captcha.getImageBase64());
-        // }};
-        // vo.setCaptchaKey(key);
-        // vo.setCapt64("data:image/png;base64," + captcha.getImageBase64());
+        // return "data:image/png;base64," + captcha.getImageBase64();
+        return new HashMap<String, String>() {{
+            put("uuid", key);
+            put("img", captcha.get("svg"));
+        }};
+    }
 
-        // if (flag) {
-        //     String code = RandomUtil.randomNumbers(4);
-        //     qingSiCache.put(code, email, 5, TimeUnit.MINUTES);
-        //     return code;
-        // } else {
-        //     String code = RandomUtil.randomNumbers(6);
-        //     qingSiCache.put(code, email, 5, TimeUnit.MINUTES);
-        //     return code;
-        // }
-
-
-        return "data:image/png;base64," + captcha.getImageBase64();
+    @Override
+    public Boolean checkCaptcha(String uuid, String code) {
+        if (!StringUtils.hasText(uuid) || !StringUtils.hasText(code)) {
+            return false;
+        }
+        String key = CommonConst.CAPTCHA_PREFIX + uuid;
+        String saved = qingSiCache.get(key);
+        return StringUtils.hasText(saved) && saved.equalsIgnoreCase(code);
     }
 
     /**

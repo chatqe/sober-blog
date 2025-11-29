@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 /**
  * 公共响应类
- * 
+ *
  * @author Upjqs
  * @since 2025-11-20 21:08
  */
@@ -19,7 +19,7 @@ public class R<T> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int code;
-    private String message;
+    private String msg;
     private T data;
     private long currentTimeMillis = System.currentTimeMillis();
 
@@ -27,9 +27,9 @@ public class R<T> implements Serializable {
         this.code = 200;
     }
 
-    public R(int code, String message) {
+    public R(int code, String msg) {
         this.code = code;
-        this.message = message;
+        this.msg = msg;
     }
 
     public R(T data) {
@@ -37,9 +37,9 @@ public class R<T> implements Serializable {
         this.data = data;
     }
 
-    public R(String message) {
+    public R(String msg) {
         this.code = 500;
-        this.message = message;
+        this.msg = msg;
     }
 
     public static <T> R<T> fail(String message) {

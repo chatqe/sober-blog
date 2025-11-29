@@ -276,4 +276,8 @@ public class CommonConst {
     public static final String RESOURCE_ARTICLE_DOC = "resource_article_doc";
 
 
+    /**
+     * 图形验证码
+     */
+    public static final String CAPTCHA_PREFIX = "captcha_prefix";
 }

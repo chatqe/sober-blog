@@ -8,6 +8,7 @@ import com.joy.qs.model.user.vo.UserVO;
 import com.joy.qs.model.user.pojo.User;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -59,5 +60,7 @@ public interface UserService extends IService<User> {
      * @param flag
      * @return
      */
-    String getCaptcha(Boolean flag, String email);
+    Map<String, String> getCaptcha(Boolean flag, String email);
+
+    Boolean checkCaptcha(String uuid, String code);
 }
