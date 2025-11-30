@@ -2,7 +2,7 @@ package com.joy.qs.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.SecureUtil;
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -25,8 +25,8 @@ import com.joy.qs.model.webinfo.pojo.WebInfo;
 import com.joy.qs.model.weiyan.pojo.WeiYan;
 import com.joy.qs.service.UserService;
 import com.joy.qs.service.WeiYanService;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.CaptchaUtils;
-import com.joy.qs.utils.PoetryUtil;
 import com.joy.qs.utils.QingsiUtil;
 import com.joy.qs.utils.SvgCaptchaUtils;
 import com.joy.qs.utils.cache.PoetryCache;
@@ -162,8 +162,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public R exit() {
-        String token = PoetryUtil.getToken();
-        Integer userId = PoetryUtil.getUserId();
+        String token = BlogUtil.getToken();
+        Integer userId = BlogUtil.getUserId();
         if (token.contains(CommonConst.USER_ACCESS_TOKEN)) {
             PoetryCache.remove(CommonConst.USER_TOKEN + userId);
             TioWebsocketStarter tioWebsocketStarter = TioUtil.getTio();
@@ -236,7 +236,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         u.setPhoneNumber(user.getPhoneNumber());
         u.setEmail(user.getEmail());
         u.setPassword(DigestUtils.md5DigestAsHex(user.getPassword().getBytes()));
-        // u.setAvatar(PoetryUtil.getRandomAvatar(null));
+        // u.setAvatar(BlogUtil.getRandomAvatar(null));
         u.setAvatar(qingsiUtil.getRandomAvatar());
         save(u);
 
@@ -268,13 +268,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         ImChatUserFriend imChatUser = new ImChatUserFriend();
         imChatUser.setUserId(one.getId());
-        imChatUser.setFriendId(PoetryUtil.getAdminUser().getId());
+        imChatUser.setFriendId(BlogUtil.getAdminUser().getId());
         imChatUser.setRemark("站长");
         imChatUser.setFriendStatus(ImConfigConst.FRIEND_STATUS_PASS);
         imChatUserFriendMapper.insert(imChatUser);
 
         ImChatUserFriend imChatFriend = new ImChatUserFriend();
-        imChatFriend.setUserId(PoetryUtil.getAdminUser().getId());
+        imChatFriend.setUserId(BlogUtil.getAdminUser().getId());
         imChatFriend.setFriendId(one.getId());
         imChatFriend.setFriendStatus(ImConfigConst.FRIEND_STATUS_PASS);
         imChatUserFriendMapper.insert(imChatFriend);
@@ -294,32 +294,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 return R.fail("用户名不能包含@！");
             }
 
-            Integer count = lambdaQuery().eq(User::getUsername, user.getUsername()).ne(User::getId, PoetryUtil.getUserId()).count();
+            Integer count = lambdaQuery().eq(User::getUsername, user.getUsername()).ne(User::getId, BlogUtil.getUserId()).count();
             if (count != 0) {
                 return R.fail("用户名重复！");
             }
         }
         User u = new User();
-        u.setId(PoetryUtil.getUserId());
+        u.setId(BlogUtil.getUserId());
         u.setUsername(user.getUsername());
         u.setAvatar(user.getAvatar());
         u.setGender(user.getGender());
         u.setIntroduction(user.getIntroduction());
         updateById(u);
         User one = lambdaQuery().eq(User::getId, u.getId()).one();
-        PoetryCache.put(PoetryUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
-        PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), PoetryUtil.getToken(), CommonConst.TOKEN_EXPIRE);
+        PoetryCache.put(BlogUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
+        PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), BlogUtil.getToken(), CommonConst.TOKEN_EXPIRE);
 
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
         userVO.setPassword(null);
-        userVO.setAccessToken(PoetryUtil.getToken());
+        userVO.setAccessToken(BlogUtil.getToken());
         return R.success(userVO);
     }
 
     @Override
     public R getCode(Integer flag) {
-        User user = PoetryUtil.getCurrentUser();
+        User user = BlogUtil.getCurrentUser();
         // 生成六位随机数(100000~ 900000)
         int i = new Random().nextInt(900000) + 100000;
         if (flag == 1) {
@@ -352,7 +352,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 return R.fail("验证码发送次数过多，请明天再试！");
             }
         }
-        PoetryCache.put(CommonConst.USER_CODE + PoetryUtil.getUserId() + "_" + flag, Integer.valueOf(i), 300);
+        PoetryCache.put(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + flag, Integer.valueOf(i), 300);
         return R.success();
     }
 
@@ -380,7 +380,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 return R.fail("验证码发送次数过多，请明天再试！");
             }
         }
-        PoetryCache.put(CommonConst.USER_CODE + PoetryUtil.getUserId() + "_" + place + "_" + flag, Integer.valueOf(i), 300);
+        PoetryCache.put(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag, Integer.valueOf(i), 300);
         return R.success();
     }
 
@@ -388,7 +388,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public R<UserVO> updateSecretInfo(String place, Integer flag, String code, String password) {
         password = new String(SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt(password));
 
-        User user = PoetryUtil.getCurrentUser();
+        User user = BlogUtil.getCurrentUser();
         if ((flag == 1 || flag == 2) && !DigestUtils.md5DigestAsHex(password.getBytes()).equals(user.getPassword())) {
             return R.fail("密码错误！");
         }
@@ -402,10 +402,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             if (count != 0) {
                 return R.fail("手机号重复！");
             }
-            Integer codeCache = (Integer) PoetryCache.get(CommonConst.USER_CODE + PoetryUtil.getUserId() + "_" + place + "_" + flag);
+            Integer codeCache = (Integer) PoetryCache.get(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
             if (codeCache != null && codeCache.intValue() == Integer.parseInt(code)) {
 
-                PoetryCache.remove(CommonConst.USER_CODE + PoetryUtil.getUserId() + "_" + place + "_" + flag);
+                PoetryCache.remove(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
 
                 updateUser.setPhoneNumber(place);
             } else {
@@ -417,10 +417,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             if (count != 0) {
                 return R.fail("邮箱重复！");
             }
-            Integer codeCache = (Integer) PoetryCache.get(CommonConst.USER_CODE + PoetryUtil.getUserId() + "_" + place + "_" + flag);
+            Integer codeCache = (Integer) PoetryCache.get(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
             if (codeCache != null && codeCache.intValue() == Integer.parseInt(code)) {
 
-                PoetryCache.remove(CommonConst.USER_CODE + PoetryUtil.getUserId() + "_" + place + "_" + flag);
+                PoetryCache.remove(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
 
                 updateUser.setEmail(place);
             } else {
@@ -436,8 +436,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         updateById(updateUser);
 
         User one = lambdaQuery().eq(User::getId, user.getId()).one();
-        PoetryCache.put(PoetryUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
-        PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), PoetryUtil.getToken(), CommonConst.TOKEN_EXPIRE);
+        PoetryCache.put(BlogUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
+        PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), BlogUtil.getToken(), CommonConst.TOKEN_EXPIRE);
 
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
@@ -638,7 +638,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public R<UserVO> subscribe(Integer labelId, Boolean flag) {
         UserVO userVO = null;
-        User one = lambdaQuery().eq(User::getId, PoetryUtil.getUserId()).one();
+        User one = lambdaQuery().eq(User::getId, BlogUtil.getUserId()).one();
         List<Integer> sub = JSON.parseArray(one.getSubscribe(), Integer.class);
         if (sub == null) sub = new ArrayList<>();
         if (flag) {
@@ -653,7 +653,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 BeanUtils.copyProperties(one, userVO);
                 userVO.setPassword(null);
                 userVO.setSubscribe(user.getSubscribe());
-                userVO.setAccessToken(PoetryUtil.getToken());
+                userVO.setAccessToken(BlogUtil.getToken());
             }
         } else {
             if (sub.contains(labelId)) {
@@ -667,7 +667,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 BeanUtils.copyProperties(one, userVO);
                 userVO.setPassword(null);
                 userVO.setSubscribe(user.getSubscribe());
-                userVO.setAccessToken(PoetryUtil.getToken());
+                userVO.setAccessToken(BlogUtil.getToken());
             }
         }
         return R.success(userVO);
@@ -686,11 +686,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Map<String, String> captcha = svgCaptchaUtils.getSvgBase64();
         String code = captcha.get("code");
 
-        // // 2. 缓存
+        // 缓存
         String key = UUID.randomUUID().toString();
         qingSiCache.put(CommonConst.CAPTCHA_PREFIX + key, code, 120);
-        // 3. 封装返回
-        // return "data:image/png;base64," + captcha.getImageBase64();
+        // 封装返回
         return new HashMap<String, String>() {{
             put("uuid", key);
             put("img", captcha.get("svg"));
@@ -713,13 +712,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     private String getCodeMail(int i) {
         // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
-        WebInfo webInfo = com.alibaba.fastjson2.JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
+        WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
         String webName = (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName());
         String m = mailUtil.getMailText();
         return String.format(mailUtil.getMailText(),
                 webName,
-                String.format(MailUtil.imMail, PoetryUtil.getAdminUser().getUsername()),
-                PoetryUtil.getAdminUser().getUsername(),
+                String.format(MailUtil.imMail, BlogUtil.getAdminUser().getUsername()),
+                BlogUtil.getAdminUser().getUsername(),
                 String.format(codeFormat, i),
                 "",
                 webName);
@@ -733,8 +732,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 【Corrain】218360为本次验证的验证码，请在5分钟内完成验证。为保证账号安全，请勿泄漏此验证码。
         return String.format(mailUtil.getMailText(),
                 webName,
-                String.format(MailUtil.imMail, PoetryUtil.getAdminUser().getUsername()),
-                PoetryUtil.getAdminUser().getUsername(),
+                String.format(MailUtil.imMail, BlogUtil.getAdminUser().getUsername()),
+                BlogUtil.getAdminUser().getUsername(),
                 String.format(codeFormat, i),
                 "",
                 webName);

@@ -10,7 +10,7 @@ import com.joy.qs.model.FileVO;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.model.resource.pojo.Resource;
 import com.joy.qs.service.ResourceService;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.storage.FileStorageService;
 import com.joy.qs.utils.storage.StoreService;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +61,7 @@ public class ResourceController {
         re.setOriginalName(resource.getOriginalName());
         re.setMimeType(resource.getMimeType());
         re.setStoreType(resource.getStoreType());
-        re.setUserId(PoetryUtil.getUserId());
+        re.setUserId(BlogUtil.getUserId());
         resourceService.save(re);
         return R.success();
     }
@@ -89,7 +89,7 @@ public class ResourceController {
         re.setMimeType(file.getContentType());
         re.setStoreType(fileVO.getStoreType());
         re.setOriginalName(fileVO.getOriginalName());
-        re.setUserId(PoetryUtil.getUserId());
+        re.setUserId(BlogUtil.getUserId());
         resourceService.save(re);
         return R.success(result.getVisitPath());
     }
@@ -120,7 +120,7 @@ public class ResourceController {
         List<Resource> list = resourceService.lambdaQuery().select(Resource::getPath)
                 .eq(Resource::getType, CommonConst.PATH_TYPE_INTERNET_MEME)
                 .eq(Resource::getStatus, YouthEnum.STATUS_ENABLE.getCode())
-                .eq(Resource::getUserId, PoetryUtil.getAdminUser().getId())
+                .eq(Resource::getUserId, BlogUtil.getAdminUser().getId())
                 .orderByDesc(Resource::getCreateTime)
                 .list();
         List<String> paths = list.stream().map(Resource::getPath).collect(Collectors.toList());

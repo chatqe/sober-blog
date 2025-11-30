@@ -20,7 +20,7 @@ import com.joy.qs.im.http.service.ImChatUserGroupMessageService;
 import com.joy.qs.im.http.vo.GroupVO;
 import com.joy.qs.enums.CodeMsg;
 import com.joy.qs.enums.YouthEnum;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -65,7 +65,7 @@ public class ImChatGroupController {
             return R.fail(CodeMsg.PARAMETER_ERROR);
         }
         imChatGroup.setGroupType(ImConfigConst.GROUP_COMMON);
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         imChatGroup.setMasterUserId(userId);
         imChatGroupService.save(imChatGroup);
 
@@ -94,7 +94,7 @@ public class ImChatGroupController {
             return R.fail(CodeMsg.PARAMETER_ERROR);
         }
         imChatGroup.setGroupType(ImConfigConst.GROUP_TOPIC);
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         imChatGroup.setMasterUserId(userId);
         imChatGroup.setInType(ImConfigConst.IN_TYPE_FALSE);
         imChatGroupService.save(imChatGroup);
@@ -113,7 +113,7 @@ public class ImChatGroupController {
     public R updateGroup(@RequestBody ImChatGroup imChatGroup) {
         LambdaUpdateChainWrapper<ImChatGroup> lambdaUpdate = imChatGroupService.lambdaUpdate();
         lambdaUpdate.eq(ImChatGroup::getId, imChatGroup.getId());
-        lambdaUpdate.eq(ImChatGroup::getMasterUserId, PoetryUtil.getUserId());
+        lambdaUpdate.eq(ImChatGroup::getMasterUserId, BlogUtil.getUserId());
         if (StringUtils.hasText(imChatGroup.getGroupName())) {
             lambdaUpdate.set(ImChatGroup::getGroupName, imChatGroup.getGroupName());
         }
@@ -148,14 +148,14 @@ public class ImChatGroupController {
     @GetMapping("/deleteGroup")
     @LoginCheck
     public R deleteGroup(@RequestParam("id") Integer id) {
-        User currentUser = PoetryUtil.getCurrentUser();
+        User currentUser = BlogUtil.getCurrentUser();
         boolean isSuccess;
         if (currentUser.getUserType().intValue() == YouthEnum.USER_TYPE_ADMIN.getCode()) {
             isSuccess = imChatGroupService.removeById(id);
         } else {
             LambdaUpdateChainWrapper<ImChatGroup> lambdaUpdate = imChatGroupService.lambdaUpdate();
             lambdaUpdate.eq(ImChatGroup::getId, id);
-            lambdaUpdate.eq(ImChatGroup::getMasterUserId, PoetryUtil.getUserId());
+            lambdaUpdate.eq(ImChatGroup::getMasterUserId, BlogUtil.getUserId());
             isSuccess = lambdaUpdate.remove();
         }
         if (isSuccess) {
@@ -197,7 +197,7 @@ public class ImChatGroupController {
         if (count == 1) {
             TioWebsocketStarter tioWebsocketStarter = TioUtil.getTio();
             if (tioWebsocketStarter != null) {
-                Tio.bindGroup(tioWebsocketStarter.getServerTioConfig(), String.valueOf(PoetryUtil.getUserId()), String.valueOf(id));
+                Tio.bindGroup(tioWebsocketStarter.getServerTioConfig(), String.valueOf(BlogUtil.getUserId()), String.valueOf(id));
             }
         }
         return R.success();
@@ -211,7 +211,7 @@ public class ImChatGroupController {
     @GetMapping("/listGroup")
     @LoginCheck
     public R<List<GroupVO>> listGroup() {
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         LambdaQueryChainWrapper<ImChatGroupUser> lambdaQuery = imChatGroupUserService.lambdaQuery();
         lambdaQuery.eq(ImChatGroupUser::getUserId, userId);
         lambdaQuery.in(ImChatGroupUser::getUserStatus, ImConfigConst.GROUP_USER_STATUS_PASS, ImConfigConst.GROUP_USER_STATUS_SILENCE);
@@ -232,7 +232,7 @@ public class ImChatGroupController {
                 imChatGroupUser.setUserStatus(ImConfigConst.GROUP_USER_STATUS_PASS);
                 imChatGroupUser.setCreateTime(LocalDateTime.now());
                 imChatGroupUser.setUserId(userId);
-                imChatGroupUser.setAdminFlag(userId.intValue() == PoetryUtil.getAdminUser().getId().intValue());
+                imChatGroupUser.setAdminFlag(userId.intValue() == BlogUtil.getAdminUser().getId().intValue());
             }
             return getGroupVO(imChatGroup, imChatGroupUser);
         }).collect(Collectors.toList());

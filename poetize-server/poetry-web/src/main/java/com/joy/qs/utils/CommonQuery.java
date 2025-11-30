@@ -77,7 +77,7 @@ public class CommonQuery {
      * @param ip
      */
     public void saveHistory(String ip) {
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         String ipUser = ip + (userId != null ? "_" + userId : "");
 
         CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
@@ -117,7 +117,7 @@ public class CommonQuery {
      * @param ip
      */
     public void saveHistoryByBaidu(String ip) {
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         String ipUser = ip + (userId != null ? "_" + userId : "");
 
         CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);

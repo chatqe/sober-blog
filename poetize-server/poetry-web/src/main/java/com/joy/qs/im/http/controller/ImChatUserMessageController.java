@@ -10,8 +10,8 @@ import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.im.http.entity.ImChatUserMessage;
 import com.joy.qs.im.http.service.ImChatUserMessageService;
 import com.joy.qs.im.http.vo.UserMessageVO;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.CommonQuery;
-import com.joy.qs.utils.PoetryUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -119,7 +119,7 @@ public class ImChatUserMessageController {
         page.setCurrent(current);
         page.setSize(size);
 
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
 
         LambdaQueryChainWrapper<ImChatUserMessage> lambdaQuery = imChatUserMessageService.lambdaQuery();
         lambdaQuery.and(wrapper -> wrapper.eq(ImChatUserMessage::getFromId, userId).eq(ImChatUserMessage::getToId, friendId))

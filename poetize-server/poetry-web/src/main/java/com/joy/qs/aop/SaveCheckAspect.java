@@ -3,8 +3,8 @@ package com.joy.qs.aop;
 import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.handle.BlogRuntimeException;
 import com.joy.qs.constants.CommonConst;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.cache.PoetryCache;
-import com.joy.qs.utils.PoetryUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -26,11 +26,11 @@ public class SaveCheckAspect {
     public Object around(ProceedingJoinPoint joinPoint, SaveCheck saveCheck) throws Throwable {
         boolean flag = false;
 
-        String token = PoetryUtil.getToken();
+        String token = BlogUtil.getToken();
         if (StringUtils.hasText(token)) {
             User user = (User) PoetryCache.get(token);
             if (user != null) {
-                if (user.getId().intValue() == PoetryUtil.getAdminUser().getId().intValue()) {
+                if (user.getId().intValue() == BlogUtil.getAdminUser().getId().intValue()) {
                     return joinPoint.proceed();
                 }
 
@@ -47,7 +47,7 @@ public class SaveCheckAspect {
             }
         }
 
-        String ip = PoetryUtil.getIpAddr(PoetryUtil.getRequest());
+        String ip = BlogUtil.getIpAddr(BlogUtil.getRequest());
         AtomicInteger atomic = (AtomicInteger) PoetryCache.get(CommonConst.SAVE_COUNT_IP + ip);
         if (atomic == null) {
             atomic = new AtomicInteger();

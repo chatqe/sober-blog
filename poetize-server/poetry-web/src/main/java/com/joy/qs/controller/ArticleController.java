@@ -1,17 +1,15 @@
 package com.joy.qs.controller;
 
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.joy.qs.aop.LoginCheck;
 import com.joy.qs.common.PageResult;
 import com.joy.qs.common.R;
 import com.joy.qs.constants.CommonConst;
-import com.joy.qs.model.BaseReqVO;
 import com.joy.qs.model.article.dto.ArticleDTO;
 import com.joy.qs.model.article.dto.ArticlePageDTO;
 import com.joy.qs.model.article.vo.ArticleVO;
 import com.joy.qs.service.ArticleService;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +47,7 @@ public class ArticleController {
     @LoginCheck(1)
     @PostMapping("/saveArticle")
     public R saveArticle(@Validated @RequestBody ArticleVO articleVO) {
-        PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + PoetryUtil.getUserId().toString());
+        PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + BlogUtil.getUserId().toString());
         PoetryCache.remove(CommonConst.ARTICLE_LIST);
         PoetryCache.remove(CommonConst.SORT_ARTICLE_LIST);
         return articleService.saveArticle(articleVO);
@@ -62,7 +60,7 @@ public class ArticleController {
     @GetMapping("/deleteArticle")
     @LoginCheck(1)
     public R deleteArticle(@RequestParam("id") Integer id) {
-        PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + PoetryUtil.getUserId().toString());
+        PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + BlogUtil.getUserId().toString());
         PoetryCache.remove(CommonConst.ARTICLE_LIST);
         PoetryCache.remove(CommonConst.SORT_ARTICLE_LIST);
         return articleService.deleteArticle(id);

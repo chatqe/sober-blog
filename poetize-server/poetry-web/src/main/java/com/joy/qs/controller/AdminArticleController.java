@@ -8,7 +8,7 @@ import com.joy.qs.model.article.vo.ArticleVO;
 import com.joy.qs.model.BaseReqVO;
 import com.joy.qs.model.article.pojo.Article;
 import com.joy.qs.service.ArticleService;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,7 +56,7 @@ public class AdminArticleController {
                                  @RequestParam(value = "recommendStatus", required = false) Boolean recommendStatus) {
         LambdaUpdateChainWrapper<Article> updateChainWrapper = articleService.lambdaUpdate()
                 .eq(Article::getId, articleId)
-                .eq(Article::getUserId, PoetryUtil.getUserId());
+                .eq(Article::getUserId, BlogUtil.getUserId());
         if (viewStatus != null) {
             updateChainWrapper.set(Article::getViewStatus, viewStatus);
         }

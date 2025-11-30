@@ -15,7 +15,7 @@ import com.joy.qs.im.http.service.ImChatGroupUserService;
 import com.joy.qs.im.http.service.ImChatUserGroupMessageService;
 import com.joy.qs.im.http.vo.GroupMessageVO;
 import com.joy.qs.utils.CommonQuery;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -63,7 +63,7 @@ public class ImChatUserGroupMessageController {
         page.setCurrent(current);
         page.setSize(size);
 
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
 
         ImChatGroup chatGroup = imChatGroupService.getById(groupId);
         if (chatGroup == null) {

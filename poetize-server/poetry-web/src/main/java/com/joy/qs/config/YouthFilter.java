@@ -3,8 +3,8 @@ package com.joy.qs.config;
 import com.alibaba.fastjson.JSON;
 import com.joy.qs.common.R;
 import com.joy.qs.enums.CodeMsg;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.CommonQuery;
-import com.joy.qs.utils.PoetryUtil;
 import com.joy.qs.utils.storage.FileFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -30,7 +30,7 @@ public class YouthFilter extends OncePerRequestFilter {
         if (!"OPTIONS".equals(httpServletRequest.getMethod())) {
             try {
                 // 保存访问记录
-                commonQuery.saveHistory(PoetryUtil.getIpAddr(httpServletRequest));
+                commonQuery.saveHistory(BlogUtil.getIpAddr(httpServletRequest));
             } catch (Exception e) {
             }
 

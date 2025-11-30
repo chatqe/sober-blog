@@ -1,7 +1,7 @@
 package com.joy.qs.utils.cache;
 
 import com.alibaba.fastjson2.JSON;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
  * @author sjq
  * @since 2025-02-28 18:58
  */
+@Slf4j
 @Component
 public class QingSiCache {
 
@@ -89,14 +90,17 @@ public class QingSiCache {
     }
 
 
-    /** -------------------String相关操作--------------------- */
-    public String get(String key){
+    /**
+     * -------------------String相关操作---------------------
+     */
+    public String get(String key) {
         return stringRedisTemplate.opsForValue().get(key);
     }
 
 
     /**
      * 持久缓存
+     *
      * @param key
      * @param value
      */
@@ -111,6 +115,7 @@ public class QingSiCache {
 
     /**
      * 默认 时间单位 s
+     *
      * @param key
      * @param value
      * @param timeout
@@ -121,6 +126,7 @@ public class QingSiCache {
 
     /**
      * 默认 时间单位 s
+     *
      * @param key
      * @param value
      * @param timeout
@@ -132,6 +138,7 @@ public class QingSiCache {
 
     /**
      * 缓存带过期时间单位
+     *
      * @param key
      * @param value
      * @param timeout
@@ -140,6 +147,7 @@ public class QingSiCache {
     public void put(String key, String value, long timeout, TimeUnit unit) {
         stringRedisTemplate.opsForValue().set(key, value, timeout, unit);
     }
+
     public void put(String key, Object value, long timeout, TimeUnit unit) {
 
         stringRedisTemplate.opsForValue().set(key, JSON.toJSONString(value), timeout, unit);
@@ -152,29 +160,37 @@ public class QingSiCache {
 
 
     /************************Hash************************/
-    public void putHash(String key, String hashKey, String value){
+    public void putHash(String key, String hashKey, String value) {
         stringRedisTemplate.opsForHash().put(key, hashKey, value);
     }
 
     /**
      * 获取hashKey对应的value
      */
-    public String getHash(String key, String hashKey){
+    public String getHash(String key, String hashKey) {
         return (String) stringRedisTemplate.opsForHash().get(key, hashKey);
     }
 
     /**
      * 是否含有hashKey
      */
-    public Boolean hasHashKey(String key, String hashKey){
+    public Boolean hasHashKey(String key, String hashKey) {
         return stringRedisTemplate.opsForHash().hasKey(key, hashKey);
     }
 
     /**
      * 删除hashKey
      */
-    public void delHashKey(String key, String hashKey){
+    public void delHashKey(String key, String hashKey) {
         stringRedisTemplate.opsForHash().delete(key, hashKey);
     }
 
+
+    public Boolean putIfAbsent(String key, long timeout, TimeUnit unit) {
+        if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(key))) {
+            return false;
+        }
+        stringRedisTemplate.opsForValue().set(key, "1", timeout, unit);
+        return true;
+    }
 }

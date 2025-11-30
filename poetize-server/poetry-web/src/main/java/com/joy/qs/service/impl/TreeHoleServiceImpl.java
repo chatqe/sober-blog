@@ -32,7 +32,7 @@ public class TreeHoleServiceImpl extends ServiceImpl<TreeHoleMapper, TreeHole> i
 
         // for (TreeHole treeHole : treeHoles) {
         //     if (!StringUtils.hasText(treeHole.getAvatar())) {
-        //         treeHole.setAvatar(PoetryUtil.getRandomAvatar(null));
+        //         treeHole.setAvatar(BlogUtil.getRandomAvatar(null));
         //     }
         //
         // }

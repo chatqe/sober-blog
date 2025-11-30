@@ -11,7 +11,7 @@ import com.joy.qs.model.BaseReqVO;
 import com.joy.qs.model.resourcepath.vo.ResourcePathVO;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.model.resourcepath.pojo.ResourcePath;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -47,7 +47,7 @@ public class ResourceAggregationController {
             return R.fail("标题和资源类型不能为空！");
         }
         if (CommonConst.RESOURCE_PATH_TYPE_LOVE_PHOTO.equals(resourcePathVO.getType())) {
-            resourcePathVO.setRemark(PoetryUtil.getAdminUser().getId().toString());
+            resourcePathVO.setRemark(BlogUtil.getAdminUser().getId().toString());
         }
         ResourcePath resourcePath = new ResourcePath();
         BeanUtils.copyProperties(resourcePathVO, resourcePath);
@@ -78,7 +78,7 @@ public class ResourceAggregationController {
             return R.fail("Id不能为空！");
         }
         if (CommonConst.RESOURCE_PATH_TYPE_LOVE_PHOTO.equals(resourcePathVO.getType())) {
-            resourcePathVO.setRemark(PoetryUtil.getAdminUser().getId().toString());
+            resourcePathVO.setRemark(BlogUtil.getAdminUser().getId().toString());
         }
         ResourcePath resourcePath = new ResourcePath();
         BeanUtils.copyProperties(resourcePathVO, resourcePath);
@@ -96,8 +96,8 @@ public class ResourceAggregationController {
         wrapper.eq(StringUtils.hasText(baseReqVO.getResourceType()), ResourcePath::getType, baseReqVO.getResourceType());
         wrapper.eq(StringUtils.hasText(baseReqVO.getClassify()), ResourcePath::getClassify, baseReqVO.getClassify());
 
-        Integer userId = PoetryUtil.getUserId();
-        if (!PoetryUtil.getAdminUser().getId().equals(userId)) {
+        Integer userId = BlogUtil.getUserId();
+        if (!BlogUtil.getAdminUser().getId().equals(userId)) {
             wrapper.eq(ResourcePath::getStatus, Boolean.TRUE);
         } else {
             wrapper.eq(baseReqVO.getStatus() != null, ResourcePath::getStatus, baseReqVO.getStatus());

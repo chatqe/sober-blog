@@ -8,7 +8,7 @@ import com.joy.qs.dao.ResourcePathMapper;
 import com.joy.qs.model.resourcepath.vo.ResourcePathVO;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.model.resourcepath.pojo.ResourcePath;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -39,7 +39,7 @@ public class PictureController {
         QueryWrapper<ResourcePath> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("classify, count(*) as count")
                 .eq("status", Boolean.TRUE)
-                .eq("remark", PoetryUtil.getAdminUser().getId().toString())
+                .eq("remark", BlogUtil.getAdminUser().getId().toString())
                 .eq("type", CommonConst.RESOURCE_PATH_TYPE_LOVE_PHOTO)
                 .groupBy("classify");
         List<Map<String, Object>> maps = resourcePathMapper.selectMaps(queryWrapper);
@@ -62,7 +62,7 @@ public class PictureController {
         lovePhoto.setClassify(resourcePathVO.getClassify());
         lovePhoto.setTitle(resourcePathVO.getTitle());
         lovePhoto.setCover(resourcePathVO.getCover());
-        lovePhoto.setRemark(PoetryUtil.getUserId().toString());
+        lovePhoto.setRemark(BlogUtil.getUserId().toString());
         lovePhoto.setType(CommonConst.RESOURCE_PATH_TYPE_LOVE_PHOTO);
         lovePhoto.setStatus(Boolean.FALSE);
         resourcePathMapper.insert(lovePhoto);

@@ -15,8 +15,8 @@ import com.joy.qs.im.http.entity.ImChatGroupUser;
 import com.joy.qs.im.http.service.ImChatGroupService;
 import com.joy.qs.im.http.service.ImChatGroupUserService;
 import com.joy.qs.im.http.vo.GroupUserVO;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.CommonQuery;
-import com.joy.qs.utils.PoetryUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -68,7 +68,7 @@ public class ImChatGroupUserController {
             return R.fail("话题无需申请！");
         }
 
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
 
         LambdaQueryChainWrapper<ImChatGroupUser> lambdaQuery = imChatGroupUserService.lambdaQuery();
         lambdaQuery.eq(ImChatGroupUser::getGroupId, id);
@@ -119,7 +119,7 @@ public class ImChatGroupUserController {
             return R.fail("话题无需操作！");
         }
 
-        Integer currentUserId = PoetryUtil.getUserId();
+        Integer currentUserId = BlogUtil.getUserId();
         LambdaQueryChainWrapper<ImChatGroupUser> lambdaQuery = imChatGroupUserService.lambdaQuery();
         lambdaQuery.eq(ImChatGroupUser::getGroupId, groupId);
         lambdaQuery.eq(ImChatGroupUser::getUserId, currentUserId);
@@ -190,7 +190,7 @@ public class ImChatGroupUserController {
             return R.fail("话题无需操作！");
         }
 
-        Integer currentUserId = PoetryUtil.getUserId();
+        Integer currentUserId = BlogUtil.getUserId();
         if (chatGroup.getMasterUserId().intValue() != currentUserId.intValue()) {
             return R.fail("群主才能设置管理员！");
         }
@@ -219,7 +219,7 @@ public class ImChatGroupUserController {
             return R.fail("话题无需操作！");
         }
 
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
 
         if (chatGroup.getMasterUserId().intValue() == userId.intValue()) {
             //转让群
@@ -265,7 +265,7 @@ public class ImChatGroupUserController {
                                         @RequestParam(value = "userStatus", required = false) Integer userStatus,
                                         @RequestParam(value = "current", defaultValue = "1") Long current,
                                         @RequestParam(value = "size", defaultValue = "20") Long size) {
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         Page<ImChatGroupUser> page = new Page<>();
         page.setCurrent(current);
         page.setSize(size);
@@ -354,7 +354,7 @@ public class ImChatGroupUserController {
             return R.fail("话题没有用户！");
         }
 
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         LambdaQueryChainWrapper<ImChatGroupUser> wrapper = imChatGroupUserService.lambdaQuery();
         wrapper.eq(ImChatGroupUser::getUserId, userId);
         wrapper.eq(ImChatGroupUser::getGroupId, groupId);

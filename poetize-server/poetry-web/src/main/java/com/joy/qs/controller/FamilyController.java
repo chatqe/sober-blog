@@ -11,9 +11,9 @@ import com.joy.qs.model.family.vo.FamilyVO;
 import com.joy.qs.model.family.pojo.Family;
 import com.joy.qs.service.FamilyService;
 import com.joy.qs.constants.CommonConst;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.CommonQuery;
 import com.joy.qs.utils.cache.PoetryCache;
-import com.joy.qs.utils.PoetryUtil;
 import com.joy.qs.utils.cache.QingSiCache;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,12 +52,12 @@ public class FamilyController {
     @PostMapping("/saveFamily")
     @LoginCheck
     public R saveFamily(@Validated @RequestBody FamilyVO familyVO) {
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         familyVO.setUserId(userId);
         Family oldFamily = familyService.lambdaQuery().select(Family::getId).eq(Family::getUserId, userId).one();
         Family family = new Family();
         BeanUtils.copyProperties(familyVO, family);
-        if (userId.intValue() == PoetryUtil.getAdminUser().getId().intValue()) {
+        if (userId.intValue() == BlogUtil.getAdminUser().getId().intValue()) {
             family.setStatus(Boolean.TRUE);
         } else {
             family.setStatus(Boolean.FALSE);
@@ -70,7 +70,7 @@ public class FamilyController {
             family.setId(null);
             familyService.save(family);
         }
-        if (userId.intValue() == PoetryUtil.getAdminUser().getId().intValue()) {
+        if (userId.intValue() == BlogUtil.getAdminUser().getId().intValue()) {
             PoetryCache.put(CommonConst.ADMIN_FAMILY, family);
         }
         PoetryCache.remove(CommonConst.FAMILY_LIST);
@@ -94,7 +94,7 @@ public class FamilyController {
     @GetMapping("/getFamily")
     @LoginCheck
     public R<FamilyVO> getFamily() {
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         Family family = familyService.lambdaQuery().eq(Family::getUserId, userId).one();
         if (family == null) {
             return R.success();
@@ -114,7 +114,7 @@ public class FamilyController {
         Family family = JSON.parseObject(qingSiCache.get(CommonConst.ADMIN_FAMILY), Family.class) ;
         if (Objects.isNull(family)) {
             // 查数据库
-            family= familyService.getOne(Wrappers.<Family>lambdaQuery().eq(Family::getUserId, PoetryUtil.getAdminUser().getId()));
+            family= familyService.getOne(Wrappers.<Family>lambdaQuery().eq(Family::getUserId, BlogUtil.getAdminUser().getId()));
             if (Objects.isNull(family)) {
                 return R.fail("请初始化表白墙");
             }

@@ -15,8 +15,8 @@ import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.enums.CodeMsg;
 import com.joy.qs.enums.CommentTypeEnum;
 import com.joy.qs.service.CommentService;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.CommonQuery;
-import com.joy.qs.utils.PoetryUtil;
 import com.joy.qs.utils.mail.MailSendUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,7 +75,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setParentCommentId(commentVO.getParentCommentId());
         comment.setFloorCommentId(commentVO.getFloorCommentId());
         comment.setParentUserId(commentVO.getParentUserId());
-        comment.setUserId(PoetryUtil.getUserId());
+        comment.setUserId(BlogUtil.getUserId());
         if (StringUtils.hasText(commentVO.getCommentInfo())) {
             comment.setCommentInfo(commentVO.getCommentInfo());
         }
@@ -92,7 +92,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Override
     public R deleteComment(Integer id) {
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         lambdaUpdate().eq(Comment::getId, id)
                 .eq(Comment::getUserId, userId)
                 .remove();
@@ -158,7 +158,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             }
             wrapper.orderByDesc(Comment::getCreateTime).page(baseReqVO);
         } else {
-            List<Integer> userArticleIds = commonQuery.getUserArticleIds(PoetryUtil.getUserId());
+            List<Integer> userArticleIds = commonQuery.getUserArticleIds(BlogUtil.getUserId());
             if (CollectionUtils.isEmpty(userArticleIds)) {
                 baseReqVO.setTotal(0);
                 baseReqVO.setRecords(new ArrayList());
@@ -185,7 +185,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
 
         if (!StringUtils.hasText(commentVO.getUsername())) {
-            commentVO.setUsername(PoetryUtil.getRandomName(commentVO.getUserId().toString()));
+            commentVO.setUsername(BlogUtil.getRandomName(commentVO.getUserId().toString()));
         }
 
         if (commentVO.getParentUserId() != null) {
@@ -194,7 +194,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 commentVO.setParentUsername(u.getUsername());
             }
             if (!StringUtils.hasText(commentVO.getParentUsername())) {
-                commentVO.setParentUsername(PoetryUtil.getRandomName(commentVO.getParentUserId().toString()));
+                commentVO.setParentUsername(BlogUtil.getRandomName(commentVO.getParentUserId().toString()));
             }
         }
         return commentVO;

@@ -9,7 +9,7 @@ import com.joy.qs.model.comment.pojo.Comment;
 import com.joy.qs.enums.CommentTypeEnum;
 import com.joy.qs.service.ArticleService;
 import com.joy.qs.service.CommentService;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,7 +45,7 @@ public class AdminCommentController {
             return R.fail("权限不足！");
         }
         Article one = articleService.lambdaQuery().eq(Article::getId, comment.getSource()).select(Article::getUserId).one();
-        if (one == null || (PoetryUtil.getUserId().intValue() != one.getUserId().intValue())) {
+        if (one == null || (BlogUtil.getUserId().intValue() != one.getUserId().intValue())) {
             return R.fail("权限不足！");
         }
         commentService.removeById(id);

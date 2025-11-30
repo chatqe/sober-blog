@@ -3,7 +3,7 @@ package com.joy.qs.handle;
 import com.alibaba.fastjson.JSON;
 import com.joy.qs.common.R;
 import com.joy.qs.enums.CodeMsg;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseBody
     public R handlerException(Exception ex) {
-        log.error("请求URL-----------------" + PoetryUtil.getRequest().getRequestURL());
+        log.error("请求URL-----------------" + BlogUtil.getRequest().getRequestURL());
         log.error("出错啦------------------", ex);
         if (ex instanceof BlogRuntimeException) {
             BlogRuntimeException e = (BlogRuntimeException) ex;

@@ -32,8 +32,8 @@ import com.joy.qs.model.webinfo.pojo.WebInfo;
 import com.joy.qs.service.ArticleService;
 import com.joy.qs.service.LikeRecordService;
 import com.joy.qs.service.UserService;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.CommonQuery;
-import com.joy.qs.utils.PoetryUtil;
 import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.cache.QingSiCache;
 import com.joy.qs.utils.mail.MailUtil;
@@ -113,7 +113,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         article.setArticleContent(articleVO.getArticleContent());
         article.setSortId(articleVO.getSortId());
         article.setLabelId(articleVO.getLabelId());
-        article.setUserId(PoetryUtil.getUserId());
+        article.setUserId(BlogUtil.getUserId());
         save(article);
 
         PoetryCache.remove(CommonConst.SORT_INFO);
@@ -145,8 +145,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         String webName = (webInfo == null ? "POETIZE" : webInfo.getWebName());
         return String.format(mailUtil.getMailText(),
                 webName,
-                String.format(MailUtil.notificationMail, PoetryUtil.getAdminUser().getUsername()),
-                PoetryUtil.getAdminUser().getUsername(),
+                String.format(MailUtil.notificationMail, BlogUtil.getAdminUser().getUsername()),
+                BlogUtil.getAdminUser().getUsername(),
                 String.format(subscribeFormat, labelName, articleTitle),
                 "",
                 webName);
@@ -154,7 +154,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Override
     public R deleteArticle(Integer id) {
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         lambdaUpdate().eq(Article::getId, id)
                 .eq(Article::getUserId, userId)
                 .remove();
@@ -168,14 +168,14 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             return R.fail("请设置文章密码！");
         }
 
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         LambdaUpdateChainWrapper<Article> updateChainWrapper = lambdaUpdate()
                 .eq(Article::getId, articleVO.getId())
                 .eq(Article::getUserId, userId)
                 .set(Article::getLabelId, articleVO.getLabelId())
                 .set(Article::getSortId, articleVO.getSortId())
                 .set(Article::getArticleTitle, articleVO.getArticleTitle())
-                .set(Article::getUpdateBy, PoetryUtil.getUsername())
+                .set(Article::getUpdateBy, BlogUtil.getUsername())
                 .set(Article::getUpdateTime, LocalDateTime.now())
                 .set(Article::getVideoUrl, StringUtils.hasText(articleVO.getVideoUrl()) ? articleVO.getVideoUrl() : null)
                 .set(Article::getArticleContent, articleVO.getArticleContent());
@@ -285,7 +285,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         LambdaQueryChainWrapper<Article> lambdaQuery = lambdaQuery();
         lambdaQuery.select(Article.class, a -> !a.getColumn().equals("article_content"));
         if (!isBoss) {
-            lambdaQuery.eq(Article::getUserId, PoetryUtil.getUserId());
+            lambdaQuery.eq(Article::getUserId, BlogUtil.getUserId());
         } else {
             if (baseReqVO.getUserId() != null) {
                 lambdaQuery.eq(Article::getUserId, baseReqVO.getUserId());
@@ -323,7 +323,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Override
     public R<ArticleVO> getArticleByIdForUser(Integer id) {
         LambdaQueryChainWrapper<Article> lambdaQuery = lambdaQuery();
-        lambdaQuery.eq(Article::getId, id).eq(Article::getUserId, PoetryUtil.getUserId());
+        lambdaQuery.eq(Article::getId, id).eq(Article::getUserId, BlogUtil.getUserId());
         Article article = lambdaQuery.one();
         if (article == null) {
             return R.fail("文章不存在！");
@@ -479,7 +479,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         if (Objects.isNull(byId)) {
             throw new ServiceException("文章不存在");
         }
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
 
         LikeRecord one = likeRecordService.getOne(Wrappers.<LikeRecord>lambdaQuery()
                 .eq(LikeRecord::getUserId, userId)
@@ -565,7 +565,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         BeanUtils.copyProperties(article, articleVO);
         if (!isAdmin) {
             if (!StringUtils.hasText(articleVO.getArticleCover())) {
-                articleVO.setArticleCover(PoetryUtil.getRandomCover(articleVO.getId().toString()));
+                articleVO.setArticleCover(BlogUtil.getRandomCover(articleVO.getId().toString()));
             }
         }
 
@@ -573,7 +573,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         if (user != null && StringUtils.hasText(user.getUsername())) {
             articleVO.setUsername(user.getUsername());
         } else if (!isAdmin) {
-            articleVO.setUsername(PoetryUtil.getRandomName(articleVO.getUserId().toString()));
+            articleVO.setUsername(BlogUtil.getRandomName(articleVO.getUserId().toString()));
         }
         if (articleVO.getCommentStatus()) {
             articleVO.setCommentCount(commonQuery.getCommentCount(articleVO.getId(), CommentTypeEnum.COMMENT_TYPE_ARTICLE.getCode()));

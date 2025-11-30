@@ -12,7 +12,7 @@ import com.joy.qs.model.article.pojo.Article;
 import com.joy.qs.model.weiyan.pojo.WeiYan;
 import com.joy.qs.service.WeiYanService;
 import com.joy.qs.constants.CommonConst;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -56,7 +56,7 @@ public class WeiYanController {
         weiYanVO.setContent(content);
 
         WeiYan weiYan = new WeiYan();
-        weiYan.setUserId(PoetryUtil.getUserId());
+        weiYan.setUserId(BlogUtil.getUserId());
         weiYan.setContent(weiYanVO.getContent());
         weiYan.setIsPublic(weiYanVO.getIsPublic());
         weiYan.setType(CommonConst.WEIYAN_TYPE_FRIEND);
@@ -79,7 +79,7 @@ public class WeiYanController {
             weiYanVO.setCreateTime(LocalDateTime.now());
         }
 
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
 
         LambdaQueryChainWrapper<Article> wrapper = new LambdaQueryChainWrapper<>(articleMapper);
         Integer count = wrapper.eq(Article::getId, weiYanVO.getSource()).eq(Article::getUserId, userId).count();
@@ -122,7 +122,7 @@ public class WeiYanController {
     @GetMapping("/deleteWeiYan")
     @LoginCheck
     public R deleteWeiYan(@RequestParam("id") Integer id) {
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         weiYanService.lambdaUpdate().eq(WeiYan::getId, id)
                 .eq(WeiYan::getUserId, userId)
                 .remove();
@@ -138,14 +138,14 @@ public class WeiYanController {
         LambdaQueryChainWrapper<WeiYan> lambdaQuery = weiYanService.lambdaQuery();
         lambdaQuery.eq(WeiYan::getType, CommonConst.WEIYAN_TYPE_FRIEND);
         if (baseReqVO.getUserId() == null) {
-            if (PoetryUtil.getUserId() != null) {
-                lambdaQuery.eq(WeiYan::getUserId, PoetryUtil.getUserId());
+            if (BlogUtil.getUserId() != null) {
+                lambdaQuery.eq(WeiYan::getUserId, BlogUtil.getUserId());
             } else {
                 lambdaQuery.eq(WeiYan::getIsPublic, YouthEnum.PUBLIC.getCode());
-                lambdaQuery.eq(WeiYan::getUserId, PoetryUtil.getAdminUser().getId());
+                lambdaQuery.eq(WeiYan::getUserId, BlogUtil.getAdminUser().getId());
             }
         } else {
-            if (!baseReqVO.getUserId().equals(PoetryUtil.getUserId())) {
+            if (!baseReqVO.getUserId().equals(BlogUtil.getUserId())) {
                 lambdaQuery.eq(WeiYan::getIsPublic, YouthEnum.PUBLIC.getCode());
             }
             lambdaQuery.eq(WeiYan::getUserId, baseReqVO.getUserId());

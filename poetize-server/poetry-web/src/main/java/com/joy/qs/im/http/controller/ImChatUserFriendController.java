@@ -9,8 +9,8 @@ import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.im.http.entity.ImChatUserFriend;
 import com.joy.qs.im.http.service.ImChatUserFriendService;
 import com.joy.qs.im.http.vo.UserFriendVO;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.CommonQuery;
-import com.joy.qs.utils.PoetryUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,7 +50,7 @@ public class ImChatUserFriendController {
             return R.fail("用户不存在！");
         }
 
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
 
         Integer count = userFriendService.lambdaQuery()
                 .and(wrapper -> wrapper.eq(ImChatUserFriend::getUserId, userId).eq(ImChatUserFriend::getFriendId, friendId))
@@ -75,7 +75,7 @@ public class ImChatUserFriendController {
     @GetMapping("/getFriend")
     @LoginCheck
     public R<List<UserFriendVO>> getFriend(@RequestParam(value = "friendStatus", required = false) Integer friendStatus) {
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         LambdaQueryChainWrapper<ImChatUserFriend> wrapper = userFriendService.lambdaQuery().eq(ImChatUserFriend::getUserId, userId);
         if (friendStatus != null) {
             wrapper.eq(ImChatUserFriend::getFriendStatus, friendStatus);
@@ -113,7 +113,7 @@ public class ImChatUserFriendController {
     public R changeFriend(@RequestParam("friendId") Integer friendId,
                           @RequestParam(value = "friendStatus", required = false) Integer friendStatus,
                           @RequestParam(value = "remark", required = false) String remark) {
-        Integer userId = PoetryUtil.getUserId();
+        Integer userId = BlogUtil.getUserId();
         ImChatUserFriend userFriend = userFriendService.lambdaQuery()
                 .eq(ImChatUserFriend::getUserId, userId)
                 .eq(ImChatUserFriend::getFriendId, friendId).one();

@@ -7,11 +7,11 @@ import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.model.webinfo.pojo.WebInfo;
 import com.joy.qs.im.http.entity.ImChatUserMessage;
 import com.joy.qs.service.CommentService;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.CommonQuery;
 import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.model.comment.vo.CommentVO;
 import com.joy.qs.enums.CommentTypeEnum;
-import com.joy.qs.utils.PoetryUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -36,20 +36,20 @@ public class MailSendUtil {
         String toName = "";
         if (commentVO.getParentUserId() != null) {
             User user = commonQuery.getUser(commentVO.getParentUserId());
-            if (user != null && !user.getId().equals(PoetryUtil.getUserId()) && StringUtils.hasText(user.getEmail())) {
+            if (user != null && !user.getId().equals(BlogUtil.getUserId()) && StringUtils.hasText(user.getEmail())) {
                 toName = user.getUsername();
                 mail.add(user.getEmail());
             }
         } else {
             if (CommentTypeEnum.COMMENT_TYPE_MESSAGE.getCode().equals(commentVO.getType()) ||
                     CommentTypeEnum.COMMENT_TYPE_LOVE.getCode().equals(commentVO.getType())) {
-                User adminUser = PoetryUtil.getAdminUser();
-                if (StringUtils.hasText(adminUser.getEmail()) && !Objects.equals(PoetryUtil.getUserId(), adminUser.getId())) {
+                User adminUser = BlogUtil.getAdminUser();
+                if (StringUtils.hasText(adminUser.getEmail()) && !Objects.equals(BlogUtil.getUserId(), adminUser.getId())) {
                     mail.add(adminUser.getEmail());
                 }
             } else if (CommentTypeEnum.COMMENT_TYPE_ARTICLE.getCode().equals(commentVO.getType())) {
                 User user = commonQuery.getUser(one.getUserId());
-                if (user != null && StringUtils.hasText(user.getEmail()) && !user.getId().equals(PoetryUtil.getUserId())) {
+                if (user != null && StringUtils.hasText(user.getEmail()) && !user.getId().equals(BlogUtil.getUserId())) {
                     mail.add(user.getEmail());
                 }
             }
@@ -61,7 +61,7 @@ public class MailSendUtil {
                 sourceName = one.getArticleTitle();
             }
             String commentMail = getCommentMail(commentVO.getType(), sourceName,
-                    PoetryUtil.getUsername(),
+                    BlogUtil.getUsername(),
                     commentVO.getCommentContent(),
                     toName,
                     commentVO.getParentCommentId(), commentService);

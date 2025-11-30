@@ -12,7 +12,7 @@ import com.joy.qs.constants.CommonConst;
 import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.enums.CodeMsg;
 import com.joy.qs.service.UserService;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.cache.PoetryCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -51,7 +51,7 @@ public class AdminUserController {
     @GetMapping("/user/changeUserStatus")
     @LoginCheck(0)
     public R changeUserStatus(@RequestParam("userId") Integer userId, @RequestParam("flag") Boolean flag) {
-        if (userId.intValue() == PoetryUtil.getAdminUser().getId().intValue()) {
+        if (userId.intValue() == BlogUtil.getAdminUser().getId().intValue()) {
             return R.fail("站长状态不能修改！");
         }
 
@@ -85,7 +85,7 @@ public class AdminUserController {
     @GetMapping("/user/changeUserType")
     @LoginCheck(0)
     public R changeUserType(@RequestParam("userId") Integer userId, @RequestParam("userType") Integer userType) {
-        if (userId.intValue() == PoetryUtil.getAdminUser().getId().intValue()) {
+        if (userId.intValue() == BlogUtil.getAdminUser().getId().intValue()) {
             return R.fail("站长类型不能修改！");
         }
 

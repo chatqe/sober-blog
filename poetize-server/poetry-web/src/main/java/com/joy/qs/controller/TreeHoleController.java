@@ -8,7 +8,7 @@ import com.joy.qs.dao.TreeHoleMapper;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.model.treehole.pojo.TreeHole;
 import com.joy.qs.service.TreeHoleService;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.QingsiUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,7 +86,7 @@ public class TreeHoleController {
 
         treeHoles.forEach(treeHole -> {
             if (!StringUtils.hasText(treeHole.getAvatar())) {
-                treeHole.setAvatar(PoetryUtil.getRandomAvatar(treeHole.getId().toString()));
+                treeHole.setAvatar(BlogUtil.getRandomAvatar(treeHole.getId().toString()));
             }
         });
         return R.success(treeHoles);

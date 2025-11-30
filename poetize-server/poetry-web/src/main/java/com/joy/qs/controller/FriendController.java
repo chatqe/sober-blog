@@ -8,7 +8,7 @@ import com.joy.qs.dao.ResourcePathMapper;
 import com.joy.qs.model.resourcepath.vo.ResourcePathVO;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.model.resourcepath.pojo.ResourcePath;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -52,7 +52,7 @@ public class FriendController {
         friend.setIntroduction(resourcePathVO.getIntroduction());
         friend.setCover(resourcePathVO.getCover());
         friend.setUrl(resourcePathVO.getUrl());
-        friend.setRemark(PoetryUtil.getUserId().toString());
+        friend.setRemark(BlogUtil.getUserId().toString());
         friend.setType(CommonConst.RESOURCE_PATH_TYPE_FRIEND);
         friend.setStatus(Boolean.FALSE);
         resourcePathMapper.insert(friend);

@@ -2,7 +2,7 @@ package com.joy.qs.utils.storage;
 
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.model.user.pojo.User;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.cache.PoetryCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -31,14 +31,14 @@ public class FileFilter {
         log.info("=================> 进入FileFilter过滤器处理,URL:{}",httpServletRequest.getRequestURI());
         if (matcher.match("/resource/upload", httpServletRequest.getRequestURI())) {
             // 根据自定义的请求头 Authorization 获取是否进行缓存用户信息
-            String token = PoetryUtil.getToken();
+            String token = BlogUtil.getToken();
             boolean hasText = StringUtils.hasText(token);
             if (hasText) {
                 User user = (User) PoetryCache.get(token);
 
                 if (user != null) {
 
-                    if (user.getId().intValue() == PoetryUtil.getAdminUser().getId().intValue()) {
+                    if (user.getId().intValue() == BlogUtil.getAdminUser().getId().intValue()) {
                         return false;
                     }
 
@@ -49,7 +49,7 @@ public class FileFilter {
                     }
                     int userIdCount = atomicInteger.getAndIncrement();
 
-                    String ip = PoetryUtil.getIpAddr(PoetryUtil.getRequest());
+                    String ip = BlogUtil.getIpAddr(BlogUtil.getRequest());
                     AtomicInteger atomic = (AtomicInteger) PoetryCache.get(CommonConst.SAVE_COUNT_IP + ip);
                     if (atomic == null) {
                         atomic = new AtomicInteger();

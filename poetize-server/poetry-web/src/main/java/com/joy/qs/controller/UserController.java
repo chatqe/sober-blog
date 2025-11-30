@@ -1,13 +1,14 @@
 package com.joy.qs.controller;
 
 
+import com.joy.qs.aop.Idempotent;
 import com.joy.qs.aop.LoginCheck;
 import com.joy.qs.aop.SaveCheck;
 import com.joy.qs.common.R;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.model.user.vo.UserVO;
 import com.joy.qs.service.UserService;
-import com.joy.qs.utils.PoetryUtil;
+import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.cache.PoetryCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -77,7 +78,7 @@ public class UserController {
     @PostMapping("/updateUserInfo")
     @LoginCheck
     public R<UserVO> updateUserInfo(@RequestBody UserVO user) {
-        PoetryCache.remove(CommonConst.USER_CACHE + PoetryUtil.getUserId().toString());
+        PoetryCache.remove(CommonConst.USER_CACHE + BlogUtil.getUserId().toString());
         return userService.updateUserInfo(user);
     }
 
@@ -130,7 +131,7 @@ public class UserController {
     @PostMapping("/updateSecretInfo")
     @LoginCheck
     public R<UserVO> updateSecretInfo(@RequestParam("place") String place, @RequestParam("flag") Integer flag, @RequestParam(value = "code", required = false) String code, @RequestParam("password") String password) {
-        PoetryCache.remove(CommonConst.USER_CACHE + PoetryUtil.getUserId().toString());
+        PoetryCache.remove(CommonConst.USER_CACHE + BlogUtil.getUserId().toString());
         return userService.updateSecretInfo(place, flag, code, password);
     }
 
@@ -176,7 +177,7 @@ public class UserController {
     @GetMapping("/subscribe")
     @LoginCheck
     public R<UserVO> subscribe(@RequestParam("labelId") Integer labelId, @RequestParam("flag") Boolean flag) {
-        PoetryCache.remove(CommonConst.USER_CACHE + PoetryUtil.getUserId().toString());
+        PoetryCache.remove(CommonConst.USER_CACHE + BlogUtil.getUserId().toString());
         return userService.subscribe(labelId, flag);
     }
 
@@ -192,6 +193,7 @@ public class UserController {
     // public R<String> getCaptcha(@RequestParam("flag") Boolean flag, @RequestParam("email") String email) {
     //     return R.success(userService.getCaptcha(flag, email));
     // }
+    @Idempotent(key = "#send")
     @GetMapping("/captcha")
     public R<Map<String, String>> getCaptcha(@RequestParam("flag") Boolean flag, @RequestParam("email") String email) {
         return R.success(userService.getCaptcha(flag, email));
@@ -200,6 +202,7 @@ public class UserController {
 
     /**
      * 验证码校验
+     *
      * @param uuid
      * @param code
      * @return
