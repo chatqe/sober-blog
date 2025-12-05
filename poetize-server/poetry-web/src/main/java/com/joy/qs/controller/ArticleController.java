@@ -75,8 +75,8 @@ public class ArticleController {
     public R updateArticle(@Validated @RequestBody ArticleVO articleVO) {
         // PoetryCache.remove(CommonConst.ARTICLE_LIST);
         // PoetryCache.remove(CommonConst.SORT_ARTICLE_LIST);
-        qingSiCache.delete(CommonConst.ARTICLE_LIST);
-        qingSiCache.delete(CommonConst.SORT_ARTICLE_LIST);
+        qingSiCache.del(CommonConst.ARTICLE_LIST);
+        qingSiCache.del(CommonConst.SORT_ARTICLE_LIST);
         return articleService.updateArticle(articleVO);
     }
 

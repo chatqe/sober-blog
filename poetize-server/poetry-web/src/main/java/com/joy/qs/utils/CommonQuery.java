@@ -10,6 +10,7 @@ import com.joy.qs.dao.*;
 import com.joy.qs.model.article.pojo.Article;
 import com.joy.qs.model.comment.pojo.Comment;
 import com.joy.qs.model.family.pojo.Family;
+import com.joy.qs.model.family.vo.FamilyVO;
 import com.joy.qs.model.historyinfo.pojo.HistoryInfo;
 import com.joy.qs.model.label.pojo.Label;
 import com.joy.qs.model.sort.pojo.Sort;
@@ -17,7 +18,6 @@ import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.service.UserService;
 import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.cache.QingSiCache;
-import com.joy.qs.model.family.vo.FamilyVO;
 import org.apache.commons.io.IOUtils;
 import org.lionsoul.ip2region.xdb.Searcher;
 import org.springframework.beans.BeanUtils;
@@ -80,7 +80,11 @@ public class CommonQuery {
         Integer userId = BlogUtil.getUserId();
         String ipUser = ip + (userId != null ? "_" + userId : "");
 
-        CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
+        // CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
+        CopyOnWriteArraySet<String> ipHistory =
+                qingSiCache.get(CommonConst.IP_HISTORY) == null ? new CopyOnWriteArraySet<>()
+                        : JSON.parseObject(qingSiCache.get(CommonConst.IP_HISTORY), new TypeReference<CopyOnWriteArraySet<String>>() {
+                });
         if (!ipHistory.contains(ipUser)) {
             synchronized (ipUser.intern()) {
                 if (!ipHistory.contains(ipUser)) {
@@ -120,7 +124,11 @@ public class CommonQuery {
         Integer userId = BlogUtil.getUserId();
         String ipUser = ip + (userId != null ? "_" + userId : "");
 
-        CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
+        // CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
+        CopyOnWriteArraySet<String> ipHistory =
+                qingSiCache.get(CommonConst.IP_HISTORY) == null ? new CopyOnWriteArraySet<>()
+                        : JSON.parseObject(qingSiCache.get(CommonConst.IP_HISTORY), new TypeReference<CopyOnWriteArraySet<String>>() {
+                });
         if (!ipHistory.contains(ipUser)) {
             synchronized (ipUser.intern()) {
                 if (!ipHistory.contains(ipUser)) {
@@ -167,19 +175,24 @@ public class CommonQuery {
     }
 
     public List<User> getAdmire() {
-        List<User> admire = (List<User>) PoetryCache.get(CommonConst.ADMIRE);
+        // List<User> admire = (List<User>) PoetryCache.get(CommonConst.ADMIRE);
+        List<User> admire = JSON.parseObject(qingSiCache.get(CommonConst.ADMIRE), new TypeReference<List<User>>() {
+        });
         if (admire != null) {
             return admire;
         }
 
         synchronized (CommonConst.ADMIRE.intern()) {
-            admire = (List<User>) PoetryCache.get(CommonConst.ADMIRE);
+            // admire = (List<User>) PoetryCache.get(CommonConst.ADMIRE);
+            admire = JSON.parseObject(qingSiCache.get(CommonConst.ADMIRE), new TypeReference<List<User>>() {
+            });
             if (admire != null) {
                 return admire;
             } else {
                 List<User> users = userService.lambdaQuery().select(User::getId, User::getUsername, User::getAdmire, User::getAvatar).isNotNull(User::getAdmire).list();
 
-                PoetryCache.put(CommonConst.ADMIRE, users, CommonConst.EXPIRE);
+                // PoetryCache.put(CommonConst.ADMIRE, users, CommonConst.EXPIRE);
+                qingSiCache.put(CommonConst.ADMIRE, users, CommonConst.EXPIRE);
 
                 return users;
             }
@@ -187,13 +200,17 @@ public class CommonQuery {
     }
 
     public List<FamilyVO> getFamilyList() {
-        List<FamilyVO> familyVOList = (List<FamilyVO>) PoetryCache.get(CommonConst.FAMILY_LIST);
+        // List<FamilyVO> familyVOList = (List<FamilyVO>) PoetryCache.get(CommonConst.FAMILY_LIST);
+        List<FamilyVO> familyVOList = JSON.parseObject(qingSiCache.get(CommonConst.FAMILY_LIST), new TypeReference<List<FamilyVO>>() {
+        });
         if (familyVOList != null) {
             return familyVOList;
         }
 
         synchronized (CommonConst.FAMILY_LIST.intern()) {
-            familyVOList = (List<FamilyVO>) PoetryCache.get(CommonConst.FAMILY_LIST);
+            // familyVOList = (List<FamilyVO>) PoetryCache.get(CommonConst.FAMILY_LIST);
+            familyVOList = JSON.parseObject(qingSiCache.get(CommonConst.FAMILY_LIST), new TypeReference<List<FamilyVO>>() {
+            });
             if (familyVOList != null) {
                 return familyVOList;
             } else {
@@ -209,7 +226,8 @@ public class CommonQuery {
                     familyVOList = new ArrayList<>();
                 }
 
-                PoetryCache.put(CommonConst.FAMILY_LIST, familyVOList);
+                // PoetryCache.put(CommonConst.FAMILY_LIST, familyVOList);
+                qingSiCache.put(CommonConst.FAMILY_LIST, familyVOList);
                 return familyVOList;
             }
         }
@@ -229,20 +247,25 @@ public class CommonQuery {
     }
 
     public List<Integer> getUserArticleIds(Integer userId) {
-        List<Integer> ids = (List<Integer>) PoetryCache.get(CommonConst.USER_ARTICLE_LIST + userId.toString());
+        // List<Integer> ids = (List<Integer>) PoetryCache.get(CommonConst.USER_ARTICLE_LIST + userId.toString());
+        List<Integer> ids = JSON.parseObject(qingSiCache.get(CommonConst.USER_ARTICLE_LIST + userId.toString()), new TypeReference<List<Integer>>() {
+        });
         if (ids != null) {
             return ids;
         }
 
         synchronized ((CommonConst.USER_ARTICLE_LIST + userId.toString()).intern()) {
-            ids = (List<Integer>) PoetryCache.get(CommonConst.USER_ARTICLE_LIST + userId.toString());
+            // ids = (List<Integer>) PoetryCache.get(CommonConst.USER_ARTICLE_LIST + userId.toString());
+            ids = JSON.parseObject(qingSiCache.get(CommonConst.USER_ARTICLE_LIST + userId.toString()), new TypeReference<List<Integer>>() {
+            });
             if (ids != null) {
                 return ids;
             } else {
                 LambdaQueryChainWrapper<Article> wrapper = new LambdaQueryChainWrapper<>(articleMapper);
                 List<Article> articles = wrapper.eq(Article::getUserId, userId).select(Article::getId).list();
                 List<Integer> collect = articles.stream().map(Article::getId).collect(Collectors.toList());
-                PoetryCache.put(CommonConst.USER_ARTICLE_LIST + userId.toString(), collect, CommonConst.EXPIRE);
+                // PoetryCache.put(CommonConst.USER_ARTICLE_LIST + userId.toString(), collect, CommonConst.EXPIRE);
+                qingSiCache.put(CommonConst.USER_ARTICLE_LIST + userId.toString(), collect, CommonConst.EXPIRE);
                 return collect;
             }
         }

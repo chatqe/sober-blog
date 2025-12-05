@@ -116,7 +116,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         article.setUserId(BlogUtil.getUserId());
         save(article);
 
-        PoetryCache.remove(CommonConst.SORT_INFO);
+        // PoetryCache.remove(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.SORT_INFO);
 
         try {
             if (articleVO.getViewStatus()) {
@@ -130,7 +131,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                     LambdaQueryChainWrapper<Label> wrapper = new LambdaQueryChainWrapper<>(labelMapper);
                     Label label = wrapper.select(Label::getLabelName).eq(Label::getId, articleVO.getLabelId()).one();
                     String text = getSubscribeMail(label.getLabelName(), articleVO.getArticleTitle());
-                    WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+                    // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+                    WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
                     mailUtil.sendMailMessage(emails, "您有一封来自" + (webInfo == null ? "POETIZE" : webInfo.getWebName()) + "的回执！", text);
                 }
             }
@@ -141,7 +143,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     private String getSubscribeMail(String labelName, String articleTitle) {
-        WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+        WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
         String webName = (webInfo == null ? "POETIZE" : webInfo.getWebName());
         return String.format(mailUtil.getMailText(),
                 webName,
@@ -158,7 +161,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         lambdaUpdate().eq(Article::getId, id)
                 .eq(Article::getUserId, userId)
                 .remove();
-        PoetryCache.remove(CommonConst.SORT_INFO);
+        // PoetryCache.remove(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
 
@@ -197,7 +201,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             updateChainWrapper.set(Article::getViewStatus, articleVO.getViewStatus());
         }
         updateChainWrapper.update();
-        PoetryCache.remove(CommonConst.SORT_INFO);
+        // PoetryCache.remove(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
 

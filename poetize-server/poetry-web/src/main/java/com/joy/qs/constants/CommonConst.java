@@ -103,6 +103,8 @@ public class CommonConst {
      */
     public static final String COMMENT_IM_MAIL = "comment_im_mail_";
 
+    /*************** 邮箱***********************/
+    public static final String COMMENT_MAIL = "comment_mail_";
     /**
      * 验证码邮件
      */

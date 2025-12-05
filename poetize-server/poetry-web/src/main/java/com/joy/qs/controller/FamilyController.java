@@ -71,9 +71,11 @@ public class FamilyController {
             familyService.save(family);
         }
         if (userId.intValue() == BlogUtil.getAdminUser().getId().intValue()) {
-            PoetryCache.put(CommonConst.ADMIN_FAMILY, family);
+            // PoetryCache.put(CommonConst.ADMIN_FAMILY, family);
+            qingSiCache.put(CommonConst.ADMIN_FAMILY, family);
         }
-        PoetryCache.remove(CommonConst.FAMILY_LIST);
+        // PoetryCache.remove(CommonConst.FAMILY_LIST);
+        qingSiCache.del(CommonConst.FAMILY_LIST);
         return R.success();
     }
 
@@ -84,7 +86,8 @@ public class FamilyController {
     @LoginCheck(0)
     public R deleteFamily(@RequestParam("id") Integer id) {
         familyService.removeById(id);
-        PoetryCache.remove(CommonConst.FAMILY_LIST);
+        // PoetryCache.remove(CommonConst.FAMILY_LIST);
+        qingSiCache.del(CommonConst.FAMILY_LIST);
         return R.success();
     }
 

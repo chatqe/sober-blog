@@ -87,6 +87,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Value("${user.code.format}")
     private String codeFormat;
+    @Value("${user.fwd.format}")
+    private String fwdFormat;
 
 
     @Override
@@ -122,12 +124,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             if (one.getUserType() != YouthEnum.USER_TYPE_ADMIN.getCode() && one.getUserType() != YouthEnum.USER_TYPE_DEV.getCode()) {
                 return R.fail("请输入管理员账号！");
             }
-            if (PoetryCache.get(CommonConst.ADMIN_TOKEN + one.getId()) != null) {
-                adminToken = (String) PoetryCache.get(CommonConst.ADMIN_TOKEN + one.getId());
+            // if (PoetryCache.get(CommonConst.ADMIN_TOKEN + one.getId()) != null) {
+            if (qingSiCache.get(CommonConst.ADMIN_TOKEN + one.getId()) != null) {
+                adminToken = qingSiCache.get(CommonConst.ADMIN_TOKEN + one.getId());
             }
         } else {
-            if (PoetryCache.get(CommonConst.USER_TOKEN + one.getId()) != null) {
-                userToken = (String) PoetryCache.get(CommonConst.USER_TOKEN + one.getId());
+            // if (PoetryCache.get(CommonConst.USER_TOKEN + one.getId()) != null) {
+            if (qingSiCache.get(CommonConst.USER_TOKEN + one.getId()) != null) {
+                userToken = qingSiCache.get(CommonConst.USER_TOKEN + one.getId());
             }
         }
 
@@ -135,13 +139,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (isAdmin && !StringUtils.hasText(adminToken)) {
             String uuid = UUID.randomUUID().toString().replaceAll("-", "");
             adminToken = CommonConst.ADMIN_ACCESS_TOKEN + uuid;
-            PoetryCache.put(adminToken, one, CommonConst.TOKEN_EXPIRE);
-            PoetryCache.put(CommonConst.ADMIN_TOKEN + one.getId(), adminToken, CommonConst.TOKEN_EXPIRE);
+            // PoetryCache.put(adminToken, one, CommonConst.TOKEN_EXPIRE);
+            // PoetryCache.put(CommonConst.ADMIN_TOKEN + one.getId(), adminToken, CommonConst.TOKEN_EXPIRE);
+            qingSiCache.put(adminToken, one, CommonConst.TOKEN_EXPIRE);
+            qingSiCache.put(CommonConst.ADMIN_TOKEN + one.getId(), adminToken, CommonConst.TOKEN_EXPIRE);
         } else if (!isAdmin && !StringUtils.hasText(userToken)) {
             String uuid = UUID.randomUUID().toString().replaceAll("-", "");
             userToken = CommonConst.USER_ACCESS_TOKEN + uuid;
-            PoetryCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
-            PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
+            // PoetryCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
+            // PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
+            qingSiCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
+            qingSiCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
         }
 
 
@@ -165,15 +173,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String token = BlogUtil.getToken();
         Integer userId = BlogUtil.getUserId();
         if (token.contains(CommonConst.USER_ACCESS_TOKEN)) {
-            PoetryCache.remove(CommonConst.USER_TOKEN + userId);
+            // PoetryCache.remove(CommonConst.USER_TOKEN + userId);
+            qingSiCache.del(CommonConst.USER_TOKEN + userId);
             TioWebsocketStarter tioWebsocketStarter = TioUtil.getTio();
             if (tioWebsocketStarter != null) {
                 Tio.removeUser(tioWebsocketStarter.getServerTioConfig(), String.valueOf(userId), "remove user");
             }
         } else if (token.contains(CommonConst.ADMIN_ACCESS_TOKEN)) {
-            PoetryCache.remove(CommonConst.ADMIN_TOKEN + userId);
+            // PoetryCache.remove(CommonConst.ADMIN_TOKEN + userId);
+            qingSiCache.del(CommonConst.ADMIN_TOKEN + userId);
         }
-        PoetryCache.remove(token);
+        // PoetryCache.remove(token);
+        qingSiCache.del(token);
         return R.success();
     }
 
@@ -195,19 +206,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         if (StringUtils.hasText(user.getPhoneNumber())) {
-            Integer codeCache = (Integer) PoetryCache.get(CommonConst.FORGET_PASSWORD + user.getPhoneNumber() + "_1");
+            // Integer codeCache = (Integer) PoetryCache.get(CommonConst.FORGET_PASSWORD + user.getPhoneNumber() + "_1");
+            Integer codeCache = JSON.parseObject(qingSiCache.get(CommonConst.CODE_MAIL + user.getPhoneNumber() + "_1"), Integer.class);
             if (codeCache == null || codeCache != Integer.parseInt(user.getCode())) {
                 return R.fail("验证码错误！");
             }
-            PoetryCache.remove(CommonConst.FORGET_PASSWORD + user.getPhoneNumber() + "_1");
+            // PoetryCache.remove(CommonConst.FORGET_PASSWORD + user.getPhoneNumber() + "_1");
+            qingSiCache.del(CommonConst.FORGET_PASSWORD + user.getPhoneNumber() + "_1");
         } else if (StringUtils.hasText(user.getEmail())) {
             // Integer codeCache = (Integer) PoetryCache.get(CommonConst.FORGET_PASSWORD + user.getEmail() + "_2");
-            Integer codeCache = JSON.parseObject(qingSiCache.get(CommonConst.CODE_MAIL + user.getEmail() + "_2"), Integer.class);
+            Integer codeCache = JSON.parseObject(qingSiCache.get(CommonConst.FORGET_PASSWORD + user.getEmail() + "_2"), Integer.class);
             if (codeCache == null || codeCache != Integer.parseInt(user.getCode())) {
                 return R.fail("验证码错误！");
             }
             // PoetryCache.remove(CommonConst.FORGET_PASSWORD + user.getEmail() + "_2");
-            qingSiCache.delete(CommonConst.FORGET_PASSWORD + user.getEmail() + "_2");
+            qingSiCache.del(CommonConst.FORGET_PASSWORD + user.getEmail() + "_2");
         } else {
             return R.fail("请输入邮箱或手机号！");
         }
@@ -245,8 +258,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String userToken = CommonConst.USER_ACCESS_TOKEN + UUID.randomUUID().toString().replaceAll("-", "");
         // PoetryCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
         // PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
-        PoetryCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
-        PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
+        qingSiCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
+        qingSiCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
 
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
@@ -307,8 +320,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         u.setIntroduction(user.getIntroduction());
         updateById(u);
         User one = lambdaQuery().eq(User::getId, u.getId()).one();
-        PoetryCache.put(BlogUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
-        PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), BlogUtil.getToken(), CommonConst.TOKEN_EXPIRE);
+        // PoetryCache.put(BlogUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
+        // PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), BlogUtil.getToken(), CommonConst.TOKEN_EXPIRE);
+        qingSiCache.put(BlogUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
+        qingSiCache.put(CommonConst.USER_TOKEN + one.getId(), BlogUtil.getToken(), CommonConst.TOKEN_EXPIRE);
 
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
@@ -338,13 +353,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             List<String> mail = new ArrayList<>();
             mail.add(user.getEmail());
             String text = getCodeMail(i);
-            WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+            WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
 
-            AtomicInteger count = (AtomicInteger) PoetryCache.get(CommonConst.CODE_MAIL + mail.get(0));
+            AtomicInteger count = JSON.parseObject(qingSiCache.get(CommonConst.CODE_MAIL + mail.get(0)), AtomicInteger.class);
             if (count == null || count.get() < CommonConst.CODE_MAIL_COUNT) {
                 mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName()) + "的回执！", text);
                 if (count == null) {
-                    PoetryCache.put(CommonConst.CODE_MAIL + mail.get(0), new AtomicInteger(1), CommonConst.CODE_EXPIRE);
+                    qingSiCache.put(CommonConst.CODE_MAIL + mail.get(0), new AtomicInteger(1), CommonConst.CODE_EXPIRE);
                 } else {
                     count.incrementAndGet();
                 }
@@ -352,7 +367,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 return R.fail("验证码发送次数过多，请明天再试！");
             }
         }
-        PoetryCache.put(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + flag, Integer.valueOf(i), 300);
+        qingSiCache.put(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + flag, Integer.valueOf(i), 300);
         return R.success();
     }
 
@@ -402,10 +417,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             if (count != 0) {
                 return R.fail("手机号重复！");
             }
-            Integer codeCache = (Integer) PoetryCache.get(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
+            // Integer codeCache = (Integer) PoetryCache.get(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
+            Integer codeCache = JSON.parseObject(qingSiCache.get(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag), Integer.class);
             if (codeCache != null && codeCache.intValue() == Integer.parseInt(code)) {
 
-                PoetryCache.remove(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
+                // PoetryCache.remove(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
+                qingSiCache.del(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
 
                 updateUser.setPhoneNumber(place);
             } else {
@@ -417,10 +434,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             if (count != 0) {
                 return R.fail("邮箱重复！");
             }
-            Integer codeCache = (Integer) PoetryCache.get(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
+            // Integer codeCache = (Integer) PoetryCache.get(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
+            Integer codeCache = JSON.parseObject(qingSiCache.get(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag), Integer.class);
             if (codeCache != null && codeCache.intValue() == Integer.parseInt(code)) {
 
-                PoetryCache.remove(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
+                // PoetryCache.remove(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
+                qingSiCache.del(CommonConst.USER_CODE + BlogUtil.getUserId() + "_" + place + "_" + flag);
 
                 updateUser.setEmail(place);
             } else {
@@ -436,8 +455,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         updateById(updateUser);
 
         User one = lambdaQuery().eq(User::getId, user.getId()).one();
-        PoetryCache.put(BlogUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
-        PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), BlogUtil.getToken(), CommonConst.TOKEN_EXPIRE);
+        // PoetryCache.put(BlogUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
+        // PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), BlogUtil.getToken(), CommonConst.TOKEN_EXPIRE);
+        qingSiCache.put(BlogUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
+        qingSiCache.put(CommonConst.USER_TOKEN + one.getId(), BlogUtil.getToken(), CommonConst.TOKEN_EXPIRE);
 
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
@@ -451,35 +472,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("加密后密码: {}", encryptionPwd);
     }
 
-    @Override
-    public R getCodeForForgetPassword(String place, Integer flag) {
-        int i = new Random().nextInt(900000) + 100000;
-        if (flag == 1) {
-            log.info(place + "---" + "手机验证码---" + i);
-        } else if (flag == 2) {
-            log.info(place + "---" + "邮箱验证码---" + i);
-
-            List<String> mail = new ArrayList<>();
-            mail.add(place);
-            String text = getCodeMail(i);
-            WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
-
-            AtomicInteger count = (AtomicInteger) PoetryCache.get(CommonConst.CODE_MAIL + mail.get(0));
-            if (count == null || count.get() < CommonConst.CODE_MAIL_COUNT) {
-                mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName()) + "的回执！", text);
-                if (count == null) {
-                    PoetryCache.put(CommonConst.CODE_MAIL + mail.get(0), new AtomicInteger(1), CommonConst.CODE_EXPIRE);
-                } else {
-                    count.incrementAndGet();
-                }
-            } else {
-                return R.fail("验证码发送次数过多，请明天再试！");
-            }
-        }
-        PoetryCache.put(CommonConst.FORGET_PASSWORD + place + "_" + flag, Integer.valueOf(i), 300);
-        return R.success();
-    }
-
 
     /**
      * 注册 获取验证码
@@ -490,7 +482,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public R getCodeByRegister(String place, Integer flag) {
-
         // 随机6位数字 字符串
         String code = RandomUtil.randomNumbers(6);
         if (flag == 1) {
@@ -501,15 +492,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             List<String> mail = new ArrayList<>();
             mail.add(place);
             String text = getCodeMail(code);
-            // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
-            WebInfo webInfo = com.alibaba.fastjson2.JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
+            WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
 
-            // AtomicInteger count = (AtomicInteger) PoetryCache.get(CommonConst.CODE_MAIL + mail.get(0));
-            AtomicInteger count = com.alibaba.fastjson2.JSON.parseObject(qingSiCache.get(CommonConst.CODE_MAIL + mail.get(0)), AtomicInteger.class);
+            AtomicInteger count = JSON.parseObject(qingSiCache.get(CommonConst.CODE_MAIL + mail.get(0)), AtomicInteger.class);
             if (count == null || count.get() < CommonConst.CODE_MAIL_COUNT) {
                 mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName()) + "的回执！", text);
                 if (count == null) {
-                    // PoetryCache.put(CommonConst.CODE_MAIL + mail.get(0), new AtomicInteger(1), CommonConst.CODE_EXPIRE);
                     qingSiCache.put(CommonConst.CODE_MAIL + mail.get(0), new AtomicInteger(1).toString(), CommonConst.CODE_EXPIRE);
                 } else {
                     count.incrementAndGet();
@@ -518,7 +506,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 return R.fail("验证码发送次数过多，请明天再试！");
             }
         }
-        // PoetryCache.put(CommonConst.FORGET_PASSWORD + place + "_" + flag, Integer.valueOf(i), 300);
         qingSiCache.put(CommonConst.CODE_MAIL + place + "_" + flag, code, 300);
 
         return R.success();
@@ -707,35 +694,71 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * @param i
+     * 根据类型发送邮箱验证码
+     *
+     * @param bizType
+     * @param email
      * @return
      */
-    private String getCodeMail(int i) {
-        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+    @Override
+    public R emailCode(String bizType, String email) {
+        // 随机6位数字 字符串
+        String code = RandomUtil.randomNumbers(6);
+
+        log.info(email + "---" + "邮箱验证码---" + code);
+
+        List<String> mail = new ArrayList<>();
+        mail.add(place);
+        String text = getCodeMail(code);
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
-        String webName = (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName());
-        String m = mailUtil.getMailText();
-        return String.format(mailUtil.getMailText(),
-                webName,
-                String.format(MailUtil.imMail, BlogUtil.getAdminUser().getUsername()),
-                BlogUtil.getAdminUser().getUsername(),
-                String.format(codeFormat, i),
-                "",
-                webName);
-    }
 
-    private String getCodeMail(String i) {
-        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
-        WebInfo webInfo = com.alibaba.fastjson2.JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
-        String webName = (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName());
+        AtomicInteger count = JSON.parseObject(qingSiCache.get(CommonConst.CODE_MAIL + mail.get(0)), AtomicInteger.class);
+        if (count == null || count.get() < CommonConst.CODE_MAIL_COUNT) {
+            mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName()) + "的回执！", text);
+            if (count == null) {
+                qingSiCache.put(CommonConst.CODE_MAIL + mail.get(0), new AtomicInteger(1).toString(), CommonConst.CODE_EXPIRE);
+            } else {
+                count.incrementAndGet();
+            }
+        } else {
+            return R.fail("验证码发送次数过多，请明天再试！");
+        }
 
-        // 【Corrain】218360为本次验证的验证码，请在5分钟内完成验证。为保证账号安全，请勿泄漏此验证码。
-        return String.format(mailUtil.getMailText(),
-                webName,
-                String.format(MailUtil.imMail, BlogUtil.getAdminUser().getUsername()),
-                BlogUtil.getAdminUser().getUsername(),
-                String.format(codeFormat, i),
-                "",
-                webName);
-    }
+        qingSiCache.put(CommonConst.CODE_MAIL +place +"_"+flag,code,300);
+
+        return R.success();
+}
+
+/**
+ * @param code
+ * @return
+ */
+private String getCodeMail(int code) {
+    WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
+    String webName = (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName());
+
+    return String.format(mailUtil.getMailText(),
+            webName,
+            String.format(MailUtil.imMail, BlogUtil.getAdminUser().getUsername()),
+            BlogUtil.getAdminUser().getUsername(),
+            String.format(codeFormat, code),
+            "",
+            webName);
+}
+
+private String getCodeMail(String i) {
+    WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
+    String webName = (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName());
+
+    // 【Corrain】218360为本次验证的验证码，请在5分钟内完成验证。为保证账号安全，请勿泄漏此验证码。
+    return String.format(mailUtil.getMailText(),
+            webName,
+            String.format(MailUtil.imMail, BlogUtil.getAdminUser().getUsername()),
+            BlogUtil.getAdminUser().getUsername(),
+            String.format(codeFormat, i),
+            "",
+            webName);
+}
+
+
 }

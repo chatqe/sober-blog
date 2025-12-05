@@ -1,10 +1,11 @@
 package com.joy.qs.aop;
 
-import com.joy.qs.model.user.pojo.User;
-import com.joy.qs.handle.BlogRuntimeException;
+import com.alibaba.fastjson2.JSON;
 import com.joy.qs.constants.CommonConst;
+import com.joy.qs.handle.BlogRuntimeException;
+import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.utils.BlogUtil;
-import com.joy.qs.utils.cache.PoetryCache;
+import com.joy.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -13,6 +14,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -22,22 +24,25 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class SaveCheckAspect {
 
+    @Resource
+    private QingSiCache qingSiCache;
+
     @Around("@annotation(saveCheck)")
     public Object around(ProceedingJoinPoint joinPoint, SaveCheck saveCheck) throws Throwable {
         boolean flag = false;
 
         String token = BlogUtil.getToken();
         if (StringUtils.hasText(token)) {
-            User user = (User) PoetryCache.get(token);
+            User user = JSON.parseObject(qingSiCache.get(token), User.class);
             if (user != null) {
                 if (user.getId().intValue() == BlogUtil.getAdminUser().getId().intValue()) {
                     return joinPoint.proceed();
                 }
 
-                AtomicInteger atomicInteger = (AtomicInteger) PoetryCache.get(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString());
+                AtomicInteger atomicInteger = JSON.parseObject(qingSiCache.get(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString()), AtomicInteger.class);
                 if (atomicInteger == null) {
                     atomicInteger = new AtomicInteger();
-                    PoetryCache.put(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString(), atomicInteger, CommonConst.SAVE_EXPIRE);
+                    qingSiCache.put(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString(), atomicInteger, CommonConst.SAVE_EXPIRE);
                 }
                 int userIdCount = atomicInteger.getAndIncrement();
                 if (userIdCount >= CommonConst.SAVE_MAX_COUNT) {
@@ -48,10 +53,10 @@ public class SaveCheckAspect {
         }
 
         String ip = BlogUtil.getIpAddr(BlogUtil.getRequest());
-        AtomicInteger atomic = (AtomicInteger) PoetryCache.get(CommonConst.SAVE_COUNT_IP + ip);
+        AtomicInteger atomic = JSON.parseObject(qingSiCache.get(CommonConst.SAVE_COUNT_IP + ip), AtomicInteger.class);
         if (atomic == null) {
             atomic = new AtomicInteger();
-            PoetryCache.put(CommonConst.SAVE_COUNT_IP + ip, atomic, CommonConst.SAVE_EXPIRE);
+            qingSiCache.put(CommonConst.SAVE_COUNT_IP + ip, atomic, CommonConst.SAVE_EXPIRE);
         }
         int ipCount = atomic.getAndIncrement();
         if (ipCount > CommonConst.SAVE_MAX_COUNT) {

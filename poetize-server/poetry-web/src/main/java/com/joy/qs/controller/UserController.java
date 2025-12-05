@@ -1,7 +1,6 @@
 package com.joy.qs.controller;
 
 
-import com.joy.qs.aop.Idempotent;
 import com.joy.qs.aop.LoginCheck;
 import com.joy.qs.aop.SaveCheck;
 import com.joy.qs.common.R;
@@ -10,10 +9,12 @@ import com.joy.qs.model.user.vo.UserVO;
 import com.joy.qs.service.UserService;
 import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.cache.PoetryCache;
+import com.joy.qs.utils.cache.QingSiCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 
@@ -32,11 +33,14 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Resource
+    private QingSiCache qingSiCache;
+
 
     /**
      * 用户名/密码注册
      */
-    @PostMapping("/regist")
+    @PostMapping("/register")
     public R<UserVO> regist(@Validated @RequestBody UserVO user) {
         return userService.regist(user);
     }
@@ -78,7 +82,8 @@ public class UserController {
     @PostMapping("/updateUserInfo")
     @LoginCheck
     public R<UserVO> updateUserInfo(@RequestBody UserVO user) {
-        PoetryCache.remove(CommonConst.USER_CACHE + BlogUtil.getUserId().toString());
+        // PoetryCache.remove(CommonConst.USER_CACHE + BlogUtil.getUserId().toString());
+        qingSiCache.del(CommonConst.USER_CACHE + BlogUtil.getUserId().toString());
         return userService.updateUserInfo(user);
     }
 
@@ -131,21 +136,11 @@ public class UserController {
     @PostMapping("/updateSecretInfo")
     @LoginCheck
     public R<UserVO> updateSecretInfo(@RequestParam("place") String place, @RequestParam("flag") Integer flag, @RequestParam(value = "code", required = false) String code, @RequestParam("password") String password) {
-        PoetryCache.remove(CommonConst.USER_CACHE + BlogUtil.getUserId().toString());
+        qingSiCache.del(CommonConst.USER_CACHE + BlogUtil.getUserId().toString());
         return userService.updateSecretInfo(place, flag, code, password);
     }
 
-    /**
-     * 忘记密码 获取验证码
-     * <p>
-     * 1 手机号
-     * 2 邮箱
-     */
-    @GetMapping("/getCodeForForgetPassword")
-    @SaveCheck
-    public R getCodeForForgetPassword(@RequestParam("place") String place, @RequestParam("flag") Integer flag) {
-        return userService.getCodeForForgetPassword(place, flag);
-    }
+
 
 
     /**
@@ -183,7 +178,7 @@ public class UserController {
 
 
     /**
-     * 注册获取验证码
+     * 注册获取图形验证码
      *
      * @param flag
      * @param email
@@ -193,7 +188,7 @@ public class UserController {
     // public R<String> getCaptcha(@RequestParam("flag") Boolean flag, @RequestParam("email") String email) {
     //     return R.success(userService.getCaptcha(flag, email));
     // }
-    @Idempotent(key = "#send")
+    // @Idempotent(key = "#send")
     @GetMapping("/captcha")
     public R<Map<String, String>> getCaptcha(@RequestParam("flag") Boolean flag, @RequestParam("email") String email) {
         return R.success(userService.getCaptcha(flag, email));
@@ -201,7 +196,7 @@ public class UserController {
 
 
     /**
-     * 验证码校验
+     * 图形验证码校验
      *
      * @param uuid
      * @param code
@@ -210,6 +205,15 @@ public class UserController {
     @PostMapping("/captchaCheck")
     public R<Boolean> checkCaptcha(@RequestParam String uuid, @RequestParam String code) {
         return R.success(userService.checkCaptcha(uuid, code));
+    }
+
+    /**
+     *  发送邮箱验证码
+     * @param bizType
+     */
+    @GetMapping("/mailCode")
+    public R mailCode(@RequestParam("bizType") String bizType,@RequestParam("email") String email) {
+        return userService.mailCode(bizType, email);
     }
 }
 

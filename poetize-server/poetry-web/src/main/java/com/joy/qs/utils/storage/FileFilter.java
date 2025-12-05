@@ -1,14 +1,16 @@
 package com.joy.qs.utils.storage;
 
+import com.alibaba.fastjson2.JSON;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.utils.BlogUtil;
-import com.joy.qs.utils.cache.PoetryCache;
+import com.joy.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,14 +29,18 @@ public class FileFilter {
 
     private final AntPathMatcher matcher = new AntPathMatcher();
 
+    @Resource
+    private QingSiCache qingSiCache;
+
     public boolean doFilterFile(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        log.info("=================> 进入FileFilter过滤器处理,URL:{}",httpServletRequest.getRequestURI());
+        log.info("=================> 进入FileFilter过滤器处理,URL:{}", httpServletRequest.getRequestURI());
         if (matcher.match("/resource/upload", httpServletRequest.getRequestURI())) {
             // 根据自定义的请求头 Authorization 获取是否进行缓存用户信息
             String token = BlogUtil.getToken();
             boolean hasText = StringUtils.hasText(token);
             if (hasText) {
-                User user = (User) PoetryCache.get(token);
+                // User user = (User) PoetryCache.get(token);
+                User user = JSON.parseObject(qingSiCache.get(token), User.class);
 
                 if (user != null) {
 
@@ -42,18 +48,22 @@ public class FileFilter {
                         return false;
                     }
 
-                    AtomicInteger atomicInteger = (AtomicInteger) PoetryCache.get(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString());
+                    // AtomicInteger atomicInteger = (AtomicInteger) PoetryCache.get(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString());
+                    AtomicInteger atomicInteger = JSON.parseObject(qingSiCache.get(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString()), AtomicInteger.class);
                     if (atomicInteger == null) {
                         atomicInteger = new AtomicInteger();
-                        PoetryCache.put(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString(), atomicInteger, CommonConst.SAVE_EXPIRE);
+                        // PoetryCache.put(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString(), atomicInteger, CommonConst.SAVE_EXPIRE);
+                        qingSiCache.put(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString(), atomicInteger, CommonConst.SAVE_EXPIRE);
                     }
                     int userIdCount = atomicInteger.getAndIncrement();
 
                     String ip = BlogUtil.getIpAddr(BlogUtil.getRequest());
-                    AtomicInteger atomic = (AtomicInteger) PoetryCache.get(CommonConst.SAVE_COUNT_IP + ip);
+                    // AtomicInteger atomic = (AtomicInteger) PoetryCache.get(CommonConst.SAVE_COUNT_IP + ip);
+                    AtomicInteger atomic = JSON.parseObject(qingSiCache.get(CommonConst.SAVE_COUNT_IP + ip), AtomicInteger.class);
                     if (atomic == null) {
                         atomic = new AtomicInteger();
-                        PoetryCache.put(CommonConst.SAVE_COUNT_IP + ip, atomic, CommonConst.SAVE_EXPIRE);
+                        // PoetryCache.put(CommonConst.SAVE_COUNT_IP + ip, atomic, CommonConst.SAVE_EXPIRE);
+                        qingSiCache.put(CommonConst.SAVE_COUNT_IP + ip, atomic, CommonConst.SAVE_EXPIRE);
                     }
                     int ipCount = atomic.getAndIncrement();
 

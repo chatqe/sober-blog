@@ -1,6 +1,6 @@
 package com.joy.qs.utils.mail;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.joy.qs.constants.CommonConst;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -61,6 +61,8 @@ public class MailUtil {
      */
     private String mailText;
 
+
+
     @PostConstruct
     public void init() {
         this.mailText = "<div style=\"font-family: serif;line-height: 22px;padding: 30px\">\n" +
@@ -95,6 +97,8 @@ public class MailUtil {
                 "        </div>\n" +
                 "    </div>\n" +
                 "</div>";
+
+
     }
 
     public String getMailText() {
@@ -104,9 +108,9 @@ public class MailUtil {
     @Async
     public void sendMailMessage(List<String> to, String subject, String text) {
         log.info("发送邮件===================");
-        log.info("to：{}", JSON.toJSONString(to));
-        log.info("subject：{}", subject);
-        log.info("text：{}", text);
+        // log.info("to：{}", JSON.toJSONString(to));
+        // log.info("subject：{}", subject);
+        // log.info("text：{}", text);
         try {
             //true代表支持复杂的类型
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mailSender.createMimeMessage(), true);

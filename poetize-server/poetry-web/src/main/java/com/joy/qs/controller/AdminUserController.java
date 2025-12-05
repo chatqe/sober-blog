@@ -4,19 +4,21 @@ import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWra
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.joy.qs.aop.LoginCheck;
 import com.joy.qs.common.R;
+import com.joy.qs.constants.CommonConst;
+import com.joy.qs.enums.CodeMsg;
 import com.joy.qs.enums.YouthEnum;
 import com.joy.qs.im.websocket.TioUtil;
 import com.joy.qs.im.websocket.TioWebsocketStarter;
 import com.joy.qs.model.BaseReqVO;
-import com.joy.qs.constants.CommonConst;
 import com.joy.qs.model.user.pojo.User;
-import com.joy.qs.enums.CodeMsg;
 import com.joy.qs.service.UserService;
 import com.joy.qs.utils.BlogUtil;
-import com.joy.qs.utils.cache.PoetryCache;
+import com.joy.qs.utils.cache.QingSiCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.tio.core.Tio;
+
+import javax.annotation.Resource;
 
 /**
  * <p>
@@ -32,6 +34,10 @@ public class AdminUserController {
 
     @Autowired
     private UserService userService;
+
+
+    @Resource
+    private QingSiCache qingSiCache;
 
     /**
      * 查询用户
@@ -75,7 +81,8 @@ public class AdminUserController {
                 .eq(User::getId, userId)
                 .set(User::getAdmire, admire)
                 .update();
-        PoetryCache.remove(CommonConst.ADMIRE);
+        // PoetryCache.remove(CommonConst.ADMIRE);
+        qingSiCache.del(CommonConst.ADMIRE);
         return R.success();
     }
 
@@ -99,16 +106,26 @@ public class AdminUserController {
     }
 
     private void logout(Integer userId) {
-        if (PoetryCache.get(CommonConst.ADMIN_TOKEN + userId) != null) {
-            String token = (String) PoetryCache.get(CommonConst.ADMIN_TOKEN + userId);
-            PoetryCache.remove(CommonConst.ADMIN_TOKEN + userId);
-            PoetryCache.remove(token);
+        // if (PoetryCache.get(CommonConst.ADMIN_TOKEN + userId) != null) {
+        //     String token = (String) PoetryCache.get(CommonConst.ADMIN_TOKEN + userId);
+        //     PoetryCache.remove(CommonConst.ADMIN_TOKEN + userId);
+        //     PoetryCache.remove(token);
+        // }
+        if (qingSiCache.get(CommonConst.ADMIN_TOKEN + userId) != null) {
+            String token = qingSiCache.get(CommonConst.ADMIN_TOKEN + userId);
+            qingSiCache.del(CommonConst.ADMIN_TOKEN + userId);
+            qingSiCache.del(token);
         }
 
-        if (PoetryCache.get(CommonConst.USER_TOKEN + userId) != null) {
-            String token = (String) PoetryCache.get(CommonConst.USER_TOKEN + userId);
-            PoetryCache.remove(CommonConst.USER_TOKEN + userId);
-            PoetryCache.remove(token);
+        // if (PoetryCache.get(CommonConst.USER_TOKEN + userId) != null) {
+        //     String token = (String) PoetryCache.get(CommonConst.USER_TOKEN + userId);
+        //     PoetryCache.remove(CommonConst.USER_TOKEN + userId);
+        //     PoetryCache.remove(token);
+        // }
+        if (qingSiCache.get(CommonConst.USER_TOKEN + userId) != null) {
+            String token = qingSiCache.get(CommonConst.USER_TOKEN + userId);
+            qingSiCache.del(CommonConst.USER_TOKEN + userId);
+            qingSiCache.del(token);
         }
         TioWebsocketStarter tioWebsocketStarter = TioUtil.getTio();
         if (tioWebsocketStarter != null) {

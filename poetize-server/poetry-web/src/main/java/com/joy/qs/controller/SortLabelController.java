@@ -70,7 +70,7 @@ public class SortLabelController {
 
         sortMapper.insert(sort);
         // PoetryCache.remove(CommonConst.SORT_INFO);
-        qingSiCache.delete(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
 
@@ -82,8 +82,8 @@ public class SortLabelController {
     @LoginCheck(0)
     public R deleteSort(@RequestParam("id") Integer id) {
         sortMapper.deleteById(id);
-        PoetryCache.remove(CommonConst.SORT_INFO);
-        qingSiCache.delete(CommonConst.SORT_INFO);
+        // PoetryCache.remove(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
 
@@ -95,8 +95,8 @@ public class SortLabelController {
     @LoginCheck(0)
     public R updateSort(@RequestBody Sort sort) {
         sortMapper.updateById(sort);
-        PoetryCache.remove(CommonConst.SORT_INFO);
-        qingSiCache.delete(CommonConst.SORT_INFO);
+        // PoetryCache.remove(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
 
@@ -123,7 +123,7 @@ public class SortLabelController {
         }
         labelMapper.insert(label);
         // PoetryCache.remove(CommonConst.SORT_INFO);
-        qingSiCache.delete(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
 
@@ -136,7 +136,7 @@ public class SortLabelController {
     public R deleteLabel(@RequestParam("id") Integer id) {
         labelMapper.deleteById(id);
         // PoetryCache.remove(CommonConst.SORT_INFO);
-        qingSiCache.delete(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
 
@@ -149,7 +149,7 @@ public class SortLabelController {
     public R updateLabel(@RequestBody Label label) {
         labelMapper.updateById(label);
         // PoetryCache.remove(CommonConst.SORT_INFO);
-        qingSiCache.delete(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
 

@@ -11,10 +11,13 @@ import com.joy.qs.constants.CommonConst;
 import com.joy.qs.utils.CommonQuery;
 import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.StringUtil;
+import com.joy.qs.utils.cache.QingSiCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 
 
 /**
@@ -36,6 +39,9 @@ public class CommentController {
     @Autowired
     private CommonQuery commonQuery;
 
+    @Resource
+    private QingSiCache qingSiCache;
+
 
     /**
      * 保存评论
@@ -50,7 +56,8 @@ public class CommentController {
         }
         commentVO.setCommentContent(content);
 
-        PoetryCache.remove(CommonConst.COMMENT_COUNT_CACHE + commentVO.getSource().toString() + "_" + commentVO.getType());
+        // PoetryCache.remove(CommonConst.COMMENT_COUNT_CACHE + commentVO.getSource().toString() + "_" + commentVO.getType());
+        qingSiCache.del(CommonConst.COMMENT_COUNT_CACHE + commentVO.getSource().toString() + "_" + commentVO.getType());
         return commentService.saveComment(commentVO);
     }
 

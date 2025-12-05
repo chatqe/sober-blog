@@ -1,17 +1,18 @@
 package com.joy.qs.task;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.dao.HistoryInfoMapper;
 import com.joy.qs.dao.WebInfoMapper;
+import com.joy.qs.enums.YouthEnum;
 import com.joy.qs.model.family.pojo.Family;
 import com.joy.qs.model.historyinfo.pojo.HistoryInfo;
 import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.model.webinfo.pojo.WebInfo;
-import com.joy.qs.enums.YouthEnum;
 import com.joy.qs.service.FamilyService;
 import com.joy.qs.service.UserService;
-import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +63,7 @@ public class TaskSchedule {
 
     /**
      * 定时创建 ipHistory 相关数据
+     *
      * @throws Exception
      */
     @Scheduled(cron = "0 0 0 * * ?")
@@ -76,7 +78,7 @@ public class TaskSchedule {
         }
 
         User admin = userService.lambdaQuery().eq(User::getUserType, YouthEnum.USER_TYPE_ADMIN.getCode()).one();
-        PoetryCache.put(CommonConst.ADMIN, admin);
+        // PoetryCache.put(CommonConst.ADMIN, admin);
         qingSiCache.put(CommonConst.ADMIN, admin);
 
         Family family = familyService.lambdaQuery().eq(Family::getUserId, admin.getId()).one();
@@ -93,7 +95,8 @@ public class TaskSchedule {
         CopyOnWriteArraySet<String> strings = new CopyOnWriteArraySet<>(
                 infoList.stream().map(info -> info.getIp() + (info.getUserId() != null ? "_" + info.getUserId().toString() : "")).collect(Collectors.toList()));
 
-        PoetryCache.put(CommonConst.IP_HISTORY, strings);
+        // PoetryCache.put(CommonConst.IP_HISTORY, strings);
+        qingSiCache.put(CommonConst.IP_HISTORY, strings);
 
         Map<String, Object> history = new HashMap<>();
         history.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
@@ -115,12 +118,12 @@ public class TaskSchedule {
 
     @Scheduled(cron = "0 1 0 * * ?")
     public void cleanIpHistory() {
-        CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
-        // CopyOnWriteArraySet<String> ipHistory = JSON.parseObject(qingSiCache.get(CommonConst.IP_HISTORY), new TypeReference<CopyOnWriteArraySet<String>>() {
-        // });
+        // CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
+        CopyOnWriteArraySet<String> ipHistory = JSON.parseObject(qingSiCache.get(CommonConst.IP_HISTORY), new TypeReference<CopyOnWriteArraySet<String>>() {
+        });
         if (ipHistory == null) {
             ipHistory = new CopyOnWriteArraySet<>();
-            PoetryCache.put(CommonConst.IP_HISTORY, ipHistory);
+            // PoetryCache.put(CommonConst.IP_HISTORY, ipHistory);
             qingSiCache.put(CommonConst.IP_HISTORY, ipHistory);
         }
         ipHistory.clear();

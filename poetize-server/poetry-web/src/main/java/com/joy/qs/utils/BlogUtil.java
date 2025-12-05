@@ -2,10 +2,10 @@ package com.joy.qs.utils;
 
 import com.alibaba.fastjson.JSON;
 import com.joy.qs.constants.CommonConst;
+import com.joy.qs.handle.BlogRuntimeException;
 import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.model.webinfo.pojo.WebInfo;
-import com.joy.qs.handle.BlogRuntimeException;
-import com.joy.qs.utils.cache.PoetryCache;
+import com.joy.qs.utils.cache.QingSiCache;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -17,12 +17,16 @@ import java.util.List;
 
 public class BlogUtil {
 
+    private static final QingSiCache qingSiCache =
+            SpringContextHolder.getBean(QingSiCache.class);
+
     public static HttpServletRequest getRequest() {
         return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
     }
 
     public static void checkEmail() {
-        User user = (User) PoetryCache.get(BlogUtil.getToken());
+        // User user = (User) PoetryCache.get(BlogUtil.getToken());
+        User user = JSON.parseObject(qingSiCache.get(BlogUtil.getToken()), User.class);
         if (!StringUtils.hasText(user.getEmail())) {
             throw new BlogRuntimeException("请先绑定邮箱！");
         }
@@ -34,12 +38,14 @@ public class BlogUtil {
     }
 
     public static User getCurrentUser() {
-        User user = (User) PoetryCache.get(BlogUtil.getToken());
+        // User user = (User) PoetryCache.get(BlogUtil.getToken());
+        User user = JSON.parseObject(qingSiCache.get(BlogUtil.getToken()), User.class);
         return user;
     }
 
     public static User getAdminUser() {
-        User admin = (User) PoetryCache.get(CommonConst.ADMIN);
+        // User admin = (User) PoetryCache.get(CommonConst.ADMIN);
+        User admin = JSON.parseObject(qingSiCache.get(CommonConst.ADMIN), User.class);
         return admin;
     }
 
@@ -48,17 +54,20 @@ public class BlogUtil {
         if (!StringUtils.hasText(token)) {
             return null;
         }
-        User user = (User) PoetryCache.get(token);
+        // User user = (User) PoetryCache.get(token);
+        User user = JSON.parseObject(token, User.class);
         return user == null ? null : user.getId();
     }
 
     public static String getUsername() {
-        User user = (User) PoetryCache.get(BlogUtil.getToken());
+        // User user = (User) PoetryCache.get(BlogUtil.getToken());
+        User user = JSON.parseObject(qingSiCache.get(BlogUtil.getToken()), User.class);
         return user == null ? null : user.getUsername();
     }
 
     public static String getRandomAvatar(String key) {
-        WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+        WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
         if (webInfo != null) {
             String randomAvatar = webInfo.getRandomAvatar();
             List<String> randomAvatars = JSON.parseArray(randomAvatar, String.class);
@@ -79,9 +88,9 @@ public class BlogUtil {
     }
 
 
-
     public static String getRandomName(String key) {
-        WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+        WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
         if (webInfo != null) {
             String randomName = webInfo.getRandomName();
             List<String> randomNames = JSON.parseArray(randomName, String.class);
@@ -102,7 +111,8 @@ public class BlogUtil {
     }
 
     public static String getRandomCover(String key) {
-        WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+        WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
         if (webInfo != null) {
             String randomCover = webInfo.getRandomCover();
             List<String> randomCovers = JSON.parseArray(randomCover, String.class);

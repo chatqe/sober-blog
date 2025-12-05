@@ -2,16 +2,17 @@ package com.joy.qs.im.websocket;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
-import com.joy.qs.model.user.pojo.User;
+import com.joy.qs.constants.CommonConst;
 import com.joy.qs.im.http.entity.ImChatGroupUser;
 import com.joy.qs.im.http.entity.ImChatUserGroupMessage;
 import com.joy.qs.im.http.entity.ImChatUserMessage;
 import com.joy.qs.im.http.service.ImChatGroupUserService;
 import com.joy.qs.im.http.service.ImChatUserMessageService;
-import com.joy.qs.constants.CommonConst;
+import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.utils.CommonQuery;
-import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.StringUtil;
+import com.joy.qs.utils.cache.PoetryCache;
+import com.joy.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -26,6 +27,7 @@ import org.tio.websocket.common.WsRequest;
 import org.tio.websocket.common.WsResponse;
 import org.tio.websocket.server.handler.IWsMsgHandler;
 
+import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +48,9 @@ public class ImWsMsgHandler implements IWsMsgHandler {
     @Autowired
     private CommonQuery commonQuery;
 
+    @Resource
+    private QingSiCache qingSiCache;
+
     /**
      * 握手时走这个方法，业务可以在这里获取cookie，request等
      * 对httpResponse参数进行补充并返回，如果返回null表示不想和对方建立连接
@@ -59,7 +64,8 @@ public class ImWsMsgHandler implements IWsMsgHandler {
             return null;
         }
 
-        User user = (User) PoetryCache.get(token);
+        // User user = (User) PoetryCache.get(token);
+        User user = JSON.parseObject(qingSiCache.get(token), User.class);
 
         if (user == null) {
             return null;
@@ -76,7 +82,8 @@ public class ImWsMsgHandler implements IWsMsgHandler {
     @Override
     public void onAfterHandshaked(HttpRequest httpRequest, HttpResponse httpResponse, ChannelContext channelContext) {
         String token = httpRequest.getParam(CommonConst.TOKEN_HEADER);
-        User user = (User) PoetryCache.get(token);
+        // User user = (User) PoetryCache.get(token);
+        User user = JSON.parseObject(qingSiCache.get(token), User.class);
         Tio.closeUser(channelContext.tioConfig, user.getId().toString(), null);
         Tio.bindUser(channelContext, user.getId().toString());
 

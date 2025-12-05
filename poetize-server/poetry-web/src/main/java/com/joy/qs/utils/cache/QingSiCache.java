@@ -32,7 +32,7 @@ public class QingSiCache {
      *
      * @param key
      */
-    public void delete(String key) {
+    public void del(String key) {
         stringRedisTemplate.delete(key);
     }
 
@@ -41,7 +41,7 @@ public class QingSiCache {
      *
      * @param keys
      */
-    public void delete(Collection<String> keys) {
+    public void del(Collection<String> keys) {
         stringRedisTemplate.delete(keys);
     }
 

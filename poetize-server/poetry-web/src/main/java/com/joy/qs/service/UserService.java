@@ -41,7 +41,6 @@ public interface UserService extends IService<User> {
 
     R<UserVO> updateSecretInfo(String place, Integer flag, String code, String password);
 
-    R getCodeForForgetPassword(String place, Integer flag);
     R getCodeByRegister(String place, Integer flag);
 
     R updateForForgetPassword(String place, Integer flag, String code, String password);
@@ -63,4 +62,15 @@ public interface UserService extends IService<User> {
     Map<String, String> getCaptcha(Boolean flag, String email);
 
     Boolean checkCaptcha(String uuid, String code);
+
+    /**
+     * 获取邮件验证码
+     *
+     * @param bizType
+     * @param email
+     * @return
+     */
+    R mailCode(String bizType, String email);
+
+    R emailCode(String bizType, String email);
 }
