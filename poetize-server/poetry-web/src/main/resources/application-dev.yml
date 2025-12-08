@@ -26,6 +26,7 @@ spring:
     host: smtp.qq.com
     username: 918906714@qq.com
     password: hrbrcvqrbcvubbde
+    sender-name: "青肆博客"
     default-encoding: utf-8
     protocol: smtp
     port: 465
@@ -94,14 +95,7 @@ custom:
     processor:
       enabled: false
 
-user:
-  code:
-    #    %06d String.format()占位符 0 表示 不足6位前面补0 6表示位数 d表示十进制整数
-    format: "【青肆博客】本次验证码 %s，请在5分钟内完成验证。为保证账号安全，请勿泄漏此验证码。"
-  fwd:
-    format: "【青肆博客】本次更新密码操作请确保为本人操作,校验码 %s，请在5分钟内完成验证。为保证账号安全，请勿泄漏此验证码。"
-  subscribe:
-    format:
+
 
 store:
   type: qiniu

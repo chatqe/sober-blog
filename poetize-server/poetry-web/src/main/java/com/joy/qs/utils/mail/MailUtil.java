@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.mail.MessagingException;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.List;
 
@@ -50,6 +51,8 @@ public class MailUtil {
 
     @Value("${spring.mail.username}")
     private String sendMailer;
+    @Value("${spring.mail.sender-name}")
+    private String nickName;
 
     /**
      * 1. 网站名称
@@ -60,7 +63,6 @@ public class MailUtil {
      * 6. 网站名称
      */
     private String mailText;
-
 
 
     @PostConstruct
@@ -115,7 +117,7 @@ public class MailUtil {
             //true代表支持复杂的类型
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mailSender.createMimeMessage(), true);
             //邮件发信人
-            mimeMessageHelper.setFrom(sendMailer);
+            mimeMessageHelper.setFrom(sendMailer, nickName);
             //邮件收信人1或多个
             mimeMessageHelper.setTo(to.toArray(new String[0]));
             //邮件主题
@@ -129,9 +131,10 @@ public class MailUtil {
             mailSender.send(mimeMessageHelper.getMimeMessage());
 
             log.info("发送成功==================");
-        } catch (MessagingException e) {
+        } catch (MessagingException | UnsupportedEncodingException e) {
             log.info("发送失败==================");
-            log.error(e.getMessage());
+            log.error("邮件发送失败 - 收件人: {}, 主题: {}",
+                    JSON.toJSONString(to), subject, e);
         }
     }
 }
