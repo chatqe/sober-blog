@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.joy.qs.common.R;
 import com.joy.qs.model.BaseReqVO;
-import com.joy.qs.model.user.vo.UserVO;
 import com.joy.qs.model.user.pojo.User;
+import com.joy.qs.model.user.vo.UserVO;
 
 import java.util.List;
 import java.util.Map;
@@ -67,10 +67,9 @@ public interface UserService extends IService<User> {
      * 获取邮件验证码
      *
      * @param bizType
-     * @param email
+     * @param receiver
      * @return
      */
-    R mailCode(String bizType, String email);
+    R mailCode(String bizType, String receiver );
 
-    R emailCode(String bizType, String email);
 }

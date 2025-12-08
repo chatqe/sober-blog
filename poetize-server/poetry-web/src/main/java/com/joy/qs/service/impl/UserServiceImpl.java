@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.joy.qs.common.R;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.dao.UserMapper;
+import com.joy.qs.enums.EmailBizType;
 import com.joy.qs.enums.YouthEnum;
 import com.joy.qs.handle.BlogRuntimeException;
 import com.joy.qs.im.http.dao.ImChatGroupUserMapper;
@@ -697,19 +698,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * 根据类型发送邮箱验证码
      *
      * @param bizType
-     * @param email
+     * @param receiver
      * @return
      */
     @Override
-    public R emailCode(String bizType, String email) {
+    public R mailCode(String bizType, String receiver) {
         // 随机6位数字 字符串
         String code = RandomUtil.randomNumbers(6);
 
-        log.info(email + "---" + "邮箱验证码---" + code);
+        log.info(receiver + "---" + "邮箱验证码---" + code);
 
         List<String> mail = new ArrayList<>();
-        mail.add(place);
-        String text = getCodeMail(code);
+        mail.add(receiver);// 收件人
+        String text = getCodeMail(code, bizType);// 邮件内容
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
 
         AtomicInteger count = JSON.parseObject(qingSiCache.get(CommonConst.CODE_MAIL + mail.get(0)), AtomicInteger.class);
@@ -724,41 +725,71 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return R.fail("验证码发送次数过多，请明天再试！");
         }
 
-        qingSiCache.put(CommonConst.CODE_MAIL +place +"_"+flag,code,300);
+        // TODO 暂未找到获取的地方 qingSiCache.put(CommonConst.CODE_MAIL + place + "_" + flag, code, 300);
+        qingSiCache.put(CommonConst.CODE_MAIL + receiver + "_" + EmailBizType.keyToPfx(bizType), code, 300);
 
         return R.success();
-}
+    }
 
-/**
- * @param code
- * @return
- */
-private String getCodeMail(int code) {
-    WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
-    String webName = (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName());
+    /**
+     * @param code
+     * @return
+     */
+    private String getCodeMail(int code) {
+        WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
+        String webName = (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName());
 
-    return String.format(mailUtil.getMailText(),
-            webName,
-            String.format(MailUtil.imMail, BlogUtil.getAdminUser().getUsername()),
-            BlogUtil.getAdminUser().getUsername(),
-            String.format(codeFormat, code),
-            "",
-            webName);
-}
+        return String.format(mailUtil.getMailText(),
+                webName,
+                String.format(MailUtil.imMail, BlogUtil.getAdminUser().getUsername()),
+                BlogUtil.getAdminUser().getUsername(),
+                String.format(codeFormat, code),
+                "",
+                webName);
+    }
 
-private String getCodeMail(String i) {
-    WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
-    String webName = (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName());
+    private String getCodeMail(String code) {
+        WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
+        String webName = (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName());
 
-    // 【Corrain】218360为本次验证的验证码，请在5分钟内完成验证。为保证账号安全，请勿泄漏此验证码。
-    return String.format(mailUtil.getMailText(),
-            webName,
-            String.format(MailUtil.imMail, BlogUtil.getAdminUser().getUsername()),
-            BlogUtil.getAdminUser().getUsername(),
-            String.format(codeFormat, i),
-            "",
-            webName);
-}
+        // 【Corrain】218360为本次验证的验证码，请在5分钟内完成验证。为保证账号安全，请勿泄漏此验证码。
+        return String.format(mailUtil.getMailText(),
+                webName,
+                String.format(MailUtil.imMail, BlogUtil.getAdminUser().getUsername()),
+                BlogUtil.getAdminUser().getUsername(),
+                String.format(codeFormat, code),
+                "",
+                webName);
+    }
 
+    /**
+     * 根据业务类型生成邮件内容
+     *
+     * @param code
+     * @param bizType
+     * @return
+     */
+    private String getCodeMail(String code, String bizType) {
+        String info = "";
+
+        if (EmailBizType.REGISTER.getKey().equals(bizType)) {
+            info = String.format(codeFormat, code);
+        } else if (EmailBizType.RESET_PWD.getKey().equals(bizType)) {
+            info = String.format(fwdFormat, code);
+        } else if (EmailBizType.LOGIN.getKey().equals(bizType)) {
+            info = String.format(codeFormat, code);
+        }
+        WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
+        String webName = (webInfo == null ? CommonConst.WEB_DEFAULT_TITLE : webInfo.getWebName());
+
+        // 【Corrain】218360为本次验证的验证码，请在5分钟内完成验证。为保证账号安全，请勿泄漏此验证码。
+        return String.format(mailUtil.getMailText(),
+                webName,
+                String.format(MailUtil.imMail, BlogUtil.getAdminUser().getUsername()),
+                BlogUtil.getAdminUser().getUsername(),
+                info,
+                "",
+                webName);
+    }
 
 }

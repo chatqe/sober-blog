@@ -141,8 +141,6 @@ public class UserController {
     }
 
 
-
-
     /**
      * 忘记密码 更新密码
      * <p>
@@ -208,11 +206,12 @@ public class UserController {
     }
 
     /**
-     *  发送邮箱验证码
+     * 发送邮箱验证码
+     *
      * @param bizType
      */
     @GetMapping("/mailCode")
-    public R mailCode(@RequestParam("bizType") String bizType,@RequestParam("email") String email) {
+    public R mailCode(@RequestParam("bizType") String bizType, @RequestParam("email") String email) {
         return userService.mailCode(bizType, email);
     }
 }
