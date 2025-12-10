@@ -1,8 +1,10 @@
 package com.joy.qs.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson2.JSON;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -26,10 +28,7 @@ import com.joy.qs.model.webinfo.pojo.WebInfo;
 import com.joy.qs.model.weiyan.pojo.WeiYan;
 import com.joy.qs.service.UserService;
 import com.joy.qs.service.WeiYanService;
-import com.joy.qs.utils.BlogUtil;
-import com.joy.qs.utils.CaptchaUtils;
-import com.joy.qs.utils.QingsiUtil;
-import com.joy.qs.utils.SvgCaptchaUtils;
+import com.joy.qs.utils.*;
 import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.cache.QingSiCache;
 import com.joy.qs.utils.mail.MailUtil;
@@ -727,6 +726,43 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // TODO 暂未找到获取的地方 qingSiCache.put(CommonConst.CODE_MAIL + place + "_" + flag, code, 300);
         qingSiCache.put(CommonConst.CODE_MAIL + receiver + "_" + EmailBizType.keyToPfx(bizType), code, 300);
+
+        return R.success();
+    }
+
+    /**
+     * 重置密码
+     *
+     * @param email   邮箱
+     * @param bizType 业务类型
+     * @param code    验证码
+     * @param pwd
+     * @return
+     */
+    @Override
+    public R resetPwdForFgtPwd(String email, String bizType, String code, String pwd) {
+        // dec
+        pwd = AESUtil.decrypt(pwd);
+
+        String codeCache = qingSiCache.get(CommonConst.CODE_MAIL + email + "_" + EmailBizType.keyToPfx(bizType));
+        if (StrUtil.isBlank(codeCache) || StrUtil.equals(codeCache, code)) {
+            return R.fail("验证码错误！");
+        }
+
+        qingSiCache.del(CommonConst.CODE_MAIL + email + "_" + EmailBizType.keyToPfx(bizType));
+
+        // User user = lambdaQuery().eq(User::getEmail, email).one();
+        User user = getOne(Wrappers.<User>lambdaQuery().eq(User::getEmail, email));
+        if (Objects.isNull(user)) {
+            return R.fail("该邮箱未绑定账号！");
+        }
+
+        if (Boolean.FALSE.equals(user.getUserStatus())) {
+            return R.fail("账号被冻结！");
+        }
+
+        lambdaUpdate().eq(User::getEmail, email).set(User::getPassword, AESUtil.encrypt(pwd)).update();
+        qingSiCache.del(CommonConst.USER_CACHE + user.getId().toString());
 
         return R.success();
     }

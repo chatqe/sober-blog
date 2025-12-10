@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 
@@ -213,6 +214,18 @@ public class UserController {
     @GetMapping("/mailCode")
     public R mailCode(@RequestParam("bizType") String bizType, @RequestParam("email") String email) {
         return userService.mailCode(bizType, email);
+    }
+
+
+    /**
+     * 忘记密码 更新密码
+     * <p>
+     * 1 手机号
+     * 2 邮箱
+     */
+    @PostMapping("/resetPwdForFgtPwd")
+    public R resetPwdForFgtPwd(@NotNull @RequestParam("email") String email, @RequestParam("bizType") String bizType, @RequestParam("code") String code, @RequestParam("password") String password) {
+        return userService.resetPwdForFgtPwd(email, bizType, code, password);
     }
 }
 

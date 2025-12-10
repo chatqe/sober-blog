@@ -70,6 +70,14 @@ public interface UserService extends IService<User> {
      * @param receiver
      * @return
      */
-    R mailCode(String bizType, String receiver );
+    R mailCode(String bizType, String receiver);
 
+    /**
+     * 重置密码
+     *
+     * @param email
+     * @param bizType
+     * @return
+     */
+    R resetPwdForFgtPwd(String email, String bizType, String code, String password);
 }
