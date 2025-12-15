@@ -5,7 +5,9 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.joy.qs.model.treehole.pojo.TreeHole;
+import com.joy.qs.model.webinfo.pojo.WebInfo;
 import com.joy.qs.service.TreeHoleService;
+import com.joy.qs.service.WebInfoService;
 import com.joy.qs.utils.cache.QingSiCache;
 import com.joy.qs.utils.storage.QiniuUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 树洞 测试类
@@ -36,10 +39,13 @@ public class TreeHoleTests {
     @Resource
     private QiniuUtil qiniuUtil;
 
+    @Resource
+    private WebInfoService webInfoService;
+
     @Test
     void saveTreeHoleList() {
 
-        String listStr="[\n" +
+        String listStr = "[\n" +
                 "  {\n" +
                 "    \"id\": 3252,\n" +
                 "    \"avatar\": \"https://file.poetize.cn/userAvatar/1064801740981653674469.jpg\",\n" +
@@ -196,10 +202,10 @@ public class TreeHoleTests {
         List<TreeHole> treeHoles = JSON.parseObject(listStr, new TypeReference<List<TreeHole>>() {
         });
 
-        log.info("list:{}",treeHoles);
+        log.info("list:{}", treeHoles);
 
         boolean b = treeHoleService.saveBatch(treeHoles);
-        log.info(b?"保存成功":"保存失败");
+        log.info(b ? "保存成功" : "保存失败");
     }
 
     @Test
@@ -210,15 +216,40 @@ public class TreeHoleTests {
         List<String> randomAvatars = qiniuUtil.list("qingsi/static/avatar/");
 
         // List<TreeHole> needUpdateList = treeHoleService.list(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
-        log.info("randomAvatars:{}",randomAvatars.size());
+        log.info("randomAvatars:{}", randomAvatars.size());
 
-        List<TreeHole> needUpdateList = treeHoleService.list(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "corrain"));
-        log.info("list:{}",needUpdateList.size());
+        // List<TreeHole> needUpdateList = treeHoleService.list(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "corrain"));
+        List<TreeHole> needUpdateList = treeHoleService.list();
+        log.info("list:{}", needUpdateList.size());
         needUpdateList.forEach(treeHole -> {
             treeHole.setAvatar(randomAvatars.get(RandomUtil.randomInt(0, randomAvatars.size())));
         });
         boolean b = treeHoleService.updateBatchById(needUpdateList);
-        log.info(b?"更新成功":"更新失败");
+        log.info(b ? "更新成功" : "更新失败");
         // treeHoleService.remove(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
     }
+
+    @Test
+    void updateRandomCoverUrl() {
+        // List<String> randomAvatars = JSON.parseObject(qingSiCache.get(CommonConst.PATH_TYPE_RANDOM_AVATAR), new TypeReference<List<String>>() {
+        // });
+
+        List<String> imgs = qiniuUtil.list("backgroundImg/");
+
+        // List<TreeHole> needUpdateList = treeHoleService.list(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
+        log.info("randomAvatars:{}", imgs.size());
+
+        WebInfo one = webInfoService.getOne(Wrappers.<WebInfo>lambdaQuery().orderByDesc());
+        log.info("one:{}", one);
+        /* 1. 每个元素前后加双引号，并转义内部双引号（虽然这里没有出现） */
+        String json = imgs.stream()
+                .map(s -> "\"" + s.replace("\"", "\\\"") + "\"")
+                .collect(Collectors.joining(",", "[", "]"));
+        log.info("json:{}", json);
+        one.setRandomCover(json);
+        boolean b = webInfoService.updateById(one);
+        log.info(b ? "更新成功" : "更新失败");
+        // treeHoleService.remove(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
+    }
+
 }

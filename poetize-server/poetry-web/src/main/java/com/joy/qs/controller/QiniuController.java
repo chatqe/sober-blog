@@ -28,7 +28,7 @@ public class QiniuController {
     @GetMapping("/getUpToken")
     @LoginCheck
     @SaveCheck
-    public R<String> getUpToken(@RequestParam(value = "key") String key) {
+    public R<String> getUpToken(@RequestParam("key") String key) {
         return R.success(qiniuUtil.getToken(key));
     }
 }

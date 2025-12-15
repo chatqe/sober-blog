@@ -1,11 +1,13 @@
 package com.joy.qs.utils;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.handle.BlogRuntimeException;
 import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.model.webinfo.pojo.WebInfo;
+import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.cache.QingSiCache;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -15,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.util.List;
 
+@Slf4j
 public class BlogUtil {
 
     private static final QingSiCache qingSiCache =
@@ -54,8 +57,8 @@ public class BlogUtil {
         if (!StringUtils.hasText(token)) {
             return null;
         }
-        // User user = (User) PoetryCache.get(token);
-        User user = JSON.parseObject(token, User.class);
+
+        User user = JSON.parseObject(qingSiCache.get(token), User.class);
         return user == null ? null : user.getId();
     }
 
