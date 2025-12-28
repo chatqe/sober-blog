@@ -4,14 +4,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>poetry</artifactId>
-        <groupId>com.ld</groupId>
-        <version>2.0</version>
+        <artifactId>qs</artifactId>
+        <groupId>io.charqe</groupId>
+        <version>1.0</version>
     </parent>
 
     <packaging>jar</packaging>
-    <artifactId>poetry-web</artifactId>
-    <name>poetry-web</name>
+    <artifactId>qs-blog</artifactId>
+    <name>qs-blog</name>
     <version>0.0.1-SNAPSHOT</version>
     <description>青肆博客</description>
 
