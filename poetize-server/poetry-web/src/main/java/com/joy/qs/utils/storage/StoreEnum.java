@@ -1,6 +1,6 @@
 package com.joy.qs.utils.storage;
 
-import com.joy.qs.handle.BlogRuntimeException;
+import com.joy.qs.handle.BizException;
 import org.springframework.util.StringUtils;
 
 public enum StoreEnum {
@@ -27,6 +27,6 @@ public enum StoreEnum {
                 }
             }
         }
-        throw new BlogRuntimeException("存储平台不支持：" + code);
+        throw new BizException("存储平台不支持：" + code);
     }
 }

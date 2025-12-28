@@ -52,10 +52,10 @@ public class ImChatUserFriendController {
 
         Integer userId = BlogUtil.getUserId();
 
-        Integer count = userFriendService.lambdaQuery()
+        Integer count = Math.toIntExact(userFriendService.lambdaQuery()
                 .and(wrapper -> wrapper.eq(ImChatUserFriend::getUserId, userId).eq(ImChatUserFriend::getFriendId, friendId))
                 .or(wrapper -> wrapper.eq(ImChatUserFriend::getFriendId, userId).eq(ImChatUserFriend::getUserId, friendId))
-                .count();
+                .count());
         if (count > 0) {
             return R.success();
         }

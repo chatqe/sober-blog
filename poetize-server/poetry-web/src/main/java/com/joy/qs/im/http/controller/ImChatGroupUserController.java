@@ -359,7 +359,7 @@ public class ImChatGroupUserController {
         wrapper.eq(ImChatGroupUser::getUserId, userId);
         wrapper.eq(ImChatGroupUser::getGroupId, groupId);
         wrapper.in(ImChatGroupUser::getUserStatus, ImConfigConst.GROUP_USER_STATUS_PASS, ImConfigConst.GROUP_USER_STATUS_SILENCE);
-        Integer count = wrapper.count();
+        Integer count = Math.toIntExact(wrapper.count());
         if (count < 1) {
             return R.fail("未加群！");
         }

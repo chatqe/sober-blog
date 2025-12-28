@@ -33,7 +33,9 @@ public class QiniuUtilTest {
     @Resource
     private QingSiCache qingSiCache;
 
-
+    /**
+     * 更新缓存
+     */
     @Test
     public void test() {
         // qiniuUtil.fileList();
@@ -45,12 +47,16 @@ public class QiniuUtilTest {
 
     }
 
+    /**
+     * 1) webp转码
+     */
     @Test
     public void convertProductDir() {
         /* 1. 捞出所有待转码文件（不带域名） */
         // List<String> srcKeys = qiniuUtil.listNoDomain("qingsi/static/avatar/");
         // List<String> srcKeys = qiniuUtil.listNoDomain("qingsi/static/backgroundImg/");
-        List<String> srcKeys = qiniuUtil.listNoDomain("backgroundImg/");
+        // List<String> srcKeys = qiniuUtil.listNoDomain("backgroundImg/");
+        List<String> srcKeys = qiniuUtil.listNoDomain("articleCover/");
         log.info("共扫描到 {} 张图片", srcKeys.size());
 
         /* 2. 只保留 jpg/jpeg/png，防止目录里混了其他文件 */
@@ -105,11 +111,15 @@ public class QiniuUtilTest {
 
     }
 
+    /**
+     * 2)删除 压缩前旧图片 =>  非 webp 且大于250kb 图片
+     */
     @Test
     public void delUnWebpImg() {
         // List<String> delKeys = qiniuUtil.listLargeNonWebp("qingsi/static/avatar/");
         // List<String> delKeys = qiniuUtil.listLargeNonWebp("qingsi/static/backgroundImg/");
-        List<String> delKeys = qiniuUtil.listLargeNonWebp("backgroundImg/");
+        // List<String> delKeys = qiniuUtil.listLargeNonWebp("backgroundImg/");
+        List<String> delKeys = qiniuUtil.listLargeNonWebp("articleCover/");
         log.info("需要删除的有 {} 张图片", delKeys.size());
         qiniuUtil.deleteFile(delKeys);
     }

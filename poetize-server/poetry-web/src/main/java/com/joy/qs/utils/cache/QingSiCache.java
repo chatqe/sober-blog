@@ -94,6 +94,10 @@ public class QingSiCache {
      * -------------------String相关操作---------------------
      */
     public String get(String key) {
+        if (key == null) {
+            log.error("key is null");
+            return null; // 或抛出自定义异常，或返回默认值
+        }
         return stringRedisTemplate.opsForValue().get(key);
     }
 

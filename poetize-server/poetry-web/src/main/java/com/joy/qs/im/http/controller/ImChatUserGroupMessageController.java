@@ -75,7 +75,7 @@ public class ImChatUserGroupMessageController {
             groupLambdaQuery.eq(ImChatGroupUser::getGroupId, groupId);
             groupLambdaQuery.eq(ImChatGroupUser::getUserId, userId);
             groupLambdaQuery.in(ImChatGroupUser::getUserStatus, ImConfigConst.GROUP_USER_STATUS_PASS, ImConfigConst.GROUP_USER_STATUS_SILENCE);
-            Integer count = groupLambdaQuery.count();
+            Integer count = Math.toIntExact(groupLambdaQuery.count());
             if (count < 1) {
                 return R.fail("未加群！");
             }

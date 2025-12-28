@@ -2,7 +2,7 @@ package com.joy.qs.aop;
 
 import com.alibaba.fastjson2.JSON;
 import com.joy.qs.constants.CommonConst;
-import com.joy.qs.handle.BlogRuntimeException;
+import com.joy.qs.handle.BizException;
 import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.utils.BlogUtil;
 import com.joy.qs.utils.cache.QingSiCache;
@@ -65,7 +65,7 @@ public class SaveCheckAspect {
         }
 
         if (flag) {
-            throw new BlogRuntimeException("今日提交次数已用尽，请一天后再来！");
+            throw new BizException("今日提交次数已用尽，请一天后再来！");
         }
 
         return joinPoint.proceed();

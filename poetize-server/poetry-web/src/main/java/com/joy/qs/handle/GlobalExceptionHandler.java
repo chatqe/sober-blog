@@ -24,8 +24,8 @@ public class GlobalExceptionHandler {
     public R handlerException(Exception ex) {
         log.error("请求URL-----------------" + BlogUtil.getRequest().getRequestURL());
         log.error("出错啦------------------", ex);
-        if (ex instanceof BlogRuntimeException) {
-            BlogRuntimeException e = (BlogRuntimeException) ex;
+        if (ex instanceof BizException) {
+            BizException e = (BizException) ex;
             return R.fail(e.getMessage());
         }
 

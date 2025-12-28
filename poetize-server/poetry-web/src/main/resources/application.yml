@@ -9,8 +9,8 @@ server:
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
-  #  configuration:
-  #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#  configuration:
+#      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印sql
   global-config:
     db-config:
       logic-delete-value: 1
@@ -48,4 +48,11 @@ baidu:
   ak: "8ZzlJzkuVMNxoauwcCDYt9IMxOwebhep"  # 替换为你自己的 API Key
   url:
     ip-location: "http://api.map.baidu.com/location/ip"
+
+springdoc:
+  api-docs:
+    path: /api-docs          # JSON 路径
+  swagger-ui:
+    path: /swagger-ui.html   # UI 路径
+    operations-sorter: method # 按方法排序
 

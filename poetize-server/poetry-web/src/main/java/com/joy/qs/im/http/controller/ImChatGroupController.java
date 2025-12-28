@@ -192,8 +192,8 @@ public class ImChatGroupController {
     @LoginCheck
     public R addGroupTopic(@RequestParam("id") Integer id) {
         LambdaQueryChainWrapper<ImChatGroup> lambdaQuery = imChatGroupService.lambdaQuery();
-        Integer count = lambdaQuery.eq(ImChatGroup::getId, id)
-                .eq(ImChatGroup::getGroupType, ImConfigConst.GROUP_TOPIC).count();
+        Integer count = Math.toIntExact(lambdaQuery.eq(ImChatGroup::getId, id)
+                .eq(ImChatGroup::getGroupType, ImConfigConst.GROUP_TOPIC).count());
         if (count == 1) {
             TioWebsocketStarter tioWebsocketStarter = TioUtil.getTio();
             if (tioWebsocketStarter != null) {

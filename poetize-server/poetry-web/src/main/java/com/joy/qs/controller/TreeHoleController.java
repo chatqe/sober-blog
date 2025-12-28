@@ -76,7 +76,7 @@ public class TreeHoleController {
     @GetMapping("/listTreeHole")
     public R<List<TreeHole>> listTreeHole() {
         List<TreeHole> treeHoles;
-        Integer count = new LambdaQueryChainWrapper<>(treeHoleMapper).count();
+        Integer count = Math.toIntExact(new LambdaQueryChainWrapper<>(treeHoleMapper).count());
         if (count > CommonConst.TREE_HOLE_COUNT) {
             int i = new Random().nextInt(count + 1 - CommonConst.TREE_HOLE_COUNT);
             treeHoles = treeHoleMapper.queryAllByLimit(i, CommonConst.TREE_HOLE_COUNT);

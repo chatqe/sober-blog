@@ -1,11 +1,14 @@
 package com.joy.qs;
 
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.joy.qs.model.article.pojo.Article;
 import com.joy.qs.model.treehole.pojo.TreeHole;
 import com.joy.qs.model.webinfo.pojo.WebInfo;
+import com.joy.qs.service.ArticleService;
 import com.joy.qs.service.TreeHoleService;
 import com.joy.qs.service.WebInfoService;
 import com.joy.qs.utils.cache.QingSiCache;
@@ -16,11 +19,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 树洞 测试类
+ * 库更新
  *
  * @author sjq
  * @since 2025-03-03 17:22
@@ -28,7 +33,7 @@ import java.util.stream.Collectors;
 @SpringBootTest(classes = BlogApplication.class)
 @ActiveProfiles("dev")
 @Slf4j
-public class TreeHoleTests {
+public class DatabaseTests {
 
     @Resource
     private TreeHoleService treeHoleService;
@@ -41,6 +46,9 @@ public class TreeHoleTests {
 
     @Resource
     private WebInfoService webInfoService;
+
+    @Resource
+    private ArticleService articleService;
 
     @Test
     void saveTreeHoleList() {
@@ -208,6 +216,9 @@ public class TreeHoleTests {
         log.info(b ? "保存成功" : "保存失败");
     }
 
+    /**
+     * 更新头像
+     */
     @Test
     void updateTreeHoleUrl() {
         // List<String> randomAvatars = JSON.parseObject(qingSiCache.get(CommonConst.PATH_TYPE_RANDOM_AVATAR), new TypeReference<List<String>>() {
@@ -229,6 +240,9 @@ public class TreeHoleTests {
         // treeHoleService.remove(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
     }
 
+    /**
+     * 更新随机封面
+     */
     @Test
     void updateRandomCoverUrl() {
         // List<String> randomAvatars = JSON.parseObject(qingSiCache.get(CommonConst.PATH_TYPE_RANDOM_AVATAR), new TypeReference<List<String>>() {
@@ -239,7 +253,7 @@ public class TreeHoleTests {
         // List<TreeHole> needUpdateList = treeHoleService.list(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
         log.info("randomAvatars:{}", imgs.size());
 
-        WebInfo one = webInfoService.getOne(Wrappers.<WebInfo>lambdaQuery().orderByDesc());
+        WebInfo one = webInfoService.getOne(Wrappers.<WebInfo>lambdaQuery());
         log.info("one:{}", one);
         /* 1. 每个元素前后加双引号，并转义内部双引号（虽然这里没有出现） */
         String json = imgs.stream()
@@ -252,4 +266,54 @@ public class TreeHoleTests {
         // treeHoleService.remove(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
     }
 
+    /**
+     * 更新文章封面
+     */
+    @Test
+    void updateArticleCoverUrl() {
+        List<String> newUrlList = qiniuUtil.list("articleCover/");
+        log.info("最新的articleCover有: {}", newUrlList.size());
+        List<Article> oldList = articleService.list();
+        log.info("已有的oldList有: {}", oldList.size());
+        // 先把 newUrl 按"纯 key"映射：key -> 完整 url
+        Map<String, String> newKeyMap = newUrlList.stream()
+                .collect(Collectors.toMap(
+                        url -> keyOf(url),          // aaa.webp -> aaa
+                        url -> url,                 // 完整新 url
+                        (v1, v2) -> v1));           // 如有重复留第一个
+
+        List<Article> needUpdateList = new ArrayList<Article>();
+        // 收集需要更新的文章
+        for (Article old : oldList) {
+            String oldCover = old.getArticleCover();
+            // 检查文章封面是否为null
+            String oldKey = keyOf(oldCover);
+            String newUrl = newKeyMap.get(oldKey);
+            // 后缀不同才替换
+            if (newUrl != null && !StrUtil.equalsIgnoreCase(oldCover, newUrl)) {
+                old.setArticleCover(newUrl);
+                log.info("需更新文章ID {} 的封面为 {}", old.getId(), newUrl);
+                needUpdateList.add(old);
+            }
+        }
+        log.info("需更新的文章有 {} 个", needUpdateList.size());
+        boolean b = articleService.updateBatchById(needUpdateList);
+        log.info(b ? "更新成功" : "更新失败");
+
+    }
+
+
+    /**
+     * 拿到文件名 无后缀
+     *
+     * @param url 完整url
+     * @return key 文件名 无后缀
+     */
+    private String keyOf(String url) {
+        // 去掉域名
+        // String key = url.replace(downloadUrl, "");
+        // 去掉后缀：aaa.webp -> aaa
+        int dot = url.lastIndexOf('.');
+        return dot == -1 ? url : url.substring(0, dot); // 安全地去掉后缀，拿不到就原样返回。
+    }
 }

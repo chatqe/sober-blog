@@ -5,7 +5,7 @@ import com.joy.qs.common.R;
 import com.joy.qs.constants.CommonConst;
 import com.joy.qs.enums.CodeMsg;
 import com.joy.qs.enums.YouthEnum;
-import com.joy.qs.handle.BlogRuntimeException;
+import com.joy.qs.handle.BizException;
 import com.joy.qs.handle.LoginException;
 import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.utils.BlogUtil;
@@ -57,7 +57,7 @@ public class LoginCheckAspect {
         }
 
         if (loginCheck.value() < user.getUserType()) {
-            throw new BlogRuntimeException("权限不足！");
+            throw new BizException("权限不足！");
         }
 
         //重置过期时间

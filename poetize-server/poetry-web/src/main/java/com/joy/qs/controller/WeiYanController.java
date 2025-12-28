@@ -82,7 +82,7 @@ public class WeiYanController {
         Integer userId = BlogUtil.getUserId();
 
         LambdaQueryChainWrapper<Article> wrapper = new LambdaQueryChainWrapper<>(articleMapper);
-        Integer count = wrapper.eq(Article::getId, weiYanVO.getSource()).eq(Article::getUserId, userId).count();
+        Integer count = Math.toIntExact(wrapper.eq(Article::getId, weiYanVO.getSource()).eq(Article::getUserId, userId).count());
 
         if (count == null || count < 1) {
             return R.fail("来源不存在！");

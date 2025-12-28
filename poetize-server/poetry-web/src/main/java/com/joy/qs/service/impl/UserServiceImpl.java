@@ -13,7 +13,7 @@ import com.joy.qs.constants.CommonConst;
 import com.joy.qs.dao.UserMapper;
 import com.joy.qs.enums.EmailBizType;
 import com.joy.qs.enums.YouthEnum;
-import com.joy.qs.handle.BlogRuntimeException;
+import com.joy.qs.handle.BizException;
 import com.joy.qs.im.http.dao.ImChatGroupUserMapper;
 import com.joy.qs.im.http.dao.ImChatUserFriendMapper;
 import com.joy.qs.im.http.entity.ImChatGroupUser;
@@ -228,17 +228,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         user.setPassword(new String(SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt(user.getPassword())));
 
-        Integer count = lambdaQuery().eq(User::getUsername, user.getUsername()).count();
+        Integer count = Math.toIntExact(lambdaQuery().eq(User::getUsername, user.getUsername()).count());
         if (count != 0) {
             return R.fail("用户名重复！");
         }
         if (StringUtils.hasText(user.getPhoneNumber())) {
-            Integer phoneNumberCount = lambdaQuery().eq(User::getPhoneNumber, user.getPhoneNumber()).count();
+            Integer phoneNumberCount = Math.toIntExact(lambdaQuery().eq(User::getPhoneNumber, user.getPhoneNumber()).count());
             if (phoneNumberCount != 0) {
                 return R.fail("手机号重复！");
             }
         } else if (StringUtils.hasText(user.getEmail())) {
-            Integer emailCount = lambdaQuery().eq(User::getEmail, user.getEmail()).count();
+            Integer emailCount = Math.toIntExact(lambdaQuery().eq(User::getEmail, user.getEmail()).count());
             if (emailCount != 0) {
                 return R.fail("邮箱重复！");
             }
@@ -307,7 +307,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 return R.fail("用户名不能包含@！");
             }
 
-            Integer count = lambdaQuery().eq(User::getUsername, user.getUsername()).ne(User::getId, BlogUtil.getUserId()).count();
+            Integer count = Math.toIntExact(lambdaQuery().eq(User::getUsername, user.getUsername()).ne(User::getId, BlogUtil.getUserId()).count());
             if (count != 0) {
                 return R.fail("用户名重复！");
             }
@@ -413,7 +413,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User updateUser = new User();
         updateUser.setId(user.getId());
         if (flag == 1) {
-            Integer count = lambdaQuery().eq(User::getPhoneNumber, place).count();
+            Integer count = Math.toIntExact(lambdaQuery().eq(User::getPhoneNumber, place).count());
             if (count != 0) {
                 return R.fail("手机号重复！");
             }
@@ -430,7 +430,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
 
         } else if (flag == 2) {
-            Integer count = lambdaQuery().eq(User::getEmail, place).count();
+            Integer count = Math.toIntExact(lambdaQuery().eq(User::getEmail, place).count());
             if (count != 0) {
                 return R.fail("邮箱重复！");
             }
@@ -604,13 +604,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userToken = new String(SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt(userToken));
 
         if (!StringUtils.hasText(userToken)) {
-            throw new BlogRuntimeException("未登陆，请登陆后再进行操作！");
+            throw new BizException("未登陆，请登陆后再进行操作！");
         }
 
         User user = (User) PoetryCache.get(userToken);
 
         if (user == null) {
-            throw new BlogRuntimeException("登录已过期，请重新登陆！");
+            throw new BizException("登录已过期，请重新登陆！");
         }
 
         UserVO userVO = new UserVO();

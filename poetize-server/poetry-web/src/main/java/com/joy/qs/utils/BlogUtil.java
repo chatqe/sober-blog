@@ -2,10 +2,9 @@ package com.joy.qs.utils;
 
 import com.alibaba.fastjson2.JSON;
 import com.joy.qs.constants.CommonConst;
-import com.joy.qs.handle.BlogRuntimeException;
+import com.joy.qs.handle.BizException;
 import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.model.webinfo.pojo.WebInfo;
-import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
@@ -31,7 +30,7 @@ public class BlogUtil {
         // User user = (User) PoetryCache.get(BlogUtil.getToken());
         User user = JSON.parseObject(qingSiCache.get(BlogUtil.getToken()), User.class);
         if (!StringUtils.hasText(user.getEmail())) {
-            throw new BlogRuntimeException("请先绑定邮箱！");
+            throw new BizException("请先绑定邮箱！");
         }
     }
 
@@ -64,6 +63,9 @@ public class BlogUtil {
 
     public static String getUsername() {
         // User user = (User) PoetryCache.get(BlogUtil.getToken());
+        if (qingSiCache.get(BlogUtil.getToken()) == null) {
+            return null;
+        }
         User user = JSON.parseObject(qingSiCache.get(BlogUtil.getToken()), User.class);
         return user == null ? null : user.getUsername();
     }

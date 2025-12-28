@@ -16,7 +16,6 @@ import com.joy.qs.model.label.pojo.Label;
 import com.joy.qs.model.sort.pojo.Sort;
 import com.joy.qs.model.user.pojo.User;
 import com.joy.qs.service.UserService;
-import com.joy.qs.utils.cache.PoetryCache;
 import com.joy.qs.utils.cache.QingSiCache;
 import org.apache.commons.io.IOUtils;
 import org.lionsoul.ip2region.xdb.Searcher;
@@ -240,7 +239,7 @@ public class CommonQuery {
             return count;
         }
         LambdaQueryChainWrapper<Comment> wrapper = new LambdaQueryChainWrapper<>(commentMapper);
-        Integer c = wrapper.eq(Comment::getSource, source).eq(Comment::getType, type).count();
+        Integer c = Math.toIntExact(wrapper.eq(Comment::getSource, source).eq(Comment::getType, type).count());
         // PoetryCache.put(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type, c, CommonConst.EXPIRE);
         qingSiCache.put(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type, c, CommonConst.EXPIRE);
         return c;
@@ -263,6 +262,7 @@ public class CommonQuery {
             } else {
                 LambdaQueryChainWrapper<Article> wrapper = new LambdaQueryChainWrapper<>(articleMapper);
                 List<Article> articles = wrapper.eq(Article::getUserId, userId).select(Article::getId).list();
+                // List<Integer> collect = articles.stream().map(Article::getId).collect(Collectors.toList());
                 List<Integer> collect = articles.stream().map(Article::getId).collect(Collectors.toList());
                 // PoetryCache.put(CommonConst.USER_ARTICLE_LIST + userId.toString(), collect, CommonConst.EXPIRE);
                 qingSiCache.put(CommonConst.USER_ARTICLE_LIST + userId.toString(), collect, CommonConst.EXPIRE);
@@ -332,7 +332,7 @@ public class CommonQuery {
                 if (!CollectionUtils.isEmpty(sorts)) {
                     sorts.forEach(sort -> {
                         LambdaQueryChainWrapper<Article> sortWrapper = new LambdaQueryChainWrapper<>(articleMapper);
-                        Integer countOfSort = sortWrapper.eq(Article::getSortId, sort.getId()).count();
+                        Integer countOfSort = Math.toIntExact(sortWrapper.eq(Article::getSortId, sort.getId()).count());
                         sort.setCountOfSort(countOfSort);
 
                         LambdaQueryChainWrapper<Label> wrapper = new LambdaQueryChainWrapper<>(labelMapper);
@@ -340,7 +340,7 @@ public class CommonQuery {
                         if (!CollectionUtils.isEmpty(labels)) {
                             labels.forEach(label -> {
                                 LambdaQueryChainWrapper<Article> labelWrapper = new LambdaQueryChainWrapper<>(articleMapper);
-                                Integer countOfLabel = labelWrapper.eq(Article::getLabelId, label.getId()).count();
+                                Integer countOfLabel = Math.toIntExact(labelWrapper.eq(Article::getLabelId, label.getId()).count());
                                 label.setCountOfLabel(countOfLabel);
                             });
                             sort.setLabels(labels);
