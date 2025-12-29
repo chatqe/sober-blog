@@ -1,4 +1,4 @@
-﻿package io.charqe.qs.model.resourcepath.pojo;
+package io.charqe.qs.model.resourcepath.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;

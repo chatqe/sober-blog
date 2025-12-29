@@ -1,4 +1,4 @@
-﻿package io.charqe.qs.model.resource.pojo;
+package io.charqe.qs.model.resource.pojo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

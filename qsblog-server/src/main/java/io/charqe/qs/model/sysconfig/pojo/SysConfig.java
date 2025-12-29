@@ -1,4 +1,4 @@
-﻿package io.charqe.qs.model.sysconfig.pojo;
+package io.charqe.qs.model.sysconfig.pojo;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;

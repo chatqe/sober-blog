@@ -1,4 +1,4 @@
-﻿package io.charqe.qs.model.friend.pojo;
+package io.charqe.qs.model.friend.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;

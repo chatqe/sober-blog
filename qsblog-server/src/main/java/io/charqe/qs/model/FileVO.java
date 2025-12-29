@@ -1,4 +1,4 @@
-﻿package io.charqe.qs.model;
+package io.charqe.qs.model;
 
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;

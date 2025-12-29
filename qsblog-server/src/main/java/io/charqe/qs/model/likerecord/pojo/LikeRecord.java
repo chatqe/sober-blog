@@ -1,4 +1,4 @@
-﻿package io.charqe.qs.model.likerecord.pojo;
+package io.charqe.qs.model.likerecord.pojo;
 
 import java.util.Date;
 

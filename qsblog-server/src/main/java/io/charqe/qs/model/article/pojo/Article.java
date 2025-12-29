@@ -1,4 +1,4 @@
-﻿package io.charqe.qs.model.article.pojo;
+package io.charqe.qs.model.article.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;

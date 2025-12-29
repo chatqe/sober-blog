@@ -1,4 +1,4 @@
-﻿package io.charqe.qs.model.sort.pojo;
+package io.charqe.qs.model.sort.pojo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

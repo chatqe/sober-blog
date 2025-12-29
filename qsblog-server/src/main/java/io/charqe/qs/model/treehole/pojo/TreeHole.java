@@ -1,4 +1,4 @@
-﻿package io.charqe.qs.model.treehole.pojo;
+package io.charqe.qs.model.treehole.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;

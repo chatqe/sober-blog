@@ -1,4 +1,4 @@
-﻿package io.charqe.qs.model.articlelike.pojo;
+package io.charqe.qs.model.articlelike.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
