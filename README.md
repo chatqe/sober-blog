@@ -1,5 +1,5 @@
-## POETIZE
-POETIZE：作诗，有诗意地描写。
+﻿## QingSi - Blog
+QingSi：青肆, 青春肆意。
 
 ![首页](poetize_picture/首页.png)
 
@@ -11,9 +11,9 @@ ps: 虽然我知道，大部分人都是来了直接下载源代码后就潇洒�
 相信各位同仁看到下面的项目介绍一定会心动的，心想`怎么没有早点遇到这么漂亮的博客项目`。在搭建这个美丽的网站同时，何不`Star`，为这个项目点赞呢！
 
 ## 技术栈
-这是一个 SpringBoot + Vue2 + Vue3 的产物，支持移动端自适应，配有完备的前台和后台管理功能。
+这是一个 SpringBoot  + Vue3 的产物，支持移动端自适应，配有完备的前台和后台管理功能。
 
-前端技术：Vue2（博客系统），Vue3（IM 聊天室系统），Element UI（Vue2），Element-Plus UI（Vue3），Naive UI（Vue3）
+前端技术：Vue3（博客系统），Vue3（IM 聊天室系统），Element Plus（Vue3），Element-Plus UI（Vue3），Naive UI（Vue3）
 
 后端技术：Java，SpringBoot，MySQL，Mybatis-Plus，t-io，qiniu-java-sdk，spring-boot-starter-mail
 
@@ -46,12 +46,12 @@ Vue3：
 2. npm run serve
 
 SpringBoot：
-1. 导入SQL文件到数据库（poetry.sql）
+1. 导入SQL文件到数据库（qsblog.sql）
 2. 配置数据库连接（application.yml里面的datasource信息）
-3. 启动（PoetryApplication）
+3. 启动（QsBlogApplication）
 
 ## 项目介绍
-大家好，我是Sara。POETIZE已经3年了。
+大家好，我是Joy。qs-blog已经1年了。
 
 从2021年6月16日开始搭建项目，到2022年8月21日第一个版本发布。期间曾因为换工作而暂停几个月，也因老头环而鸽了几个月。
 
@@ -203,3 +203,5 @@ SpringBoot：
 - 部署优化
 - 后端增加系统配置模块
 - 部分样式美化
+
+
