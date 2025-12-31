@@ -2,9 +2,9 @@ package io.charqe.qs;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.thread.ThreadUtil;
-import io.charqe.qs.constants.CommonConst;
+import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.utils.cache.QingSiCache;
-import io.charqe.qs.utils.storage.QiniuUtil;
+import io.charqe.qs.infra.storage.QiniuUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

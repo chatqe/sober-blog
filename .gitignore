@@ -38,3 +38,5 @@ log/
 *.pid
 *.orig
 temp/
+**/deprecated.txt
+**/jdk-internals.txt

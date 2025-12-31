@@ -1,7 +1,7 @@
 package io.charqe.qs.utils;
 
 
-import io.charqe.qs.model.user.dto.LoginUserInfo;
+import io.charqe.qs.modules.user.controller.web.dto.LoginUserInfo;
 
 /**
  * @author Upjqs

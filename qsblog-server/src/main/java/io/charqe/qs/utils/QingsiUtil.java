@@ -3,7 +3,7 @@ package io.charqe.qs.utils;
 import cn.hutool.core.util.RandomUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
-import io.charqe.qs.constants.CommonConst;
+import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.utils.cache.QingSiCache;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;

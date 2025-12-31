@@ -1,0 +1,18 @@
+package io.charqe.qs.modules.sort.domain.dao;
+
+import io.charqe.qs.modules.sort.domain.pojo.Sort;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+/**
+ * <p>
+ * 分类 Mapper 接口
+ * </p>
+ *
+ * @author sara
+ * @since 2021-09-14
+ */
+public interface SortMapper extends BaseMapper<Sort> {
+
+}
+
+

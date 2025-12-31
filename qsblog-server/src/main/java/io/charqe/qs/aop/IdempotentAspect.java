@@ -1,6 +1,6 @@
 package io.charqe.qs.aop;
 
-import io.charqe.qs.handle.ServiceException;
+import io.charqe.qs.common.exception.ServiceException;
 import io.charqe.qs.utils.IpUtils;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.RequiredArgsConstructor;

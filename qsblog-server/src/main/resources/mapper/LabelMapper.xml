@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="io.charqe.qs.dao.LabelMapper">
+<mapper namespace="io.charqe.qs.modules.label.domain.dao.LabelMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="io.charqe.qs.model.label.pojo.Label">
+    <resultMap id="BaseResultMap" type="io.charqe.qs.modules.label.domain.pojo.Label">
         <id column="id" property="id"/>
         <result column="sort_id" property="sortId"/>
         <result column="label_name" property="labelName"/>

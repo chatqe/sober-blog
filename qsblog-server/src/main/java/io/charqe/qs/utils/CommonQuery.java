@@ -5,22 +5,26 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
-import io.charqe.qs.constants.CommonConst;
-import io.charqe.qs.dao.*;
-import io.charqe.qs.model.article.pojo.Article;
-import io.charqe.qs.model.comment.pojo.Comment;
-import io.charqe.qs.model.family.pojo.Family;
-import io.charqe.qs.model.family.vo.FamilyVO;
-import io.charqe.qs.model.historyinfo.pojo.HistoryInfo;
-import io.charqe.qs.model.label.pojo.Label;
-import io.charqe.qs.model.sort.pojo.Sort;
-import io.charqe.qs.model.user.pojo.User;
-import io.charqe.qs.service.UserService;
+import io.charqe.qs.common.constants.CommonConst;
+import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
+import io.charqe.qs.modules.article.domain.pojo.Article;
+import io.charqe.qs.modules.comment.domain.dao.CommentMapper;
+import io.charqe.qs.modules.comment.domain.pojo.Comment;
+import io.charqe.qs.modules.family.domain.dao.FamilyMapper;
+import io.charqe.qs.modules.family.domain.pojo.Family;
+import io.charqe.qs.modules.family.controller.web.vo.FamilyVO;
+import io.charqe.qs.modules.historyInfo.domain.pojo.HistoryInfo;
+import io.charqe.qs.modules.historyInfo.domain.dao.HistoryInfoMapper;
+import io.charqe.qs.modules.label.domain.dao.LabelMapper;
+import io.charqe.qs.modules.label.domain.pojo.Label;
+import io.charqe.qs.modules.sort.domain.dao.SortMapper;
+import io.charqe.qs.modules.sort.domain.pojo.Sort;
+import io.charqe.qs.modules.user.domain.pojo.User;
+import io.charqe.qs.modules.user.service.UserService;
 import io.charqe.qs.utils.cache.QingSiCache;
 import org.apache.commons.io.IOUtils;
 import org.lionsoul.ip2region.xdb.Searcher;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -35,25 +39,25 @@ import java.util.stream.Collectors;
 
 @Component
 public class CommonQuery {
-    @Autowired
+    @Resource
     private CommentMapper commentMapper;
 
-    @Autowired
+    @Resource
     private HistoryInfoMapper historyInfoMapper;
 
-    @Autowired
+    @Resource
     private UserService userService;
 
-    @Autowired
+    @Resource
     private SortMapper sortMapper;
 
-    @Autowired
+    @Resource
     private LabelMapper labelMapper;
 
-    @Autowired
+    @Resource
     private ArticleMapper articleMapper;
 
-    @Autowired
+    @Resource
     private FamilyMapper familyMapper;
 
     @Resource

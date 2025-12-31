@@ -1,9 +1,9 @@
 package io.charqe.qs.aop;
 
 import com.alibaba.fastjson2.JSON;
-import io.charqe.qs.constants.CommonConst;
-import io.charqe.qs.handle.BizException;
-import io.charqe.qs.model.user.pojo.User;
+import io.charqe.qs.common.constants.CommonConst;
+import io.charqe.qs.common.exception.BizException;
+import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;

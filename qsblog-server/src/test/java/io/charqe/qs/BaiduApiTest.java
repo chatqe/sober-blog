@@ -1,6 +1,6 @@
 package io.charqe.qs;
 
-import io.charqe.qs.utils.BaiduIPLocator;
+import io.charqe.qs.infra.thirdparty.baidumap.BaiduIPLocator;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,10 +1,10 @@
 package io.charqe.qs.utils;
 
 import com.alibaba.fastjson2.JSON;
-import io.charqe.qs.constants.CommonConst;
-import io.charqe.qs.handle.BizException;
-import io.charqe.qs.model.user.pojo.User;
-import io.charqe.qs.model.webinfo.pojo.WebInfo;
+import io.charqe.qs.common.constants.CommonConst;
+import io.charqe.qs.common.exception.BizException;
+import io.charqe.qs.modules.user.domain.pojo.User;
+import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;

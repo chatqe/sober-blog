@@ -8,7 +8,9 @@
 
 
 mybatis-plus:
-  mapper-locations: classpath*:mapper/**/*.xml
+  # 1. 配置 Mapper 接口包路径
+#  type-aliases-package: io.charqe.qs.modules.comment.domain
+  mapper-locations: classpath*:mapper/**/*.xml  # 如果有XML文件
 #  configuration:
 #      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印sql
   global-config:
@@ -54,6 +56,7 @@ springdoc:
     path: /api-docs          # JSON 路径
   swagger-ui:
     path: /swagger-ui.html   # UI 路径
+    tags-sorter: alpha
     operations-sorter: method # 按方法排序
 
 

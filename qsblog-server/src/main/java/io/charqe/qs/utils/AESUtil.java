@@ -1,7 +1,7 @@
 package io.charqe.qs.utils;
 
 import cn.hutool.crypto.SecureUtil;
-import io.charqe.qs.constants.CommonConst;
+import io.charqe.qs.common.constants.CommonConst;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
