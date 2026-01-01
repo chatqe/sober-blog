@@ -160,8 +160,9 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-ui</artifactId>
-            <version>1.7.0</version>   <!-- Boot 2.x 最新版 -->
+            <version>1.8.0</version>   <!-- Boot 2.x 最新版 -->
         </dependency>
+
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

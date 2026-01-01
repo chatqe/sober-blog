@@ -9,10 +9,10 @@
 
 mybatis-plus:
   # 1. 配置 Mapper 接口包路径
-#  type-aliases-package: io.charqe.qs.modules.comment.domain
+  #  type-aliases-package: io.charqe.qs.modules.comment.domain
   mapper-locations: classpath*:mapper/**/*.xml  # 如果有XML文件
-#  configuration:
-#      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印sql
+  #  configuration:
+  #      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印sql
   global-config:
     db-config:
       logic-delete-value: 1
@@ -53,11 +53,20 @@ baidu:
 
 springdoc:
   api-docs:
-    path: /api-docs          # JSON 路径
+    path: /v3/api-docs
+    info:
+      title: "Openapi在线JSON文档"
+      description: "这是一个用于演示springdoc-openapi和orval集成的后端服务API文档。"
+      version: "0.0.1"
+      contact:
+        name: "Joy"
+        email: "hilary98qs@163.com"
   swagger-ui:
-    path: /swagger-ui.html   # UI 路径
-    tags-sorter: alpha
-    operations-sorter: method # 按方法排序
+    path: /swagger-ui.html
+    tags-sorter: alpha         # 标签按字母顺序排序
+    operations-sorter: method  # 接口内的操作按HTTP方法排序 (GET, POST, PUT, DELETE)
 
-
+  packages-to-scan: io.charqe.qs.modules # 指定要扫描的基础包，用于发现Controller
+  default-produces-media-type: application/json   # API默认产生的媒体类型
+  writer-with-default-pretty-print: true  #让 /v3/api-docs 返回的 JSON 格式带有缩进，非常易于阅读。
 

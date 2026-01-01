@@ -17,6 +17,8 @@ public class WebInfoConfigurer implements WebMvcConfigurer {
         registry.addInterceptor(webInfoHandlerInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
                         "/user/login",
                         "/admin/**",
                         "/webInfo/getWebInfo",

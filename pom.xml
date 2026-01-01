@@ -7,7 +7,7 @@
     <artifactId>qs</artifactId>
     <version>1.0</version>
     <name>Qs-Blog</name>
-    <description>QingSi - 个人博客</description>
+    <description>青肆 - 个人博客</description>
     <packaging>pom</packaging>
 
     <properties>
@@ -47,7 +47,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <dependency>
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
@@ -85,7 +85,7 @@
                 <version>${ip2region.version}</version>
             </dependency>
 
-            
+
         </dependencies>
     </dependencyManagement>
 

@@ -1,10 +1,10 @@
 package io.charqe.qs.framework.interceptor;
 
 import com.alibaba.fastjson.JSON;
-import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
-import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.common.enums.CodeMsg;
+import io.charqe.qs.common.model.R;
+import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.utils.cache.QingSiCache;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
