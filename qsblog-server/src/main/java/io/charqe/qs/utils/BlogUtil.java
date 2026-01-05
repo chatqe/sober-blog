@@ -9,11 +9,7 @@ import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
-import java.net.InetAddress;
 import java.util.List;
 
 @Slf4j
@@ -21,10 +17,6 @@ public class BlogUtil {
 
     private static final QingSiCache qingSiCache =
             SpringContextHolder.getBean(QingSiCache.class);
-
-    public static HttpServletRequest getRequest() {
-        return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-    }
 
     public static void checkEmail() {
         // User user = (User) PoetryCache.get(BlogUtil.getToken());
@@ -35,20 +27,16 @@ public class BlogUtil {
     }
 
     public static String getToken() {
-        String token = BlogUtil.getRequest().getHeader(CommonConst.TOKEN_HEADER);
+        String token = IPUtil.getRequest().getHeader(CommonConst.TOKEN_HEADER);
         return "null".equals(token) ? null : token;
     }
 
     public static User getCurrentUser() {
-        // User user = (User) PoetryCache.get(BlogUtil.getToken());
-        User user = JSON.parseObject(qingSiCache.get(BlogUtil.getToken()), User.class);
-        return user;
+        return JSON.parseObject(qingSiCache.get(BlogUtil.getToken()), User.class);
     }
 
     public static User getAdminUser() {
-        // User admin = (User) PoetryCache.get(CommonConst.ADMIN);
-        User admin = JSON.parseObject(qingSiCache.get(CommonConst.ADMIN), User.class);
-        return admin;
+        return JSON.parseObject(qingSiCache.get(CommonConst.ADMIN), User.class);
     }
 
     public static Integer getUserId() {
@@ -62,7 +50,6 @@ public class BlogUtil {
     }
 
     public static String getUsername() {
-        // User user = (User) PoetryCache.get(BlogUtil.getToken());
         if (qingSiCache.get(BlogUtil.getToken()) == null) {
             return null;
         }
@@ -71,7 +58,6 @@ public class BlogUtil {
     }
 
     public static String getRandomAvatar(String key) {
-        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
         if (webInfo != null) {
             String randomAvatar = webInfo.getRandomAvatar();
@@ -80,7 +66,7 @@ public class BlogUtil {
                 if (StringUtils.hasText(key)) {
                     return randomAvatars.get(BlogUtil.hashLocation(key, randomAvatars.size()));
                 } else {
-                    String ipAddr = BlogUtil.getIpAddr(BlogUtil.getRequest());
+                    String ipAddr = IPUtil.getRealIp(IPUtil.getRequest());
                     if (StringUtils.hasText(ipAddr)) {
                         return randomAvatars.get(BlogUtil.hashLocation(ipAddr, randomAvatars.size()));
                     } else {
@@ -94,7 +80,6 @@ public class BlogUtil {
 
 
     public static String getRandomName(String key) {
-        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
         if (webInfo != null) {
             String randomName = webInfo.getRandomName();
@@ -103,7 +88,7 @@ public class BlogUtil {
                 if (StringUtils.hasText(key)) {
                     return randomNames.get(BlogUtil.hashLocation(key, randomNames.size()));
                 } else {
-                    String ipAddr = BlogUtil.getIpAddr(BlogUtil.getRequest());
+                    String ipAddr = IPUtil.getRealIp(IPUtil.getRequest());
                     if (StringUtils.hasText(ipAddr)) {
                         return randomNames.get(BlogUtil.hashLocation(ipAddr, randomNames.size()));
                     } else {
@@ -116,7 +101,6 @@ public class BlogUtil {
     }
 
     public static String getRandomCover(String key) {
-        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
         if (webInfo != null) {
             String randomCover = webInfo.getRandomCover();
@@ -125,7 +109,7 @@ public class BlogUtil {
                 if (StringUtils.hasText(key)) {
                     return randomCovers.get(BlogUtil.hashLocation(key, randomCovers.size()));
                 } else {
-                    String ipAddr = BlogUtil.getIpAddr(BlogUtil.getRequest());
+                    String ipAddr = IPUtil.getRealIp(IPUtil.getRequest());
                     if (StringUtils.hasText(ipAddr)) {
                         return randomCovers.get(BlogUtil.hashLocation(ipAddr, randomCovers.size()));
                     } else {
@@ -137,38 +121,19 @@ public class BlogUtil {
         return null;
     }
 
-    public static String getIpAddr(HttpServletRequest request) {
-        String ipAddress;
-        try {
-            ipAddress = request.getHeader("x-forwarded-for");
-            if (ipAddress == null || ipAddress.length() == 0 || "unknown".equalsIgnoreCase(ipAddress)) {
-                ipAddress = request.getHeader("Proxy-Client-IP");
-            }
-            if (ipAddress == null || ipAddress.length() == 0 || "unknown".equalsIgnoreCase(ipAddress)) {
-                ipAddress = request.getHeader("WL-Proxy-Client-IP");
-            }
-            if (ipAddress == null || ipAddress.length() == 0 || "unknown".equalsIgnoreCase(ipAddress)) {
-                ipAddress = request.getRemoteAddr();
-                if (ipAddress.equals("127.0.0.1") || ipAddress.equals("0:0:0:0:0:0:0:1")) {
-                    // 根据网卡取本机配置的IP
-                    ipAddress = InetAddress.getLocalHost().getHostAddress();
-                }
-            }
-            // 对于通过多个代理的情况，第一个IP为客户端真实IP,多个IP按照','分割
-            if (ipAddress != null && ipAddress.length() > 15) {
-                if (ipAddress.indexOf(",") > 0) {
-                    ipAddress = ipAddress.substring(0, ipAddress.indexOf(","));
-                }
-            }
-        } catch (Exception e) {
-            ipAddress = null;
-        }
-        return ipAddress;
-    }
-
-
+    /**
+     * 任意 key 尽量均匀地映射到 0 … length-1 的槽位里，同时保证快（只有位运算，无取模）。
+     *
+     * @param key
+     * @param length
+     * @return
+     */
     public static int hashLocation(String key, int length) {
+        // 调用 Java 内置 hashCode()，得到一个 32 位 int（可能分布很糟，比如连续整数只相差低位几位）
         int h = key.hashCode();
+        // h ^ (h >>> 16)  （扰动函数） 让 高 16 位的特征扩散到低 16 位，后续做“与”运算时，低位也能带上高位的随机性，减少冲突。
+        // & (length - 1)  （位运算取槽）length 必须是 2 的幂（例如 16、32、64…），那么 length-1 就是低位全 1 的掩码。
+        // 结果：等价于 h % length，但 CPU 只需一次 按位与，比取模指令快 3~5 倍。
         return (h ^ (h >>> 16)) & (length - 1);
     }
 }

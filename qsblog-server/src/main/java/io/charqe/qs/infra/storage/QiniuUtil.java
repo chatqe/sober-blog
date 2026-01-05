@@ -2,10 +2,6 @@ package io.charqe.qs.infra.storage;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import io.charqe.qs.common.constants.CommonConst;
-import io.charqe.qs.common.FileVO;
-import io.charqe.qs.modules.resource.domain.pojo.Resource;
-import io.charqe.qs.modules.resource.service.ResourceService;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
 import com.qiniu.processing.OperationManager;
@@ -19,6 +15,10 @@ import com.qiniu.storage.model.FileListing;
 import com.qiniu.util.Auth;
 import com.qiniu.util.StringMap;
 import com.qiniu.util.UrlSafeBase64;
+import io.charqe.qs.common.FileVO;
+import io.charqe.qs.common.constants.CommonConst;
+import io.charqe.qs.modules.resource.domain.pojo.Resource;
+import io.charqe.qs.modules.resource.service.ResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +29,12 @@ import org.springframework.util.CollectionUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * qiniu工具类
+ *
+ * @author Joy
+ * @since 2026-01-02 19:45
+ */
 @Slf4j
 @Component
 @ConditionalOnProperty(name = "qiniu.enable", havingValue = "true")
@@ -307,6 +313,7 @@ public class QiniuUtil implements StoreService {
 
     /**
      * 查询指定前缀下 体积 > 250 kB 且后缀 ≠ .webp 的图片（返回不带域名 URL）
+     *
      * @param imgPrefix 目录前缀
      * @return List<String>
      */

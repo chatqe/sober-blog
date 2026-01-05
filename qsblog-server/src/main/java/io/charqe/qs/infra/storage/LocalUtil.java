@@ -5,7 +5,7 @@ import io.charqe.qs.modules.resource.domain.pojo.Resource;
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.modules.resource.service.ResourceService;
 import io.charqe.qs.common.FileVO;
-import io.charqe.qs.utils.StringUtil;
+import io.charqe.qs.utils.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,11 +69,11 @@ public class LocalUtil implements StoreService {
                 throw new BizException("文件路径不合法！");
             }
             for (int i = 0; i < split.length - 1; i++) {
-                if (!StringUtil.isValidDirectoryName(split[i])) {
+                if (!StrUtil.isValidDirectoryName(split[i])) {
                     throw new BizException("文件路径不合法！");
                 }
             }
-            if (!StringUtil.isValidFileName(split[split.length - 1])) {
+            if (!StrUtil.isValidFileName(split[split.length - 1])) {
                 throw new BizException("文件路径不合法！");
             }
         }

@@ -2,9 +2,10 @@ package io.charqe.qs.common.config;
 
 
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springdoc.core.GroupedOpenApi;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,23 +15,35 @@ import org.springframework.context.annotation.Configuration;
  * @author sjq
  * @since 2026-01-01 18:25
  */
-// @Configuration
+@Configuration
 public class OpenApiConfig {
+
+    @Value("${springdoc.info.title}")
+    private String title;
+    @Value("${springdoc.info.description}")
+    private String description;
+    @Value("${springdoc.info.version}")
+    private String version;
+    @Value("${springdoc.info.contact.name}")
+    private String name;
+    @Value("${springdoc.info.contact.email}")
+    private String email;
+
+
     @Bean
     public OpenAPI apiInfo() {
         return new OpenAPI()
-                // 1. 基本信息
                 .info(new Info()
-                        .title("后端业务 API")
-                        .version("0.0.1")
-                        .description("©青肆 - 仅限内部使用"))
-                // 2. 服务器地址
+                        .title(title)
+                        .version(version)
+                        .description(description)
+                        .contact(new Contact()
+                                .name(name)
+                                .email(email)))
                 .addServersItem(new Server()
-                        .url("http://localhost:18081")
-                        .description("本地"))
+                        .url("http://localhost:18081").description("本地"))
                 .addServersItem(new Server()
-                        .url("https://api.xxx.com")
-                        .description("生产"));
+                        .url("https://api.xxx.com").description("生产"));
         // 3. 安全方案
         // .components(new Components()                      // 1. 组件定义区：放公共的、可复用的 schema、参数、安全方案等
         //         .addSecuritySchemes("Bearer",             // 2. 给这个安全方案起个名字“Bearer”，后续接口直接引用

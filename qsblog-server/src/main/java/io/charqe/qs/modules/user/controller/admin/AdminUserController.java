@@ -13,7 +13,13 @@ import io.charqe.qs.modules.im.websocket.TioWebsocketStarter;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.service.UserService;
 import io.charqe.qs.utils.BlogUtil;
+import io.charqe.qs.utils.cache.PoetryCache;
 import io.charqe.qs.utils.cache.QingSiCache;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.tio.core.Tio;
@@ -29,7 +35,7 @@ import javax.annotation.Resource;
 
 @RestController
 @RequestMapping("/admin/user")
-@Tag(name = "管理后台-用户管理")
+@Tag(name = "adminUser", description = "管理后台-用户管理")
 public class AdminUserController {
 
     @Resource
@@ -40,11 +46,22 @@ public class AdminUserController {
     private QingSiCache qingSiCache;
 
     /**
-     * 查询用户
+     * 查询用户列表
+     * 
+     * @param baseReqVO 查询条件
+     * @return 用户分页列表
      */
+    @Operation(summary = "查询用户列表", description = "用于管理后台查询用户列表，支持分页和条件筛选")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功，返回用户分页列表"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @PostMapping("/list")
     @LoginCheck(0)
-    public R<Page> listUser(@RequestBody BaseReqVO baseReqVO) {
+    public R<Page> listUser(
+        @Parameter(name = "baseReqVO", description = "查询条件", required = true, example = "{\"page\":1,\"pageSize\":10}")
+        @RequestBody BaseReqVO baseReqVO) {
         return userService.listUser(baseReqVO);
     }
 
@@ -53,10 +70,25 @@ public class AdminUserController {
      * <p>
      * flag = true：解禁
      * flag = false：封禁
+     * 
+     * @param userId 用户ID
+     * @param flag 操作类型，true-解禁，false-封禁
+     * @return 修改结果
      */
+    @Operation(summary = "修改用户状态", description = "用于管理后台修改用户状态，支持解禁和封禁操作")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "修改成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误，如站长状态不能修改"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @GetMapping("/changeUserStatus")
     @LoginCheck(0)
-    public R changeUserStatus(@RequestParam("userId") Integer userId, @RequestParam("flag") Boolean flag) {
+    public R changeUserStatus(
+        @Parameter(name = "userId", description = "用户ID", required = true, example = "1")
+        @RequestParam("userId") Integer userId, 
+        @Parameter(name = "flag", description = "操作类型，true-解禁，false-封禁", required = true, example = "true")
+        @RequestParam("flag") Boolean flag) {
         if (userId.intValue() == BlogUtil.getAdminUser().getId().intValue()) {
             return R.fail("站长状态不能修改！");
         }
@@ -72,26 +104,55 @@ public class AdminUserController {
     }
 
     /**
-     * 修改用户赞赏
+     * 修改用户赞赏信息
+     * 
+     * @param userId 用户ID
+     * @param admire 赞赏信息
+     * @return 修改结果
      */
+    @Operation(summary = "修改用户赞赏信息", description = "用于管理后台修改用户的赞赏信息")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "修改成功"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @GetMapping("/changeUserAdmire")
     @LoginCheck(0)
-    public R changeUserAdmire(@RequestParam("userId") Integer userId, @RequestParam("admire") String admire) {
+    public R changeUserAdmire(
+        @Parameter(name = "userId", description = "用户ID", required = true, example = "1")
+        @RequestParam("userId") Integer userId, 
+        @Parameter(name = "admire", description = "赞赏信息", required = true, example = "感谢支持！")
+        @RequestParam("admire") String admire) {
         userService.lambdaUpdate()
                 .eq(User::getId, userId)
                 .set(User::getAdmire, admire)
                 .update();
-        // PoetryCache.remove(CommonConst.ADMIRE);
-        qingSiCache.del(CommonConst.ADMIRE);
+        // PoetryCache.remove(CommonConst.ADMINRE);
+        qingSiCache.del(CommonConst.ADMIN);
         return R.success();
     }
 
     /**
      * 修改用户类型
+     * 
+     * @param userId 用户ID
+     * @param userType 用户类型，0-普通用户，1-管理员，2-超级管理员
+     * @return 修改结果
      */
+    @Operation(summary = "修改用户类型", description = "用于管理后台修改用户类型，支持普通用户、管理员和超级管理员三种类型")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "修改成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误，如站长类型不能修改或用户类型无效"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @GetMapping("/changeUserType")
     @LoginCheck(0)
-    public R changeUserType(@RequestParam("userId") Integer userId, @RequestParam("userType") Integer userType) {
+    public R changeUserType(
+        @Parameter(name = "userId", description = "用户ID", required = true, example = "1")
+        @RequestParam("userId") Integer userId, 
+        @Parameter(name = "userType", description = "用户类型，0-普通用户，1-管理员，2-超级管理员", schema = @Schema(allowableValues = {"0", "1", "2"}), required = true, example = "1")
+        @RequestParam("userType") Integer userType) {
         if (userId.intValue() == BlogUtil.getAdminUser().getId().intValue()) {
             return R.fail("站长类型不能修改！");
         }

@@ -1,7 +1,7 @@
 package io.charqe.qs.aop;
 
 import io.charqe.qs.common.exception.ServiceException;
-import io.charqe.qs.utils.IpUtils;
+import io.charqe.qs.utils.IPUtil;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +73,7 @@ public class IdempotentAspect {
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         // 判空防御 非 Web 环境可能为 null
         if (attr != null) {
-            ctx.setVariable("ip", IpUtils.getRealIp(attr.getRequest()));
+            ctx.setVariable("ip", IPUtil.getRealIp(attr.getRequest()));
         }
         // SpEL 编译器，负责把字符串公式变成可运行的代码对象
         ExpressionParser parser = new SpelExpressionParser();

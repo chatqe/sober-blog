@@ -10,6 +10,7 @@ import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.weblinks.controller.web.vo.WeblinksVO;
 import io.charqe.qs.modules.weblinks.domain.dao.WeblinksMapper;
 import io.charqe.qs.modules.weblinks.domain.pojo.Weblinks;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,8 @@ import java.util.Map;
  * @since 2021-09-14
  */
 @RestController
-@RequestMapping("/webInfo")
+@RequestMapping("/music")
+@Tag(name = "music",description = "音乐")
 public class MusicController {
 
     @Autowired

@@ -24,7 +24,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("admin/webInfo")
-@Tag(name = "管理后台-网站信息控制", description = "管理后台-网站信息控制")
+@Tag(name = "adminWebInfo", description = "管理后台-网站信息控制")
 public class AdminWebInfoController {
 
     @Resource

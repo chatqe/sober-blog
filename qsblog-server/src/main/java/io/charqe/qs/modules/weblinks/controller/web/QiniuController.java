@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/qiniu")
 @ConditionalOnBean(QiniuUtil.class)
-@Tag(name = "对象存储",description = "对象存储(七牛云)")
+@Tag(name = "qiniu",description = "对象存储(七牛云)")
 public class QiniuController {
 
     @Autowired

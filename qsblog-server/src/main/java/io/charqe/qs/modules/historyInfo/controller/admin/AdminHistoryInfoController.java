@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequestMapping("admin/historyInfo")
-@Tag(name = "管理后台-历史数据")
+@Tag(name = "adminHistoryInfo", description = "管理后台-历史数据")
 public class AdminHistoryInfoController {
 
     @Resource

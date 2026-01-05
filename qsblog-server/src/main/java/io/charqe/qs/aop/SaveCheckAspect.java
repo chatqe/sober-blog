@@ -5,6 +5,7 @@ import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.utils.BlogUtil;
+import io.charqe.qs.utils.IPUtil;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -52,7 +53,7 @@ public class SaveCheckAspect {
             }
         }
 
-        String ip = BlogUtil.getIpAddr(BlogUtil.getRequest());
+        String ip = IPUtil.getRealIp(IPUtil.getRequest());
         AtomicInteger atomic = JSON.parseObject(qingSiCache.get(CommonConst.SAVE_COUNT_IP + ip), AtomicInteger.class);
         if (atomic == null) {
             atomic = new AtomicInteger();

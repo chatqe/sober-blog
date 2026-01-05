@@ -54,19 +54,28 @@ baidu:
 springdoc:
   api-docs:
     path: /v3/api-docs
-    info:
-      title: "Openapi在线JSON文档"
-      description: "这是一个用于演示springdoc-openapi和orval集成的后端服务API文档。"
-      version: "0.0.1"
-      contact:
-        name: "Joy"
-        email: "hilary98qs@163.com"
+
   swagger-ui:
     path: /swagger-ui.html
     tags-sorter: alpha         # 标签按字母顺序排序
     operations-sorter: method  # 接口内的操作按HTTP方法排序 (GET, POST, PUT, DELETE)
 
+  info:
+    title: "Openapi在线JSON文档"
+    description: "这是一个用于演示springdoc-openapi和orval集成的后端服务API文档。"
+    version: "0.0.1"
+    contact:
+      name: "Joy"
+      email: "hilary98qs@163.com"
+
   packages-to-scan: io.charqe.qs.modules # 指定要扫描的基础包，用于发现Controller
   default-produces-media-type: application/json   # API默认产生的媒体类型
   writer-with-default-pretty-print: true  #让 /v3/api-docs 返回的 JSON 格式带有缩进，非常易于阅读。
 
+knife4j:
+  enable: true  # 启用 knife4j 增强，访问 /doc.html
+  basic:        # 是否启用登录认证
+    enable: false
+    # username: admin
+    # password: 123456
+  production: false   # 生产环境屏蔽

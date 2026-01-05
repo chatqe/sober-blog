@@ -157,12 +157,18 @@
         </dependency>
 
         <!--Swagger-UI + OpenAPI 3.0 JSON-->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-ui</artifactId>
-            <version>1.8.0</version>   <!-- Boot 2.x 最新版 -->
-        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.springdoc</groupId>-->
+        <!--            <artifactId>springdoc-openapi-ui</artifactId>-->
+        <!--            <version>1.8.0</version>   &lt;!&ndash; Boot 2.x 最新版 &ndash;&gt;-->
+        <!--        </dependency>-->
 
+        <!-- Knife4j  增强方案：集成 Knife4j 美化与功能扩展-->
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
+            <version>4.5.0</version>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

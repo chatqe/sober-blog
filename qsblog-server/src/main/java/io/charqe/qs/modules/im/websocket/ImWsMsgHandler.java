@@ -10,7 +10,7 @@ import io.charqe.qs.modules.im.http.service.ImChatGroupUserService;
 import io.charqe.qs.modules.im.http.service.ImChatUserMessageService;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.utils.CommonQuery;
-import io.charqe.qs.utils.StringUtil;
+import io.charqe.qs.utils.StrUtil;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,7 +140,7 @@ public class ImWsMsgHandler implements IWsMsgHandler {
         try {
             ImMessage imMessage = JSON.parseObject(text, ImMessage.class);
 
-            String content = StringUtil.removeHtml(imMessage.getContent());
+            String content = StrUtil.removeHtml(imMessage.getContent());
             if (!StringUtils.hasText(content)) {
                 return null;
             }

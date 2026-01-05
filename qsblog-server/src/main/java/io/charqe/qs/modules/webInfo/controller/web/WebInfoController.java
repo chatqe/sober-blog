@@ -15,6 +15,10 @@ import io.charqe.qs.modules.webInfo.service.WebInfoService;
 import io.charqe.qs.utils.CommonQuery;
 import io.charqe.qs.utils.cache.PoetryCache;
 import io.charqe.qs.utils.cache.QingSiCache;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -40,7 +44,7 @@ import java.util.Objects;
 @Slf4j
 @RestController
 @RequestMapping("/webInfo")
-@Tag(name = "web-网站信息控制")
+@Tag(name = "webInfo", description = "网站信息管理")
 public class WebInfoController {
 
     @Value("${store.type}")
@@ -61,10 +65,21 @@ public class WebInfoController {
 
     /**
      * 更新网站信息
+     *
+     * @param webInfo 网站信息
+     * @return 更新结果
      */
+    @Operation(summary = "更新网站信息", description = "用于管理员更新网站信息，包括网站标题、描述、Logo等")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "更新成功"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @LoginCheck(0)
     @PostMapping("/update")
-    public R<WebInfo> updateWebInfo(@RequestBody WebInfo webInfo) {
+    public R<WebInfo> updateWebInfo(
+        @Parameter(name = "webInfo", description = "网站信息对象", required = true, example = "{\"webName\":\"清思博客\",\"webDescription\":\"一个技术博客网站\"}")
+        @RequestBody WebInfo webInfo) {
         webInfoService.updateById(webInfo);
 
         LambdaQueryChainWrapper<WebInfo> wrapper = new LambdaQueryChainWrapper<>(webInfoService.getBaseMapper());
@@ -80,60 +95,16 @@ public class WebInfoController {
 
     /**
      * 获取网站信息
+     *
+     * @return 网站信息
      */
+    @Operation(summary = "获取网站信息", description = "用于获取网站的基本信息，包括网站标题、描述、Logo等")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功，返回网站信息"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @GetMapping("/get")
     public R<WebInfo> getWebInfo() {
-        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
-        // WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
-        //
-        // if (webInfo != null) {
-        //     WebInfo result = new WebInfo();
-        //     BeanUtils.copyProperties(webInfo, result);
-        //     result.setRandomAvatar(null);
-        //     result.setRandomName(null);
-        //     result.setWaifuJson(null);
-        //
-        //
-        //     Map<String, Object> historyMap = JSON.parseObject(
-        //             qingSiCache.get(CommonConst.IP_HISTORY_STATISTICS), new TypeReference<Map<String, Object>>() {
-        //             });
-        //     // 总访问数
-        //     result.setHistoryAllCount( historyMap.getOrDefault(CommonConst.IP_HISTORY_COUNT, 1168).toString());
-        //
-        //     // 24小时内访问数
-        //    Object historyDayData = historyMap.get(CommonConst.IP_HISTORY_HOUR);
-        //     String dayHistoryStr =Objects.isNull(historyDayData)?"168":String.valueOf(JSON.parseObject(historyDayData.toString(), new TypeReference<List<HistoryInfo>>() {}).size());
-        //
-        //     result.setHistoryDayCount(dayHistoryStr);
-        //     log.info("result:{}", result);
-        //     return R.success(result);
-        // }
-        // // 为空 查数据库
-        // webInfo = webInfoService.list().get(0);
-        //
-        // Map<String, Object> history = new HashMap<>();
-        // history.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
-        // history.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
-        // history.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
-        // history.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount()+1168);
-        // // PoetryCache.put(CommonConst.IP_HISTORY_STATISTICS, history);
-        // qingSiCache.put(CommonConst.IP_HISTORY_STATISTICS, history);
-        //
-        // qingSiCache.put(CommonConst.WEB_INFO, webInfo);
-        //
-        // Map<String, Object> historyMap = JSON.parseObject(
-        //         qingSiCache.get(CommonConst.IP_HISTORY_STATISTICS), new TypeReference<Map<String, Object>>() {
-        //         });
-        // // 总访问数
-        // webInfo.setHistoryAllCount( historyMap.getOrDefault(CommonConst.IP_HISTORY_COUNT, 1168).toString());
-        //
-        // // 24小时内访问数
-        // Object historyDayData = historyMap.get(CommonConst.IP_HISTORY_HOUR);
-        // String dayHistoryStr =Objects.isNull(historyDayData)?"168":String.valueOf(JSON.parseObject(historyDayData.toString(), new TypeReference<List<HistoryInfo>>() {}).size());
-        //
-        // webInfo.setHistoryDayCount(dayHistoryStr);
-        // return R.success(webInfo);
-
         // 从缓存获取 WebInfo 对象
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
 
@@ -147,7 +118,6 @@ public class WebInfoController {
 
             // 获取并设置访问历史统计数据
             getHistoryCache(result);
-            // log.info("result:{}", result);
             return R.success(result);
         }
 
@@ -162,8 +132,15 @@ public class WebInfoController {
 
 
     /**
-     * 获取用户信息 获取赞赏
+     * 获取赞赏用户信息
+     *
+     * @return 赞赏用户列表
      */
+    @Operation(summary = "获取赞赏用户信息", description = "用于获取赞赏用户列表")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功，返回赞赏用户列表"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @GetMapping("/getAdmire")
     public R<List<User>> getAdmire() {
         return R.success(commonQuery.getAdmire());
@@ -171,15 +148,20 @@ public class WebInfoController {
 
     /**
      * 获取看板娘消息
+     *
+     * @return 看板娘消息JSON字符串
      */
+    @Operation(summary = "获取看板娘消息", description = "用于获取网站看板娘的配置信息，返回JSON格式的配置数据")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功，返回看板娘配置JSON"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @GetMapping("/getWaifuJson")
     public String getWaifuJson() {
 
         log.info("进入看板娘消息管理");
 
         WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
-
-        // log.info("获取到的看板娘配置为：{}", webInfo.getWaifuJson());
 
         if (webInfo != null && StringUtils.hasText(webInfo.getWaifuJson())) {
             return webInfo.getWaifuJson();

@@ -9,6 +9,7 @@ import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.common.exception.LoginException;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.utils.BlogUtil;
+import io.charqe.qs.utils.IPUtil;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -48,7 +49,8 @@ public class LoginCheckAspect {
                 return R.fail("请输入管理员账号！");
             }
         } else if (token.contains(CommonConst.ADMIN_ACCESS_TOKEN)) {
-            log.info("请求IP：" + BlogUtil.getIpAddr(BlogUtil.getRequest()));
+            // log.info("请求IP：" + BlogUtil.getIpAddr(BlogUtil.getRequest()));
+            log.info("请求IP：" + IPUtil.getRealIp(IPUtil.getRequest()));
             if (loginCheck.value() == YouthEnum.USER_TYPE_ADMIN.getCode() && user.getId().intValue() != CommonConst.ADMIN_USER_ID) {
                 return R.fail("请输入管理员账号！");
             }

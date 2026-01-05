@@ -7,6 +7,7 @@ import io.charqe.qs.common.exception.ServiceException;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.enums.CodeMsg;
 import io.charqe.qs.utils.BlogUtil;
+import io.charqe.qs.utils.IPUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -25,7 +26,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseBody
     public R handlerException(Exception ex) {
-        log.error("请求URL-----------------" + BlogUtil.getRequest().getRequestURL());
+        log.error("请求URL-----------------" + IPUtil.getRequest().getRequestURL());
         log.error("出错啦------------------", ex);
         if (ex instanceof BizException) {
             BizException e = (BizException) ex;

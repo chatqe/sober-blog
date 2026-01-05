@@ -13,7 +13,7 @@ import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.weiyan.domain.pojo.WeiYan;
 import io.charqe.qs.modules.weiyan.service.WeiYanService;
 import io.charqe.qs.utils.BlogUtil;
-import io.charqe.qs.utils.StringUtil;
+import io.charqe.qs.utils.StrUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +30,7 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/weiYan")
-@Tag(name = "微言管理")
+@Tag(name = "weiYan", description = "微言管理")
 public class WeiYanController {
 
     @Resource
@@ -50,7 +50,7 @@ public class WeiYanController {
             return R.fail("微言不能为空！");
         }
 
-        String content = StringUtil.removeHtml(weiYanVO.getContent());
+        String content = StrUtil.removeHtml(weiYanVO.getContent());
         if (!StringUtils.hasText(content)) {
             return R.fail("微言内容不合法！");
         }

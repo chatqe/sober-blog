@@ -307,10 +307,10 @@ public class CommonQuery {
         // List<Integer> contentIds = new ArrayList<>(); 暂时不用内容匹配
 
         for (Article article : articles) {
-            if (StringUtil.matchString(article.getArticleTitle(), searchText)) {
+            if (StrUtil.matchString(article.getArticleTitle(), searchText)) {
                 titleIds.add(article.getId());
             }
-            // else if (StringUtil.matchString(article.getArticleContent(), searchText)) {
+            // else if (StrUtil.matchString(article.getArticleContent(), searchText)) {
             //     contentIds.add(article.getId());
             // }
         }

@@ -5,11 +5,9 @@ import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
-import io.charqe.qs.common.model.R;
-import io.charqe.qs.common.model.BaseReqVO;
-
 import io.charqe.qs.common.constants.CommonConst;
-
+import io.charqe.qs.common.model.BaseReqVO;
+import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.weblinks.controller.web.vo.WeblinksVO;
 import io.charqe.qs.modules.weblinks.domain.dao.WeblinksMapper;
 import io.charqe.qs.modules.weblinks.domain.pojo.Weblinks;
@@ -26,16 +24,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * <p>
  * 资源管理
- * </p>
  *
- * @author sara
- * @since 2021-09-14
+ * @author Joy
+ * @since 2026-01-05 20:57
  */
+
 @RestController
-@RequestMapping("/webInfo")
-@Tag(name = "资源管理", description = "友链/网络资源等")
+@RequestMapping("/resAgg")
+@Tag(name = "resAgg", description = "友链/网络资源等")
 public class ResourceAggregationController {
 
     @Autowired

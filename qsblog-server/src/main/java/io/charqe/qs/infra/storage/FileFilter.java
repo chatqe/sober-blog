@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.utils.BlogUtil;
+import io.charqe.qs.utils.IPUtil;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,6 @@ public class FileFilter {
             String token = BlogUtil.getToken();
             boolean hasText = StringUtils.hasText(token);
             if (hasText) {
-                // User user = (User) PoetryCache.get(token);
                 User user = JSON.parseObject(qingSiCache.get(token), User.class);
 
                 if (user != null) {
@@ -48,21 +48,17 @@ public class FileFilter {
                         return false;
                     }
 
-                    // AtomicInteger atomicInteger = (AtomicInteger) PoetryCache.get(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString());
                     AtomicInteger atomicInteger = JSON.parseObject(qingSiCache.get(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString()), AtomicInteger.class);
                     if (atomicInteger == null) {
                         atomicInteger = new AtomicInteger();
-                        // PoetryCache.put(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString(), atomicInteger, CommonConst.SAVE_EXPIRE);
                         qingSiCache.put(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString(), atomicInteger, CommonConst.SAVE_EXPIRE);
                     }
                     int userIdCount = atomicInteger.getAndIncrement();
 
-                    String ip = BlogUtil.getIpAddr(BlogUtil.getRequest());
-                    // AtomicInteger atomic = (AtomicInteger) PoetryCache.get(CommonConst.SAVE_COUNT_IP + ip);
+                    String ip = IPUtil.getRealIp(IPUtil.getRequest());
                     AtomicInteger atomic = JSON.parseObject(qingSiCache.get(CommonConst.SAVE_COUNT_IP + ip), AtomicInteger.class);
                     if (atomic == null) {
                         atomic = new AtomicInteger();
-                        // PoetryCache.put(CommonConst.SAVE_COUNT_IP + ip, atomic, CommonConst.SAVE_EXPIRE);
                         qingSiCache.put(CommonConst.SAVE_COUNT_IP + ip, atomic, CommonConst.SAVE_EXPIRE);
                     }
                     int ipCount = atomic.getAndIncrement();

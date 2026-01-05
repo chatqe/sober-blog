@@ -6,6 +6,7 @@ import io.charqe.qs.common.enums.CodeMsg;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.CommonQuery;
 import io.charqe.qs.infra.storage.FileFilter;
+import io.charqe.qs.utils.IPUtil;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -30,7 +31,7 @@ public class YouthFilter extends OncePerRequestFilter {
         if (!"OPTIONS".equals(httpServletRequest.getMethod())) {
             try {
                 // 保存访问记录
-                commonQuery.saveHistory(BlogUtil.getIpAddr(httpServletRequest));
+                commonQuery.saveHistory(IPUtil.getRealIp(httpServletRequest));
             } catch (Exception e) {
             }
 

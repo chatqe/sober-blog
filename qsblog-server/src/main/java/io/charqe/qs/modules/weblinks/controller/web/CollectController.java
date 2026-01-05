@@ -6,6 +6,7 @@ import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.weblinks.controller.web.vo.WeblinksVO;
 import io.charqe.qs.modules.weblinks.domain.dao.WeblinksMapper;
 import io.charqe.qs.modules.weblinks.domain.pojo.Weblinks;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -25,7 +26,8 @@ import java.util.stream.Collectors;
  * @since 2021-09-14
  */
 @RestController
-@RequestMapping("/webInfo")
+@RequestMapping("/collect")
+@Tag(name = "collect", description = "收藏夹")
 public class CollectController {
 
     @Autowired
@@ -34,7 +36,7 @@ public class CollectController {
     /**
      * 查询收藏
      */
-    @GetMapping("/listCollect")
+    @GetMapping("/list")
     public R<Map<String, List<WeblinksVO>>> listCollect() {
         LambdaQueryChainWrapper<Weblinks> wrapper = new LambdaQueryChainWrapper<>(weblinksMapper);
         List<Weblinks> resourcePaths = wrapper.eq(Weblinks::getType, CommonConst.RESOURCE_PATH_TYPE_FAVORITES)

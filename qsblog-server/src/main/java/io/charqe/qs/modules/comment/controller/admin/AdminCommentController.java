@@ -10,6 +10,10 @@ import io.charqe.qs.common.enums.CommentTypeEnum;
 import io.charqe.qs.modules.article.service.ArticleService;
 import io.charqe.qs.modules.comment.service.CommentService;
 import io.charqe.qs.utils.BlogUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +29,7 @@ import javax.annotation.Resource;
  */
 @RestController
 @RequestMapping("/admin")
-@Tag(name = "管理后台-评论管理", description = "后台评论相关")
+@Tag(name = "adminComment", description = "管理后台-评论管理")
 public class AdminCommentController {
 
     @Resource
@@ -36,10 +40,22 @@ public class AdminCommentController {
 
     /**
      * 作者删除评论
+     *
+     * @param id 评论ID
+     * @return 删除结果
      */
+    @Operation(summary = "作者删除评论", description = "用于文章作者删除自己文章下的评论")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "删除成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误或权限不足"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @GetMapping("/comment/user/deleteComment")
     @LoginCheck(1)
-    public R userDeleteComment(@RequestParam("id") Integer id) {
+    public R userDeleteComment(
+        @Parameter(name = "id", description = "评论ID", required = true, example = "1")
+        @RequestParam("id") Integer id) {
         Comment comment = commentService.lambdaQuery().select(Comment::getSource, Comment::getType).eq(Comment::getId, id).one();
         if (comment == null) {
             return R.success();
@@ -56,30 +72,64 @@ public class AdminCommentController {
     }
 
     /**
-     * Boss删除评论
+     * 管理员删除评论
+     *
+     * @param id 评论ID
+     * @return 删除结果
      */
+    @Operation(summary = "管理员删除评论", description = "用于管理员删除任意评论")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "删除成功"),
+        @ApiResponse(responseCode = "400", description = "请求参数错误"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @GetMapping("/comment/boss/deleteComment")
     @LoginCheck(0)
-    public R bossDeleteComment(@RequestParam("id") Integer id) {
+    public R bossDeleteComment(
+        @Parameter(name = "id", description = "评论ID", required = true, example = "1")
+        @RequestParam("id") Integer id) {
         commentService.removeById(id);
         return R.success();
     }
 
     /**
-     * 用户查询评论
+     * 作者查询评论
+     *
+     * @param baseReqVO 查询参数
+     * @return 评论分页列表
      */
+    @Operation(summary = "作者查询评论", description = "用于文章作者查询自己文章下的评论列表")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功，返回评论分页列表"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @PostMapping("/comment/user/list")
     @LoginCheck(1)
-    public R<Page> listUserComment(@RequestBody BaseReqVO baseReqVO) {
+    public R<Page> listUserComment(
+        @Parameter(name = "baseReqVO", description = "查询参数", required = true, example = "{\"page\":1,\"pageSize\":10}")
+        @RequestBody BaseReqVO baseReqVO) {
         return commentService.listAdminComment(baseReqVO, false);
     }
 
     /**
-     * Boss查询评论
+     * 管理员查询评论
+     *
+     * @param baseReqVO 查询参数
+     * @return 评论分页列表
      */
+    @Operation(summary = "管理员查询评论", description = "用于管理员查询所有评论列表")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功，返回评论分页列表"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
     @PostMapping("/comment/boss/list")
     @LoginCheck(0)
-    public R<Page> listBossComment(@RequestBody BaseReqVO baseReqVO) {
+    public R<Page> listBossComment(
+        @Parameter(name = "baseReqVO", description = "查询参数", required = true, example = "{\"page\":1,\"pageSize\":10}")
+        @RequestBody BaseReqVO baseReqVO) {
         return commentService.listAdminComment(baseReqVO, true);
     }
 }
