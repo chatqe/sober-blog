@@ -1,8 +1,8 @@
 package io.charqe.qs.modules.article.controller.web.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.charqe.qs.modules.label.domain.pojo.Label;
-import io.charqe.qs.modules.sort.domain.pojo.Sort;
+import io.charqe.qs.modules.tag.domain.pojo.Tag;
+import io.charqe.qs.modules.category.domain.pojo.Category;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -12,12 +12,10 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
- * 文章 VO
- * 
- * 用于文章的前端展示和交互
- * 
- * @author sara
- * @since 2021-08-13
+ * *
+ *
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Schema(name = "ArticleVO", description = "文章视图对象，用于文章的前端展示和交互")
 @Data
@@ -125,11 +123,11 @@ public class ArticleVO {
     @Schema(name = "username", description = "用户名", example = "testuser")
     private String username;
     
-    @Schema(name = "sort", description = "文章分类信息")
-    private Sort sort;
+    @Schema(name = "category", description = "文章分类信息")
+    private Category category;
     
-    @Schema(name = "label", description = "文章标签信息")
-    private Label label;
+    @Schema(name = "tag", description = "文章标签信息")
+    private Tag tag;
     
     @Schema(name = "hasVideo", description = "是否包含视频，true-是，false-否", example = "false")
     private Boolean hasVideo = false;

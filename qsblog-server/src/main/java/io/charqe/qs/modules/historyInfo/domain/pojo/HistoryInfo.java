@@ -1,38 +1,21 @@
 package io.charqe.qs.modules.historyInfo.domain.pojo;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-
-import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.TableField;
-
-import java.io.Serializable;
-
+import com.baomidou.mybatisplus.annotation.TableName;
+import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * <p>
- * 历史信息
- * </p>
+ * *
  *
- * @author sara
- * @since 2023-07-24
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("history_info")
-public class HistoryInfo implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * id
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+public class HistoryInfo extends BaseDO {
 
     /**
      * 用户ID
@@ -63,12 +46,5 @@ public class HistoryInfo implements Serializable {
      */
     @TableField("city")
     private String city;
-
-    /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
 
 }

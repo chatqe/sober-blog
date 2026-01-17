@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapp
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.historyInfo.domain.dao.HistoryInfoMapper;
 import io.charqe.qs.modules.webInfo.domain.dao.WebInfoMapper;
-import io.charqe.qs.common.enums.YouthEnum;
+import io.charqe.qs.common.enums.UserTypeEnum;
 import io.charqe.qs.modules.family.domain.pojo.Family;
 import io.charqe.qs.modules.historyInfo.domain.pojo.HistoryInfo;
 import io.charqe.qs.modules.user.domain.pojo.User;
@@ -77,7 +77,7 @@ public class TaskSchedule {
             qingSiCache.put(CommonConst.WEB_INFO, list.get(0));
         }
 
-        User admin = userService.lambdaQuery().eq(User::getUserType, YouthEnum.USER_TYPE_ADMIN.getCode()).one();
+        User admin = userService.lambdaQuery().eq(User::getUserType, UserTypeEnum.ADMIN.getCode()).one();
         // PoetryCache.put(CommonConst.ADMIN, admin);
         qingSiCache.put(CommonConst.ADMIN, admin);
 

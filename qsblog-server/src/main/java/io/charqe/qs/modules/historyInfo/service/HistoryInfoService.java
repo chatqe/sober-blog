@@ -4,12 +4,10 @@ import io.charqe.qs.modules.historyInfo.domain.pojo.HistoryInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
- * <p>
- * 历史信息 服务类
- * </p>
+ * *
  *
- * @author sara
- * @since 2023-07-24
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 public interface HistoryInfoService extends IService<HistoryInfo> {
 

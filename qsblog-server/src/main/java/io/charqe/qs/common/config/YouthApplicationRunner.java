@@ -13,7 +13,7 @@ import io.charqe.qs.modules.im.websocket.TioWebsocketStarter;
 import io.charqe.qs.modules.family.service.FamilyService;
 import io.charqe.qs.modules.user.service.UserService;
 import io.charqe.qs.utils.cache.PoetryCache;
-import io.charqe.qs.common.enums.YouthEnum;
+import io.charqe.qs.common.enums.UserTypeEnum;
 import io.charqe.qs.utils.cache.QingSiCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,7 +65,7 @@ public class YouthApplicationRunner implements ApplicationRunner {
             qingSiCache.put(CommonConst.WEB_INFO, list.get(0));
         }
 
-        User admin = userService.lambdaQuery().eq(User::getUserType, YouthEnum.USER_TYPE_ADMIN.getCode()).one();
+        User admin = userService.lambdaQuery().eq(User::getUserType, UserTypeEnum.ADMIN.getCode()).one();
         PoetryCache.put(CommonConst.ADMIN, admin);
         qingSiCache.put(CommonConst.ADMIN, admin);
 

@@ -1,29 +1,21 @@
 package io.charqe.qs.modules.weblinks.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
 /**
- * <p>
- * 友链表
- * </p>
+ * 友链表实体类
  *
- * @author sara
- * @since 2021-09-14
+ * @author Joy
+ * @since 2026-01-16 21:55
  */
+
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("weblinks")
-public class Weblinks implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+public class Weblinks extends BaseDO {
 
     /**
      * 标题
@@ -69,26 +61,8 @@ public class Weblinks implements Serializable {
     private Boolean status;
 
     /**
-     * 创建时间
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
-
-    /**
-     * 最终修改时间
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
-
-    /**
      * 最终修改人
      */
     private String updateBy;
-
-    /**
-     * 是否启用[0:未删除，1:已删除]
-     */
-    @TableLogic
-    private Boolean deleted;
 
 }

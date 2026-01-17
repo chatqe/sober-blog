@@ -1,32 +1,20 @@
 package io.charqe.qs.modules.user.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
 /**
- * <p>
- * 用户信息表
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-09-14
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("user")
-public class User implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * id
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+public class User extends BaseDO {
 
     /**
      * 用户名
@@ -101,29 +89,9 @@ public class User implements Serializable {
     private Integer userType;
 
     /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    /**
-     * 最终修改时间
-     */
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    /**
      * 最终修改人
      */
     @TableField(value = "update_by", fill = FieldFill.UPDATE)
     private String updateBy;
-
-    /**
-     * 是否启用[0:未删除，1:已删除]
-     */
-    @TableField("deleted")
-    @TableLogic
-    private Boolean deleted;
-
 
 }

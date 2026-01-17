@@ -31,12 +31,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * <p>
- * 资源聚合里的友链，其他接口在ResourceAggregationController
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-09-14
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @RestController
 @RequestMapping("/weblinks")

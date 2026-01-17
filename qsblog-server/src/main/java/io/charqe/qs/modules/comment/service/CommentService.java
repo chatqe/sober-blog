@@ -10,12 +10,10 @@ import io.charqe.qs.modules.comment.controller.web.vo.CommentVO;
 
 
 /**
- * <p>
- * 文章评论表 服务类
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-08-13
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 public interface CommentService extends IService<Comment> {
 

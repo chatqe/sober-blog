@@ -261,11 +261,11 @@ public class CommonConst {
     public static final String RESOURCE_PATH_TYPE_LOVE_PHOTO = "lovePhoto";
 
     /**
-     * 微言
+     * 动态
      */
-    public static final String WEIYAN_TYPE_FRIEND = "weblinks";
+    public static final String MOMENT_TYPE_FRIEND = "weblinks";
 
-    public static final String WEIYAN_TYPE_NEWS = "news";
+    public static final String MOMENT_TYPE_NEWS = "news";
 
     /**
      * 友情链接

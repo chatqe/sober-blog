@@ -20,12 +20,10 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 
 /**
- * <p>
- * 后台评论 前端控制器
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-08-13
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @RestController
 @RequestMapping("/admin")
@@ -60,7 +58,7 @@ public class AdminCommentController {
         if (comment == null) {
             return R.success();
         }
-        if (!CommentTypeEnum.COMMENT_TYPE_ARTICLE.getCode().equals(comment.getType())) {
+        if (!CommentTypeEnum.ARTICLE.getCode().equals(comment.getType())) {
             return R.fail("权限不足！");
         }
         Article one = articleService.lambdaQuery().eq(Article::getId, comment.getSource()).select(Article::getUserId).one();

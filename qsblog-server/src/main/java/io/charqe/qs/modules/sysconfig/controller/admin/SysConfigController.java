@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapp
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.sysconfig.domain.pojo.SysConfig;
-import io.charqe.qs.common.enums.YouthEnum;
+import io.charqe.qs.common.enums.SysConfigVisibilityEnum;
 import io.charqe.qs.modules.sysconfig.service.SysConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -23,12 +23,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * <p>
- * 参数配置表 前端控制器
- * </p>
+ * *
  *
- * @author sara
- * @since 2024-03-23
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Slf4j
 @RestController
@@ -55,7 +53,7 @@ public class SysConfigController {
         @Parameter(hidden = true) HttpServletRequest request) {
         log.info("{} 访问listSysConfig()",request.getRequestURI());
         LambdaQueryChainWrapper<SysConfig> wrapper = new LambdaQueryChainWrapper<>(sysConfigService.getBaseMapper());
-        List<SysConfig> sysConfigs = wrapper.eq(SysConfig::getConfigType, Integer.toString(YouthEnum.SYS_CONFIG_PUBLIC.getCode()))
+        List<SysConfig> sysConfigs = wrapper.eq(SysConfig::getConfigType, Integer.toString(SysConfigVisibilityEnum.PUBLIC.getCode()))
                 .list();
         Map<String, String> collect = sysConfigs.stream().collect(Collectors.toMap(SysConfig::getConfigKey, SysConfig::getConfigValue));
         return R.success(collect);
@@ -85,8 +83,8 @@ public class SysConfigController {
             return R.fail("请完善所有配置信息！");
         }
         String configType = sysConfig.getConfigType();
-        if (!Integer.toString(YouthEnum.SYS_CONFIG_PUBLIC.getCode()).equals(configType) &&
-                !Integer.toString(YouthEnum.SYS_CONFIG_PRIVATE.getCode()).equals(configType)) {
+        if (!Integer.toString(SysConfigVisibilityEnum.PUBLIC.getCode()).equals(configType) &&
+                !Integer.toString(SysConfigVisibilityEnum.PRIVATE.getCode()).equals(configType)) {
             return R.fail("配置类型不正确！");
         }
         sysConfigService.saveOrUpdate(sysConfig);

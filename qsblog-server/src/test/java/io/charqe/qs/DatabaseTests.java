@@ -6,10 +6,10 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.charqe.qs.modules.article.domain.pojo.Article;
-import io.charqe.qs.modules.treehole.domain.pojo.TreeHole;
+import io.charqe.qs.modules.danmaku.domain.pojo.Danmaku;
 import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.modules.article.service.ArticleService;
-import io.charqe.qs.modules.treehole.service.TreeHoleService;
+import io.charqe.qs.modules.danmaku.service.DanmakuService;
 import io.charqe.qs.modules.webInfo.service.WebInfoService;
 import io.charqe.qs.utils.cache.QingSiCache;
 import io.charqe.qs.infra.storage.QiniuUtil;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public class DatabaseTests {
 
     @Resource
-    private TreeHoleService treeHoleService;
+    private DanmakuService danmakuService;
 
     @Resource
     private QingSiCache qingSiCache;
@@ -51,7 +51,7 @@ public class DatabaseTests {
     private ArticleService articleService;
 
     @Test
-    void saveTreeHoleList() {
+    void saveDanmakuList() {
 
         String listStr = "[\n" +
                 "  {\n" +
@@ -207,12 +207,12 @@ public class DatabaseTests {
                 "]";
 
 
-        List<TreeHole> treeHoles = JSON.parseObject(listStr, new TypeReference<List<TreeHole>>() {
+        List<Danmaku> danmakus = JSON.parseObject(listStr, new TypeReference<List<Danmaku>>() {
         });
 
-        log.info("list:{}", treeHoles);
+        log.info("list:{}", danmakus);
 
-        boolean b = treeHoleService.saveBatch(treeHoles);
+        boolean b = danmakuService.saveBatch(danmakus);
         log.info(b ? "保存成功" : "保存失败");
     }
 
@@ -220,24 +220,24 @@ public class DatabaseTests {
      * 更新头像
      */
     @Test
-    void updateTreeHoleUrl() {
+    void updateDanmakuUrl() {
         // List<String> randomAvatars = JSON.parseObject(qingSiCache.get(CommonConst.PATH_TYPE_RANDOM_AVATAR), new TypeReference<List<String>>() {
         // });
 
         List<String> randomAvatars = qiniuUtil.list("qingsi/static/avatar/");
 
-        // List<TreeHole> needUpdateList = treeHoleService.list(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
+        // List<Danmaku> needUpdateList = danmakuService.list(Wrappers.<Danmaku>lambdaQuery().like(Danmaku::getAvatar, "poetize"));
         log.info("randomAvatars:{}", randomAvatars.size());
 
-        // List<TreeHole> needUpdateList = treeHoleService.list(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "corrain"));
-        List<TreeHole> needUpdateList = treeHoleService.list();
+        // List<Danmaku> needUpdateList = danmakuService.list(Wrappers.<Danmaku>lambdaQuery().like(Danmaku::getAvatar, "corrain"));
+        List<Danmaku> needUpdateList = danmakuService.list();
         log.info("list:{}", needUpdateList.size());
-        needUpdateList.forEach(treeHole -> {
-            treeHole.setAvatar(randomAvatars.get(RandomUtil.randomInt(0, randomAvatars.size())));
+        needUpdateList.forEach(danmaku -> {
+            danmaku.setAvatar(randomAvatars.get(RandomUtil.randomInt(0, randomAvatars.size())));
         });
-        boolean b = treeHoleService.updateBatchById(needUpdateList);
+        boolean b = danmakuService.updateBatchById(needUpdateList);
         log.info(b ? "更新成功" : "更新失败");
-        // treeHoleService.remove(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
+        // danmakuService.remove(Wrappers.<Danmaku>lambdaQuery().like(Danmaku::getAvatar, "poetize"));
     }
 
     /**
@@ -250,7 +250,7 @@ public class DatabaseTests {
 
         List<String> imgs = qiniuUtil.list("backgroundImg/");
 
-        // List<TreeHole> needUpdateList = treeHoleService.list(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
+        // List<Danmaku> needUpdateList = danmakuService.list(Wrappers.<Danmaku>lambdaQuery().like(Danmaku::getAvatar, "poetize"));
         log.info("randomAvatars:{}", imgs.size());
 
         WebInfo one = webInfoService.getOne(Wrappers.<WebInfo>lambdaQuery());
@@ -263,7 +263,7 @@ public class DatabaseTests {
         one.setRandomCover(json);
         boolean b = webInfoService.updateById(one);
         log.info(b ? "更新成功" : "更新失败");
-        // treeHoleService.remove(Wrappers.<TreeHole>lambdaQuery().like(TreeHole::getAvatar, "poetize"));
+        // danmakuService.remove(Wrappers.<Danmaku>lambdaQuery().like(Danmaku::getAvatar, "poetize"));
     }
 
     /**

@@ -19,7 +19,7 @@ import io.charqe.qs.modules.im.http.service.ImChatUserGroupMessageService;
 import io.charqe.qs.modules.im.http.vo.GroupVO;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.common.enums.CodeMsg;
-import io.charqe.qs.common.enums.YouthEnum;
+import io.charqe.qs.common.enums.UserTypeEnum;
 import io.charqe.qs.utils.BlogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -34,12 +34,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * <p>
- * 聊天群 前端控制器
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-12-02
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @RestController
 @RequestMapping("/imChatGroup")
@@ -150,7 +148,7 @@ public class ImChatGroupController {
     public R deleteGroup(@RequestParam("id") Integer id) {
         User currentUser = BlogUtil.getCurrentUser();
         boolean isSuccess;
-        if (currentUser.getUserType().intValue() == YouthEnum.USER_TYPE_ADMIN.getCode()) {
+        if (currentUser.getUserType().intValue() == UserTypeEnum.ADMIN.getCode()) {
             isSuccess = imChatGroupService.removeById(id);
         } else {
             LambdaUpdateChainWrapper<ImChatGroup> lambdaUpdate = imChatGroupService.lambdaUpdate();

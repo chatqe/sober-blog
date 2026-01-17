@@ -19,12 +19,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>
- * 资源聚合里的音乐，其他接口在ResourceAggregationController
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-09-14
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @RestController
 @RequestMapping("/music")

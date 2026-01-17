@@ -8,12 +8,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>
- * 历史信息 Mapper 接口
- * </p>
+ * *
  *
- * @author sara
- * @since 2023-07-24
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 public interface HistoryInfoMapper extends BaseMapper<HistoryInfo> {
 

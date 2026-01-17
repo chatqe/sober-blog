@@ -12,7 +12,7 @@ import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.user.domain.dao.UserMapper;
 import io.charqe.qs.common.enums.EmailBizType;
-import io.charqe.qs.common.enums.YouthEnum;
+import io.charqe.qs.common.enums.UserTypeEnum;
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.modules.im.http.dao.ImChatGroupUserMapper;
 import io.charqe.qs.modules.im.http.dao.ImChatUserFriendMapper;
@@ -25,8 +25,8 @@ import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
 import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
-import io.charqe.qs.modules.weiyan.domain.pojo.WeiYan;
-import io.charqe.qs.modules.weiyan.service.WeiYanService;
+import io.charqe.qs.modules.moment.domain.pojo.Moment;
+import io.charqe.qs.modules.moment.service.MomentService;
 import io.charqe.qs.utils.*;
 import io.charqe.qs.utils.cache.PoetryCache;
 import io.charqe.qs.utils.cache.QingSiCache;
@@ -48,12 +48,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
- * <p>
- * 用户信息表 服务实现类
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-08-12
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Service
 @Slf4j
@@ -61,7 +59,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
 
     @Autowired
-    private WeiYanService weiYanService;
+    private MomentService momentService;
 
     @Autowired
     private ImChatGroupUserMapper imChatGroupUserMapper;
@@ -120,7 +118,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String userToken = "";
 
         if (isAdmin) {
-            if (one.getUserType() != YouthEnum.USER_TYPE_ADMIN.getCode() && one.getUserType() != YouthEnum.USER_TYPE_DEV.getCode()) {
+            if (one.getUserType() != UserTypeEnum.ADMIN.getCode() && one.getUserType() != UserTypeEnum.DEV.getCode()) {
                 return R.fail("请输入管理员账号！");
             }
             // if (PoetryCache.get(CommonConst.ADMIN_TOKEN + one.getId()) != null) {
@@ -155,7 +153,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
         userVO.setPassword(null);
-        if (isAdmin && one.getUserType() == YouthEnum.USER_TYPE_ADMIN.getCode()) {
+        if (isAdmin && one.getUserType() == UserTypeEnum.ADMIN.getCode()) {
             userVO.setIsBoss(true);
         }
 
@@ -265,12 +263,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userVO.setPassword(null);
         userVO.setAccessToken(userToken);
 
-        WeiYan weiYan = new WeiYan();
-        weiYan.setUserId(one.getId());
-        weiYan.setContent("到此一游");
-        weiYan.setType(CommonConst.WEIYAN_TYPE_FRIEND);
-        weiYan.setIsPublic(Boolean.TRUE);
-        weiYanService.save(weiYan);
+        Moment moment = new Moment();
+        moment.setUserId(one.getId());
+        moment.setContent("到此一游");
+        moment.setType(CommonConst.MOMENT_TYPE_FRIEND);
+        moment.setIsPublic(Boolean.TRUE);
+        momentService.save(moment);
 
         ImChatGroupUser imChatGroupUser = new ImChatGroupUser();
         imChatGroupUser.setGroupId(ImConfigConst.DEFAULT_GROUP_ID);

@@ -5,12 +5,10 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import io.charqe.qs.modules.weblinks.domain.pojo.Weblinks;
 
 /**
- * <p>
- * 资源聚合 Mapper 接口
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-09-14
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 public interface WeblinksMapper extends BaseMapper<Weblinks> {
 

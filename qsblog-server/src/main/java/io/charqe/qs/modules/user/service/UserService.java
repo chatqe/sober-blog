@@ -11,12 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>
- * 用户信息表 服务类
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-08-12
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 public interface UserService extends IService<User> {
 

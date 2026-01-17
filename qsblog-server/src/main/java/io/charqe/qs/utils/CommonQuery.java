@@ -8,17 +8,17 @@ import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapp
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
 import io.charqe.qs.modules.article.domain.pojo.Article;
+import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
+import io.charqe.qs.modules.category.domain.pojo.Category;
 import io.charqe.qs.modules.comment.domain.dao.CommentMapper;
 import io.charqe.qs.modules.comment.domain.pojo.Comment;
+import io.charqe.qs.modules.family.controller.web.vo.FamilyVO;
 import io.charqe.qs.modules.family.domain.dao.FamilyMapper;
 import io.charqe.qs.modules.family.domain.pojo.Family;
-import io.charqe.qs.modules.family.controller.web.vo.FamilyVO;
-import io.charqe.qs.modules.historyInfo.domain.pojo.HistoryInfo;
 import io.charqe.qs.modules.historyInfo.domain.dao.HistoryInfoMapper;
-import io.charqe.qs.modules.label.domain.dao.LabelMapper;
-import io.charqe.qs.modules.label.domain.pojo.Label;
-import io.charqe.qs.modules.sort.domain.dao.SortMapper;
-import io.charqe.qs.modules.sort.domain.pojo.Sort;
+import io.charqe.qs.modules.historyInfo.domain.pojo.HistoryInfo;
+import io.charqe.qs.modules.tag.domain.dao.TagMapper;
+import io.charqe.qs.modules.tag.domain.pojo.Tag;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.service.UserService;
 import io.charqe.qs.utils.cache.QingSiCache;
@@ -49,16 +49,16 @@ public class CommonQuery {
     private UserService userService;
 
     @Resource
-    private SortMapper sortMapper;
-
-    @Resource
-    private LabelMapper labelMapper;
-
-    @Resource
     private ArticleMapper articleMapper;
 
     @Resource
     private FamilyMapper familyMapper;
+
+    @Resource
+    private CategoryMapper categoryMapper;
+
+    @Resource
+    private TagMapper tagMapper;
 
     @Resource
     private QingSiCache qingSiCache;
@@ -320,45 +320,49 @@ public class CommonQuery {
         return ids;
     }
 
-    public List<Sort> getSortInfo() {
-        // List<Sort> sortInfo = (List<Sort>) PoetryCache.get(CommonConst.SORT_INFO);
-        List<Sort> sortInfo = JSON.parseObject(qingSiCache.get(CommonConst.SORT_INFO), new TypeReference<List<Sort>>() {
+    /**
+     * 获取分类标签信息
+     */
+    public List<Category> getCategoryInfo() {
+        // List<Category> categoryInfo = (List<Category>) PoetryCache.get(CommonConst.SORT_INFO);
+        List<Category> categoryInfo = JSON.parseObject(qingSiCache.get(CommonConst.SORT_INFO), new TypeReference<List<Category>>() {
         });
-        if (sortInfo != null) {
-            return sortInfo;
+        if (categoryInfo != null) {
+            return categoryInfo;
         }
 
         synchronized (CommonConst.SORT_INFO.intern()) {
-            sortInfo = JSON.parseObject(qingSiCache.get(CommonConst.SORT_INFO), new TypeReference<List<Sort>>() {
+            categoryInfo = JSON.parseObject(qingSiCache.get(CommonConst.SORT_INFO), new TypeReference<List<Category>>() {
             });
-            if (sortInfo == null) {
-                List<Sort> sorts = new LambdaQueryChainWrapper<>(sortMapper).list();
-                if (!CollectionUtils.isEmpty(sorts)) {
-                    sorts.forEach(sort -> {
-                        LambdaQueryChainWrapper<Article> sortWrapper = new LambdaQueryChainWrapper<>(articleMapper);
-                        Integer countOfSort = Math.toIntExact(sortWrapper.eq(Article::getSortId, sort.getId()).count());
-                        sort.setCountOfSort(countOfSort);
+            if (categoryInfo == null) {
+                List<Category> categories = new LambdaQueryChainWrapper<>(categoryMapper).list();
+                if (!CollectionUtils.isEmpty(categories)) {
+                    categories.forEach(category -> {
+                        LambdaQueryChainWrapper<Article> categoryWrapper = new LambdaQueryChainWrapper<>(articleMapper);
+                        Integer countOfCategory = Math.toIntExact(categoryWrapper.eq(Article::getSortId, category.getId()).count());
+                        // category.setCountOfCategory(countOfCategory);
 
-                        LambdaQueryChainWrapper<Label> wrapper = new LambdaQueryChainWrapper<>(labelMapper);
-                        List<Label> labels = wrapper.eq(Label::getSortId, sort.getId()).list();
-                        if (!CollectionUtils.isEmpty(labels)) {
-                            labels.forEach(label -> {
-                                LambdaQueryChainWrapper<Article> labelWrapper = new LambdaQueryChainWrapper<>(articleMapper);
-                                Integer countOfLabel = Math.toIntExact(labelWrapper.eq(Article::getLabelId, label.getId()).count());
-                                label.setCountOfLabel(countOfLabel);
+                        LambdaQueryChainWrapper<Tag> wrapper = new LambdaQueryChainWrapper<>(tagMapper);
+                        List<Tag> tags = wrapper.list();
+                        if (!CollectionUtils.isEmpty(tags)) {
+                            tags.forEach(tag -> {
+                                LambdaQueryChainWrapper<Article> tagWrapper = new LambdaQueryChainWrapper<>(articleMapper);
+                                Integer countOfTag = Math.toIntExact(tagWrapper.eq(Article::getLabelId, tag.getId()).count());
+                                // tag.setCountOfTag(countOfTag);
                             });
-                            sort.setLabels(labels);
+                            // category.setTags(tags);
                         }
                     });
                 }
-                // PoetryCache.put(CommonConst.SORT_INFO, sorts);
-                qingSiCache.put(CommonConst.SORT_INFO, sorts);
-                return sorts;
+                // PoetryCache.put(CommonConst.SORT_INFO, categories);
+                qingSiCache.put(CommonConst.SORT_INFO, categories);
+                return categories;
             } else {
-                return sortInfo;
+                return categoryInfo;
             }
         }
     }
 }
+
 
 

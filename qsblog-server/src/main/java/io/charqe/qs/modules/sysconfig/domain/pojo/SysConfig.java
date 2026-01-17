@@ -1,35 +1,21 @@
 package io.charqe.qs.modules.sysconfig.domain.pojo;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableField;
-
-import java.io.Serializable;
-
+import com.baomidou.mybatisplus.annotation.TableName;
+import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * <p>
- * 参数配置表
- * </p>
+ * *
  *
- * @author sara
- * @since 2024-03-23
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("sys_config")
-public class SysConfig implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * id
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+public class SysConfig extends BaseDO {
 
     /**
      * 名称
@@ -54,7 +40,6 @@ public class SysConfig implements Serializable {
      */
     @TableField("config_type")
     private String configType;
-
 
 }
 

@@ -4,12 +4,10 @@ import io.charqe.qs.modules.im.http.entity.ImChatGroup;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
- * <p>
- * 聊天群 Mapper 接口
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-12-02
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 public interface ImChatGroupMapper extends BaseMapper<ImChatGroup> {
 

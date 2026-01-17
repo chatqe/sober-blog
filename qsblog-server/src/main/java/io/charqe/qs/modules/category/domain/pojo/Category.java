@@ -1,11 +1,9 @@
 package io.charqe.qs.modules.category.domain.pojo;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.TableName;
+import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -17,12 +15,17 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("category")
-public class Category implements Serializable {
+public class Category extends BaseDO {
 
-    private static final long serialVersionUID = 1L;
+    /**
+     * 状态
+     */
+    private Integer status;
+    /**
+     * 是否展示（0:否 1:是）
+     */
+    private Integer isShow;
 
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
 
     /**
      * 分类名称
@@ -44,26 +47,11 @@ public class Category implements Serializable {
      */
     private String icon;
 
-    /**
-     * 创建时间
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
-
-    /**
-     * 最终修改时间
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
 
     /**
      * 最终修改人
      */
     private String updateBy;
 
-    /**
-     * 是否删除[0:未删除，1:已删除]
-     */
-    @TableLogic
-    private Boolean deleted;
+
 }

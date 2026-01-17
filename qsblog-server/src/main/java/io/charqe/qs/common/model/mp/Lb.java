@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 /**
  * 强制规约：只准用 LambdaWrapper，禁止字符串列名 统一封装 Wrappers.lambdaXXX() 工具，禁止出现 .eq("status", val)；
  *
- * @author sjq
+ * @author Joy
  * @since 2025-12-16 14:51
  */
 public final class Lb {

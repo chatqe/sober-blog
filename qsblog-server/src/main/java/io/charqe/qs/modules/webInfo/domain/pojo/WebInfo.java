@@ -1,36 +1,21 @@
 package io.charqe.qs.modules.webInfo.domain.pojo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
-
 /**
- * <p>
- * 网站信息表
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-09-14
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("web_info")
-public class WebInfo implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * id
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    private Integer id;
+public class WebInfo extends BaseDO {
 
     /**
      * 网站名称

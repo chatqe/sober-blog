@@ -28,12 +28,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * <p>
- * 文章评论表 服务实现类
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-08-13
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Service
 public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
@@ -49,11 +47,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Override
     public R saveComment(CommentVO commentVO) {
-        if (CommentTypeEnum.getEnumByCode(commentVO.getType()) == null) {
+        if (CommentTypeEnum.getByCode(commentVO.getType()) == null) {
             return R.fail("评论来源类型不存在！");
         }
         Article one = null;
-        if (CommentTypeEnum.COMMENT_TYPE_ARTICLE.getCode().equals(commentVO.getType())) {
+        if (CommentTypeEnum.ARTICLE.getCode().equals(commentVO.getType())) {
             LambdaQueryChainWrapper<Article> articleWrapper = new LambdaQueryChainWrapper<>(articleMapper);
             one = articleWrapper.eq(Article::getId, commentVO.getSource()).select(Article::getUserId, Article::getArticleTitle, Article::getCommentStatus).one();
 
@@ -104,7 +102,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             return R.fail(CodeMsg.PARAMETER_ERROR);
         }
 
-        if (CommentTypeEnum.COMMENT_TYPE_ARTICLE.getCode().equals(baseReqVO.getCommentType())) {
+        if (CommentTypeEnum.ARTICLE.getCode().equals(baseReqVO.getCommentType())) {
             LambdaQueryChainWrapper<Article> articleWrapper = new LambdaQueryChainWrapper<>(articleMapper);
             Article one = articleWrapper.eq(Article::getId, baseReqVO.getSource()).select(Article::getCommentStatus).one();
 
@@ -163,9 +161,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 baseReqVO.setRecords(new ArrayList());
             } else {
                 if (baseReqVO.getSource() != null) {
-                    wrapper.eq(Comment::getSource, baseReqVO.getSource()).eq(Comment::getType, CommentTypeEnum.COMMENT_TYPE_ARTICLE.getCode());
+                    wrapper.eq(Comment::getSource, baseReqVO.getSource()).eq(Comment::getType, CommentTypeEnum.ARTICLE.getCode());
                 } else {
-                    wrapper.eq(Comment::getType, CommentTypeEnum.COMMENT_TYPE_ARTICLE.getCode()).in(Comment::getSource, userArticleIds);
+                    wrapper.eq(Comment::getType, CommentTypeEnum.ARTICLE.getCode()).in(Comment::getSource, userArticleIds);
                 }
                 wrapper.orderByDesc(Comment::getCreateTime).page(baseReqVO);
             }

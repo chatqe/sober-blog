@@ -14,12 +14,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * <p>
- * 单聊记录
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-12-02
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Data
 @EqualsAndHashCode(callSuper = false)

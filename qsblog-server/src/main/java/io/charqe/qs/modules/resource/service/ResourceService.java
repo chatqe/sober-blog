@@ -4,12 +4,10 @@ import io.charqe.qs.modules.resource.domain.pojo.Resource;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
- * <p>
- * 资源信息 服务类
- * </p>
+ * *
  *
- * @author sara
- * @since 2022-03-06
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 public interface ResourceService extends IService<Resource> {
 

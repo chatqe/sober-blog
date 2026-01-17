@@ -1,35 +1,21 @@
 package io.charqe.qs.modules.resource.domain.pojo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
 /**
- * <p>
- * 资源信息
- * </p>
+ * *
  *
- * @author sara
- * @since 2022-03-06
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("resource")
-public class Resource implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * id
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+public class Resource extends BaseDO {
 
     /**
      * 用户ID
@@ -78,12 +64,5 @@ public class Resource implements Serializable {
      */
     @TableField("original_name")
     private String originalName;
-
-    /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
 
 }

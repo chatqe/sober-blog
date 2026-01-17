@@ -33,12 +33,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * <p>
- * 聊天群成员 前端控制器
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-12-02
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @RestController
 @RequestMapping("/imChatGroupUser")

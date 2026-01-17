@@ -22,12 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>
- * 好友 前端控制器
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-12-02
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @RestController
 @RequestMapping("/imChatUserFriend")

@@ -2,33 +2,20 @@ package io.charqe.qs.modules.article.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
 /**
- * <p>
- * 文章表
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-09-14
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("article")
-public class Article implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * id
-     */
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+public class Article extends BaseDO {
 
     /**
      * 用户ID
@@ -115,31 +102,10 @@ public class Article implements Serializable {
     private Boolean recommendStatus;
 
     /**
-     * 创建时间
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    /**
-     * 最终修改时间
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
-    /**
      * 最终修改人
      */
     @TableField(value = "update_by", fill = FieldFill.UPDATE)
     private String updateBy;
-
-    /**
-     * 是否启用[0:未删除，1:已删除]
-     */
-    @TableField("deleted")
-    @TableLogic
-    private Boolean deleted;
 
 
     public Integer getWeight() {

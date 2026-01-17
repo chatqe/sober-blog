@@ -28,12 +28,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * <p>
- * 群聊记录 前端控制器
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-12-02
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @RestController
 @RequestMapping("/imChatUserGroupMessage")

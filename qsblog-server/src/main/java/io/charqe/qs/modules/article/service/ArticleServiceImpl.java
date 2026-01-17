@@ -9,32 +9,33 @@ import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWra
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.charqe.qs.aop.ResourceCheck;
-import io.charqe.qs.common.model.PageResult;
-import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
-import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
-import io.charqe.qs.modules.label.domain.dao.LabelMapper;
-import io.charqe.qs.modules.like.domain.pojo.Like;
-import io.charqe.qs.modules.sort.domain.dao.SortMapper;
 import io.charqe.qs.common.enums.CommentTypeEnum;
-import io.charqe.qs.common.enums.YouthEnum;
+import io.charqe.qs.common.enums.LikeTargetEnum;
+import io.charqe.qs.common.enums.StatusEnum;
 import io.charqe.qs.common.exception.ServiceException;
 import io.charqe.qs.common.model.BaseReqVO;
+import io.charqe.qs.common.model.PageResult;
+import io.charqe.qs.common.model.R;
+import io.charqe.qs.infra.thirdparty.mail.MailUtil;
 import io.charqe.qs.modules.article.controller.web.dto.ArticleDTO;
 import io.charqe.qs.modules.article.controller.web.dto.ArticlePageDTO;
-import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.article.controller.web.vo.ArticlePageVO;
 import io.charqe.qs.modules.article.controller.web.vo.ArticleVO;
-import io.charqe.qs.modules.label.domain.pojo.Label;
-import io.charqe.qs.modules.sort.domain.pojo.Sort;
-import io.charqe.qs.modules.user.domain.pojo.User;
-import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
+import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
+import io.charqe.qs.modules.article.domain.pojo.Article;
+import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
+import io.charqe.qs.modules.category.domain.pojo.Category;
+import io.charqe.qs.modules.like.domain.pojo.Like;
 import io.charqe.qs.modules.like.service.LikeService;
+import io.charqe.qs.modules.tag.domain.dao.TagMapper;
+import io.charqe.qs.modules.tag.domain.pojo.Tag;
+import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.service.UserService;
+import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.CommonQuery;
 import io.charqe.qs.utils.cache.QingSiCache;
-import io.charqe.qs.infra.thirdparty.mail.MailUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,12 +50,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * <p>
- * 文章表 服务实现类
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-08-13
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Service
 public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
@@ -72,10 +71,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     private MailUtil mailUtil;
 
     @Autowired
-    private SortMapper sortMapper;
+    private CategoryMapper categoryMapper;
 
     @Autowired
-    private LabelMapper labelMapper;
+    private TagMapper tagMapper;
 
     @Resource
     private QingSiCache qingSiCache;
@@ -119,16 +118,16 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
         try {
             if (articleVO.getViewStatus()) {
-                List<User> users = userService.lambdaQuery().select(User::getEmail, User::getSubscribe).eq(User::getUserStatus, YouthEnum.STATUS_ENABLE.getCode()).list();
+                List<User> users = userService.lambdaQuery().select(User::getEmail, User::getSubscribe).eq(User::getUserStatus, StatusEnum.ENABLE.getCode()).list();
                 List<String> emails = users.stream().filter(u -> {
                     List<Integer> sub = JSON.parseArray(u.getSubscribe(), Integer.class);
                     return !CollectionUtils.isEmpty(sub) && sub.contains(articleVO.getLabelId());
                 }).map(User::getEmail).collect(Collectors.toList());
 
                 if (!CollectionUtils.isEmpty(emails)) {
-                    LambdaQueryChainWrapper<Label> wrapper = new LambdaQueryChainWrapper<>(labelMapper);
-                    Label label = wrapper.select(Label::getLabelName).eq(Label::getId, articleVO.getLabelId()).one();
-                    String text = getSubscribeMail(label.getLabelName(), articleVO.getArticleTitle());
+                    LambdaQueryChainWrapper<Tag> wrapper = new LambdaQueryChainWrapper<>(tagMapper);
+                    Tag tag = wrapper.select(Tag::getTagName).eq(Tag::getId, articleVO.getLabelId()).one();
+                    String text = getSubscribeMail(tag.getTagName(), articleVO.getArticleTitle());
                     // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
                     WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
                     mailUtil.sendMailMessage(emails, "您有一封来自" + (webInfo == null ? "POETIZE" : webInfo.getWebName()) + "的回执！", text);
@@ -221,7 +220,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     //     ArticlePageDTO articlePage = articleMapper.selectPage(, Wrappers.<Article>lambdaQuery()
     //             .in(!CollectionUtils.isEmpty(ids), Article::getId, ids)
     //             .like(StringUtils.hasText(baseReqVO.getSearchKey()), Article::getArticleTitle, baseReqVO.getArticleSearch())
-    //             .eq(baseReqVO.getRecommendStatus() != null && baseReqVO.getRecommendStatus(), Article::getRecommendStatus, YouthEnum.STATUS_ENABLE.getCode())
+    //             .eq(baseReqVO.getRecommendStatus() != null && baseReqVO.getRecommendStatus(), Article::getRecommendStatus, StatusEnum.ENABLE.getCode())
     //             .eq(baseReqVO.getLabelId() != null, Article::getLabelId, baseReqVO.getLabelId())
     //             .eq(baseReqVO.getSortId() != null, Article::getSortId, baseReqVO.getSortId())
     //             .orderByDesc(Article::getCreateTime));
@@ -298,7 +297,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             lambdaQuery.like(Article::getArticleTitle, baseReqVO.getSearchKey());
         }
         if (baseReqVO.getRecommendStatus() != null && baseReqVO.getRecommendStatus()) {
-            lambdaQuery.eq(Article::getRecommendStatus, YouthEnum.STATUS_ENABLE.getCode());
+            lambdaQuery.eq(Article::getRecommendStatus, StatusEnum.ENABLE.getCode());
         }
 
         if (baseReqVO.getLabelId() != null) {
@@ -357,9 +356,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 Map<Integer, List<ArticleVO>> map = new HashMap<>();
 
                 // 获取所有展示分类
-                List<Sort> sorts = new LambdaQueryChainWrapper<>(sortMapper)
-                        .eq(Sort::getStatus, 1)
-                        .select(Sort::getId).list();
+                List<Category> categories = new LambdaQueryChainWrapper<>(categoryMapper)
+                        .eq(Category::getIsShow, 1)
+                        .select(Category::getId).list();
 
                 List<Article> articles = list(Wrappers.<Article>lambdaQuery()
                         .eq(Article::getDeleted, 0));
@@ -440,7 +439,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 // 点赞
                 Like like = new Like();
                 like.setUserId(dto.getUserId());
-                like.setTargetType(YouthEnum.LIKE_TARGET_ARTICLE.getCode());
+                like.setTargetType(LikeTargetEnum.ARTICLE.getCode());
                 like.setTargetId(dto.getArticleId());
                 like.setCreateTime(new Date());
                 likeService.save(like);
@@ -452,7 +451,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 likeService.remove(Wrappers.<Like>lambdaQuery()
                         .eq(Like::getUserId, dto.getUserId())
                         .eq(Like::getTargetId, dto.getArticleId())
-                        .eq(Like::getTargetType, YouthEnum.LIKE_TARGET_ARTICLE.getCode()));
+                        .eq(Like::getTargetType, LikeTargetEnum.ARTICLE.getCode()));
 
                 this.update(Wrappers.<Article>lambdaUpdate().
                         eq(Article::getId, dto.getArticleId())
@@ -487,7 +486,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         Like one = likeService.getOne(Wrappers.<Like>lambdaQuery()
                 .eq(Like::getUserId, userId)
                 .eq(Like::getTargetId, articleId)
-                .eq(Like::getTargetType, YouthEnum.LIKE_TARGET_ARTICLE.getCode()));
+                .eq(Like::getTargetType, LikeTargetEnum.ARTICLE.getCode()));
         if (Objects.nonNull(one)) {
             return true;
         }
@@ -518,7 +517,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         Page<Article> articlePage = articleMapper.selectPage(page, Wrappers.<Article>lambdaQuery()
                 .like(StringUtils.hasText(dto.getSearchKey()), Article::getArticleTitle, dto.getSearchKey())
                 .like(StringUtils.hasText(dto.getArticleSearch()), Article::getArticleTitle, dto.getArticleSearch())
-                .eq((Objects.nonNull(dto.getRecommendStatus()) && dto.getRecommendStatus()), Article::getRecommendStatus, YouthEnum.STATUS_ENABLE.getCode())
+                .eq((Objects.nonNull(dto.getRecommendStatus()) && dto.getRecommendStatus()), Article::getRecommendStatus, StatusEnum.ENABLE.getCode())
                 .eq(Objects.nonNull(dto.getSortId()), Article::getSortId, dto.getSortId())
                 .eq(Objects.nonNull(dto.getLabelId()), Article::getLabelId, dto.getLabelId())
                 .orderByDesc(Article::getCreateTime));
@@ -579,29 +578,20 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             articleVO.setUsername(BlogUtil.getRandomName(articleVO.getUserId().toString()));
         }
         if (articleVO.getCommentStatus()) {
-            articleVO.setCommentCount(commonQuery.getCommentCount(articleVO.getId(), CommentTypeEnum.COMMENT_TYPE_ARTICLE.getCode()));
+            articleVO.setCommentCount(commonQuery.getCommentCount(articleVO.getId(), CommentTypeEnum.ARTICLE.getCode()));
         } else {
             articleVO.setCommentCount(0);
         }
 
-        List<Sort> sortInfo = commonQuery.getSortInfo();
-        if (!CollectionUtils.isEmpty(sortInfo)) {
-            for (Sort s : sortInfo) {
-                if (s.getId().intValue() == articleVO.getSortId().intValue()) {
-                    Sort sort = new Sort();
-                    BeanUtils.copyProperties(s, sort);
-                    sort.setLabels(null);
-                    articleVO.setSort(sort);
-                    if (!CollectionUtils.isEmpty(s.getLabels())) {
-                        for (int j = 0; j < s.getLabels().size(); j++) {
-                            Label l = s.getLabels().get(j);
-                            if (l.getId().intValue() == articleVO.getLabelId().intValue()) {
-                                Label label = new Label();
-                                BeanUtils.copyProperties(l, label);
-                                articleVO.setLabel(label);
-                                break;
-                            }
-                        }
+        List<Category> categoryInfo = commonQuery.getCategoryInfo();
+        if (!CollectionUtils.isEmpty(categoryInfo)) {
+            for (Category c : categoryInfo) {
+                if (c.getId().intValue() == articleVO.getSortId().intValue()) {
+                    articleVO.setCategory(c);
+                    // 获取标签信息
+                    Tag tag = tagMapper.selectById(articleVO.getLabelId());
+                    if (tag != null) {
+                        articleVO.setTag(tag);
                     }
                     break;
                 }

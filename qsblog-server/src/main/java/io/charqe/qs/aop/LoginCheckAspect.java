@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.enums.CodeMsg;
-import io.charqe.qs.common.enums.YouthEnum;
+import io.charqe.qs.common.enums.UserTypeEnum;
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.common.exception.LoginException;
 import io.charqe.qs.modules.user.domain.pojo.User;
@@ -45,13 +45,13 @@ public class LoginCheckAspect {
         }
 
         if (token.contains(CommonConst.USER_ACCESS_TOKEN)) {
-            if (loginCheck.value() == YouthEnum.USER_TYPE_ADMIN.getCode() || loginCheck.value() == YouthEnum.USER_TYPE_DEV.getCode()) {
+            if (loginCheck.value() == UserTypeEnum.ADMIN.getCode() || loginCheck.value() == UserTypeEnum.DEV.getCode()) {
                 return R.fail("请输入管理员账号！");
             }
         } else if (token.contains(CommonConst.ADMIN_ACCESS_TOKEN)) {
             // log.info("请求IP：" + BlogUtil.getIpAddr(BlogUtil.getRequest()));
             log.info("请求IP：" + IPUtil.getRealIp(IPUtil.getRequest()));
-            if (loginCheck.value() == YouthEnum.USER_TYPE_ADMIN.getCode() && user.getId().intValue() != CommonConst.ADMIN_USER_ID) {
+            if (loginCheck.value() == UserTypeEnum.ADMIN.getCode() && user.getId().intValue() != CommonConst.ADMIN_USER_ID) {
                 return R.fail("请输入管理员账号！");
             }
         } else {

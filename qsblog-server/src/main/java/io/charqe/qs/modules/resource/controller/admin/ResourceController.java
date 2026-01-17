@@ -4,7 +4,7 @@ package io.charqe.qs.modules.resource.controller.admin;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.R;
-import io.charqe.qs.common.enums.YouthEnum;
+import io.charqe.qs.common.enums.StatusEnum;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.common.FileVO;
 import io.charqe.qs.common.constants.CommonConst;
@@ -25,12 +25,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * <p>
- * 资源信息 前端控制器
- * </p>
+ * *
  *
- * @author sara
- * @since 2022-03-06
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Slf4j
 @RestController
@@ -119,7 +117,7 @@ public class ResourceController {
     public R<List<String>> getImageList() {
         List<Resource> list = resourceService.lambdaQuery().select(Resource::getPath)
                 .eq(Resource::getType, CommonConst.PATH_TYPE_INTERNET_MEME)
-                .eq(Resource::getStatus, YouthEnum.STATUS_ENABLE.getCode())
+                .eq(Resource::getStatus, StatusEnum.ENABLE.getCode())
                 .eq(Resource::getUserId, BlogUtil.getAdminUser().getId())
                 .orderByDesc(Resource::getCreateTime)
                 .list();

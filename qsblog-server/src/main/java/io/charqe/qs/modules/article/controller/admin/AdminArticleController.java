@@ -19,12 +19,10 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 
 /**
- * <p>
- * 后台文章 前端控制器
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-08-13
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @RestController
 @RequestMapping("/admin")

@@ -7,12 +7,10 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
 /**
- * <p>
- * 文章表 Mapper 接口
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-08-13
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Mapper
 public interface ArticleMapper extends BaseMapper<Article> {

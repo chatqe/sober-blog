@@ -24,12 +24,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>
- * 用户信息表 前端控制器
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-08-12
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @RestController
 @RequestMapping("/user")

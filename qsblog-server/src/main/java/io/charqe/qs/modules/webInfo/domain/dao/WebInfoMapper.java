@@ -4,12 +4,10 @@ import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
- * <p>
- * 网站信息表 Mapper 接口
- * </p>
+ * *
  *
- * @author sara
- * @since 2021-09-14
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 public interface WebInfoMapper extends BaseMapper<WebInfo> {
 

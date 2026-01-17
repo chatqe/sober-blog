@@ -7,7 +7,7 @@ import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.enums.CodeMsg;
-import io.charqe.qs.common.enums.YouthEnum;
+import io.charqe.qs.common.enums.StatusEnum;
 import io.charqe.qs.modules.im.websocket.TioUtil;
 import io.charqe.qs.modules.im.websocket.TioWebsocketStarter;
 import io.charqe.qs.modules.user.domain.pojo.User;
@@ -95,9 +95,9 @@ public class AdminUserController {
 
         LambdaUpdateChainWrapper<User> updateChainWrapper = userService.lambdaUpdate().eq(User::getId, userId);
         if (flag) {
-            updateChainWrapper.eq(User::getUserStatus, YouthEnum.STATUS_DISABLE.getCode()).set(User::getUserStatus, YouthEnum.STATUS_ENABLE.getCode()).update();
+            updateChainWrapper.eq(User::getUserStatus, StatusEnum.DISABLE.getCode()).set(User::getUserStatus, StatusEnum.ENABLE.getCode()).update();
         } else {
-            updateChainWrapper.eq(User::getUserStatus, YouthEnum.STATUS_ENABLE.getCode()).set(User::getUserStatus, YouthEnum.STATUS_DISABLE.getCode()).update();
+            updateChainWrapper.eq(User::getUserStatus, StatusEnum.ENABLE.getCode()).set(User::getUserStatus, StatusEnum.DISABLE.getCode()).update();
         }
         logout(userId);
         return R.success();

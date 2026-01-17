@@ -1,0 +1,31 @@
+package io.charqe.qs.modules.danmaku.domain.pojo;
+
+import com.baomidou.mybatisplus.annotation.*;
+import io.charqe.qs.common.model.BaseDO;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+/**
+ * *
+ *
+ * @author Joy
+ * @since 2026-01-17 10:47
+ */
+@Data
+@EqualsAndHashCode(callSuper = false)
+@TableName("tree_hole")
+public class Danmaku extends BaseDO {
+
+    /**
+     * 头像
+     */
+    @TableField("avatar")
+    private String avatar;
+
+    /**
+     * 留言
+     */
+    @TableField("message")
+    private String message;
+
+}

@@ -1,35 +1,21 @@
 package io.charqe.qs.modules.family.domain.pojo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
 /**
- * <p>
- * 家庭信息
- * </p>
+ * *
  *
- * @author sara
- * @since 2023-01-03
+ * @author Joy
+ * @since 2026-01-17 10:47
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("family")
-public class Family implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * id
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+public class Family extends BaseDO {
 
     /**
      * 用户ID
@@ -102,18 +88,5 @@ public class Family implements Serializable {
      */
     @TableField("like_count")
     private Integer likeCount;
-
-    /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    /**
-     * 最终修改时间
-     */
-    @TableField("update_time")
-    private LocalDateTime updateTime;
-
 
 }
