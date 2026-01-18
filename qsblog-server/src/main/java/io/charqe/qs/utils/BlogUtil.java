@@ -39,7 +39,7 @@ public class BlogUtil {
         return JSON.parseObject(qingSiCache.get(CommonConst.ADMIN), User.class);
     }
 
-    public static Integer getUserId() {
+    public static Long getUserId() {
         String token = BlogUtil.getToken();
         if (!StringUtils.hasText(token)) {
             return null;

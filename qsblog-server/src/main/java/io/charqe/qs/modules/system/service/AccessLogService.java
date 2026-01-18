@@ -2,7 +2,6 @@ package io.charqe.qs.modules.system.service;
 
 import io.charqe.qs.utils.CommonQuery;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +10,9 @@ import javax.annotation.Resource;
 /**
  * 访问日志服务类
  * 用于异步处理访问日志的存储，避免影响主流程性能
+ *
+ * @author Joy
+ * @since 2026-01-17 19:02
  */
 @Slf4j
 @Service
@@ -21,6 +23,7 @@ public class AccessLogService {
 
     /**
      * 异步保存访问日志
+     *
      * @param ip 访问IP
      */
     @Async("accessLogExecutor")

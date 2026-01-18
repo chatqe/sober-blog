@@ -72,7 +72,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setParentCommentId(commentVO.getParentCommentId());
         comment.setFloorCommentId(commentVO.getFloorCommentId());
         comment.setParentUserId(commentVO.getParentUserId());
-        comment.setUserId(BlogUtil.getUserId());
+        comment.setUserId(BlogUtil.getUserId().intValue());
         if (StringUtils.hasText(commentVO.getCommentInfo())) {
             comment.setCommentInfo(commentVO.getCommentInfo());
         }
@@ -89,7 +89,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Override
     public R deleteComment(Integer id) {
-        Integer userId = BlogUtil.getUserId();
+        Integer userId = BlogUtil.getUserId().intValue();
         lambdaUpdate().eq(Comment::getId, id)
                 .eq(Comment::getUserId, userId)
                 .remove();
@@ -155,7 +155,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             }
             wrapper.orderByDesc(Comment::getCreateTime).page(baseReqVO);
         } else {
-            List<Integer> userArticleIds = commonQuery.getUserArticleIds(BlogUtil.getUserId());
+            List<Long> userArticleIds = commonQuery.getUserArticleIds(BlogUtil.getUserId());
             if (CollectionUtils.isEmpty(userArticleIds)) {
                 baseReqVO.setTotal(0);
                 baseReqVO.setRecords(new ArrayList());

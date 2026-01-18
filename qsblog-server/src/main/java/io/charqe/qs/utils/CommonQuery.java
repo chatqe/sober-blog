@@ -249,9 +249,9 @@ public class CommonQuery {
         return c;
     }
 
-    public List<Integer> getUserArticleIds(Integer userId) {
+    public List<Long> getUserArticleIds(Long userId) {
         // List<Integer> ids = (List<Integer>) PoetryCache.get(CommonConst.USER_ARTICLE_LIST + userId.toString());
-        List<Integer> ids = JSON.parseObject(qingSiCache.get(CommonConst.USER_ARTICLE_LIST + userId.toString()), new TypeReference<List<Integer>>() {
+        List<Long> ids = JSON.parseObject(qingSiCache.get(CommonConst.USER_ARTICLE_LIST + userId.toString()), new TypeReference<List<Long>>() {
         });
         if (ids != null) {
             return ids;
@@ -259,7 +259,7 @@ public class CommonQuery {
 
         synchronized ((CommonConst.USER_ARTICLE_LIST + userId.toString()).intern()) {
             // ids = (List<Integer>) PoetryCache.get(CommonConst.USER_ARTICLE_LIST + userId.toString());
-            ids = JSON.parseObject(qingSiCache.get(CommonConst.USER_ARTICLE_LIST + userId.toString()), new TypeReference<List<Integer>>() {
+            ids = JSON.parseObject(qingSiCache.get(CommonConst.USER_ARTICLE_LIST + userId.toString()), new TypeReference<List<Long>>() {
             });
             if (ids != null) {
                 return ids;
@@ -267,7 +267,7 @@ public class CommonQuery {
                 LambdaQueryChainWrapper<Article> wrapper = new LambdaQueryChainWrapper<>(articleMapper);
                 List<Article> articles = wrapper.eq(Article::getUserId, userId).select(Article::getId).list();
                 // List<Integer> collect = articles.stream().map(Article::getId).collect(Collectors.toList());
-                List<Integer> collect = articles.stream().map(Article::getId).collect(Collectors.toList());
+                List<Long> collect = articles.stream().map(Article::getId).collect(Collectors.toList());
                 // PoetryCache.put(CommonConst.USER_ARTICLE_LIST + userId.toString(), collect, CommonConst.EXPIRE);
                 qingSiCache.put(CommonConst.USER_ARTICLE_LIST + userId.toString(), collect, CommonConst.EXPIRE);
                 return collect;
