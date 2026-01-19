@@ -1,7 +1,7 @@
 package io.charqe.qs.modules.file.domain.dao;
 
 import io.charqe.qs.modules.file.domain.pojo.FileBizRelation;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import io.charqe.qs.common.model.mp.CoreMapper;
 
 /**
  * 文件业务关系表 Mapper 接口
@@ -9,6 +9,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author Joy
  * @since 2026-01-16 22:08
  */
-public interface FileBizRelationMapper extends BaseMapper<FileBizRelation> {
+public interface FileBizRelationMapper extends CoreMapper<FileBizRelation> {
 
 }

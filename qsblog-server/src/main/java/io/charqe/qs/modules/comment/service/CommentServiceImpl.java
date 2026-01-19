@@ -2,7 +2,7 @@ package io.charqe.qs.modules.comment.service;
 
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
@@ -18,6 +18,7 @@ import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.CommonQuery;
 import io.charqe.qs.infra.thirdparty.mail.MailSendUtil;
 import org.springframework.beans.BeanUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -34,7 +35,8 @@ import java.util.stream.Collectors;
  * @since 2026-01-17 10:47
  */
 @Service
-public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> implements CommentService {
+@Slf4j
+public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> implements CommentService {
 
     @Autowired
     private ArticleMapper articleMapper;
@@ -72,7 +74,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setParentCommentId(commentVO.getParentCommentId());
         comment.setFloorCommentId(commentVO.getFloorCommentId());
         comment.setParentUserId(commentVO.getParentUserId());
-        comment.setUserId(BlogUtil.getUserId().intValue());
+        comment.setUserId(BlogUtil.getUserId());
         if (StringUtils.hasText(commentVO.getCommentInfo())) {
             comment.setCommentInfo(commentVO.getCommentInfo());
         }
@@ -88,8 +90,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     @Override
-    public R deleteComment(Integer id) {
-        Integer userId = BlogUtil.getUserId().intValue();
+    public R deleteComment(Long id) {
+        Long userId = BlogUtil.getUserId();
         lambdaUpdate().eq(Comment::getId, id)
                 .eq(Comment::getUserId, userId)
                 .remove();
@@ -175,7 +177,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         CommentVO commentVO = new CommentVO();
         BeanUtils.copyProperties(c, commentVO);
 
-        User user = commonQuery.getUser(commentVO.getUserId());
+        User user = commonQuery.getUser(commentVO.getUserId().longValue());
         if (user != null) {
             commentVO.setAvatar(user.getAvatar());
             commentVO.setUsername(user.getUsername());
@@ -186,7 +188,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         }
 
         if (commentVO.getParentUserId() != null) {
-            User u = commonQuery.getUser(commentVO.getParentUserId());
+            User u = commonQuery.getUser(commentVO.getParentUserId().longValue());
             if (u != null) {
                 commentVO.setParentUsername(u.getUsername());
             }

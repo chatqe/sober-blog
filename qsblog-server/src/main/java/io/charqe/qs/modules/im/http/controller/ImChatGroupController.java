@@ -63,7 +63,7 @@ public class ImChatGroupController {
             return R.fail(CodeMsg.PARAMETER_ERROR);
         }
         imChatGroup.setGroupType(ImConfigConst.GROUP_COMMON);
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         imChatGroup.setMasterUserId(userId);
         imChatGroupService.save(imChatGroup);
 
@@ -92,7 +92,7 @@ public class ImChatGroupController {
             return R.fail(CodeMsg.PARAMETER_ERROR);
         }
         imChatGroup.setGroupType(ImConfigConst.GROUP_TOPIC);
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         imChatGroup.setMasterUserId(userId);
         imChatGroup.setInType(ImConfigConst.IN_TYPE_FALSE);
         imChatGroupService.save(imChatGroup);
@@ -145,7 +145,7 @@ public class ImChatGroupController {
      */
     @GetMapping("/deleteGroup")
     @LoginCheck
-    public R deleteGroup(@RequestParam("id") Integer id) {
+    public R deleteGroup(@RequestParam("id") Long id) {
         User currentUser = BlogUtil.getCurrentUser();
         boolean isSuccess;
         if (currentUser.getUserType().intValue() == UserTypeEnum.ADMIN.getCode()) {
@@ -209,13 +209,13 @@ public class ImChatGroupController {
     @GetMapping("/listGroup")
     @LoginCheck
     public R<List<GroupVO>> listGroup() {
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         LambdaQueryChainWrapper<ImChatGroupUser> lambdaQuery = imChatGroupUserService.lambdaQuery();
         lambdaQuery.eq(ImChatGroupUser::getUserId, userId);
         lambdaQuery.in(ImChatGroupUser::getUserStatus, ImConfigConst.GROUP_USER_STATUS_PASS, ImConfigConst.GROUP_USER_STATUS_SILENCE);
         List<ImChatGroupUser> groupUsers = lambdaQuery.list();
 
-        Map<Integer, ImChatGroupUser> groupUserMap = groupUsers.stream().collect(Collectors.toMap(ImChatGroupUser::getGroupId, Function.identity()));
+        Map<Long, ImChatGroupUser> groupUserMap = groupUsers.stream().collect(Collectors.toMap(ImChatGroupUser::getGroupId, Function.identity()));
         LambdaQueryChainWrapper<ImChatGroup> wrapper = imChatGroupService.lambdaQuery();
         wrapper.eq(ImChatGroup::getGroupType, ImConfigConst.GROUP_TOPIC);
         if (!CollectionUtils.isEmpty(groupUserMap.keySet())) {
@@ -230,7 +230,7 @@ public class ImChatGroupController {
                 imChatGroupUser.setUserStatus(ImConfigConst.GROUP_USER_STATUS_PASS);
                 imChatGroupUser.setCreateTime(LocalDateTime.now());
                 imChatGroupUser.setUserId(userId);
-                imChatGroupUser.setAdminFlag(userId.intValue() == BlogUtil.getAdminUser().getId().intValue());
+                imChatGroupUser.setAdminFlag(userId.equals(BlogUtil.getAdminUser().getId()));
             }
             return getGroupVO(imChatGroup, imChatGroupUser);
         }).collect(Collectors.toList());

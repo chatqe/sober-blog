@@ -80,7 +80,7 @@ public class CommonQuery {
      * @param ip
      */
     public void saveHistory(String ip) {
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         String ipUser = ip + (userId != null ? "_" + userId : "");
 
         // CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
@@ -124,7 +124,7 @@ public class CommonQuery {
      * @param ip
      */
     public void saveHistoryByBaidu(String ip) {
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         String ipUser = ip + (userId != null ? "_" + userId : "");
 
         // CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
@@ -162,7 +162,7 @@ public class CommonQuery {
     }
 
 
-    public User getUser(Integer userId) {
+    public User getUser(Long userId) {
         // User user = (User) PoetryCache.get(CommonConst.USER_CACHE + userId.toString());
         User user = JSON.parseObject(qingSiCache.get(CommonConst.USER_CACHE + userId), User.class);
         if (user != null) {
@@ -236,7 +236,7 @@ public class CommonQuery {
         }
     }
 
-    public Integer getCommentCount(Integer source, String type) {
+    public Integer getCommentCount(Long source, String type) {
         // Integer count = (Integer) PoetryCache.get(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type);
         Integer count = JSON.parseObject(qingSiCache.get(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type), Integer.class);
         if (count != null) {
@@ -275,7 +275,7 @@ public class CommonQuery {
         }
     }
 
-    public List<List<Integer>> getArticleIds(String searchText) {
+    public List<List<Long>> getArticleIds(String searchText) {
         // List<Article> articles = (List<Article>) PoetryCache.get(CommonConst.ARTICLE_LIST);
 
         List<Article> articles = qingSiCache.get(CommonConst.ARTICLE_LIST) == null ?
@@ -302,8 +302,8 @@ public class CommonQuery {
             }
         }
 
-        List<List<Integer>> ids = new ArrayList<>();
-        List<Integer> titleIds = new ArrayList<>();
+        List<List<Long>> ids = new ArrayList<>();
+        List<Long> titleIds = new ArrayList<>();
         // List<Integer> contentIds = new ArrayList<>(); 暂时不用内容匹配
 
         for (Article article : articles) {

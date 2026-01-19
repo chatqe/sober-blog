@@ -5,7 +5,7 @@ import io.charqe.qs.common.model.R;
 
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.modules.comment.domain.pojo.Comment;
-import com.baomidou.mybatisplus.extension.service.IService;
+import io.charqe.qs.common.model.mp.CoreService;
 import io.charqe.qs.modules.comment.controller.web.vo.CommentVO;
 
 
@@ -15,11 +15,11 @@ import io.charqe.qs.modules.comment.controller.web.vo.CommentVO;
  * @author Joy
  * @since 2026-01-17 10:47
  */
-public interface CommentService extends IService<Comment> {
+public interface CommentService extends CoreService<Comment> {
 
     R saveComment(CommentVO commentVO);
 
-    R deleteComment(Integer id);
+    R deleteComment(Long id);
 
     R<BaseReqVO> listComment(BaseReqVO baseReqVO);
 

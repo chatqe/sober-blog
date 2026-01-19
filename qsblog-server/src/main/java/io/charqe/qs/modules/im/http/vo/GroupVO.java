@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 public class GroupVO {
 
-    private Integer id;
+    private Long id;
 
     /**
      * 群名称

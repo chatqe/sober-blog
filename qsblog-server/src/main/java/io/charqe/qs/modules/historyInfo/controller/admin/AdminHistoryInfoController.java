@@ -73,7 +73,7 @@ public class AdminHistoryInfoController {
         result.put("username_yest", ipHistoryCount.stream().map(m -> {
             Object userId = m.get("user_id");
             if (userId != null) {
-                User user = commonQuery.getUser(Integer.valueOf(userId.toString()));
+                User user = commonQuery.getUser(Long.valueOf(userId.toString()));
                 if (user != null) {
                     Map<String, String> userInfo = new HashMap<>();
                     userInfo.put("avatar", user.getAvatar());
@@ -89,7 +89,7 @@ public class AdminHistoryInfoController {
 
         // 今日访问用户
         result.put("username_today", infoList.stream().map(m -> {
-            Integer userId = m.getUserId();
+            Long userId = m.getUserId();
             if (userId != null) {
                 User user = commonQuery.getUser(userId);
                 if (user != null) {

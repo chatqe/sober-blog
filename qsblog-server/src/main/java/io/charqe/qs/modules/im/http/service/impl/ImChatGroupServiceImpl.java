@@ -3,7 +3,7 @@ package io.charqe.qs.modules.im.http.service.impl;
 import io.charqe.qs.modules.im.http.entity.ImChatGroup;
 import io.charqe.qs.modules.im.http.dao.ImChatGroupMapper;
 import io.charqe.qs.modules.im.http.service.ImChatGroupService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
  * @since 2026-01-17 10:47
  */
 @Service
-public class ImChatGroupServiceImpl extends ServiceImpl<ImChatGroupMapper, ImChatGroup> implements ImChatGroupService {
+public class ImChatGroupServiceImpl extends CoreServiceImpl<ImChatGroupMapper, ImChatGroup> implements ImChatGroupService {
 
 }
 

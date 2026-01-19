@@ -14,17 +14,17 @@ public class GroupMessageVO {
     /**
      * 群ID
      */
-    private Integer groupId;
+    private Long groupId;
 
     /**
      * 发送ID
      */
-    private Integer fromId;
+    private Long fromId;
 
     /**
      * 接收ID
      */
-    private Integer toId;
+    private Long toId;
 
     /**
      * 内容

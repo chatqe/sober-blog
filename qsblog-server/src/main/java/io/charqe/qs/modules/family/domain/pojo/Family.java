@@ -21,7 +21,7 @@ public class Family extends BaseDO {
      * 用户ID
      */
     @TableField("user_id")
-    private Integer userId;
+    private Long userId;
 
     /**
      * 背景封面

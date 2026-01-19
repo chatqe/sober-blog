@@ -97,7 +97,7 @@ public class ResourceAggregationController {
         wrapper.eq(StringUtils.hasText(baseReqVO.getResourceType()), Weblinks::getType, baseReqVO.getResourceType());
         wrapper.eq(StringUtils.hasText(baseReqVO.getClassify()), Weblinks::getClassify, baseReqVO.getClassify());
 
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         if (!BlogUtil.getAdminUser().getId().equals(userId)) {
             wrapper.eq(Weblinks::getStatus, Boolean.TRUE);
         } else {

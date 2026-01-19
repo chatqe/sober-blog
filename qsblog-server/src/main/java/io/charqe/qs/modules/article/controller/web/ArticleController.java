@@ -168,7 +168,7 @@ public class ArticleController {
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     @GetMapping("/listSortArticle")
-    public R<Map<Integer, List<ArticleVO>>> listSortArticle() {
+    public R<Map<Long, List<ArticleVO>>> listSortArticle() {
         return articleService.listSortArticle();
     }
 

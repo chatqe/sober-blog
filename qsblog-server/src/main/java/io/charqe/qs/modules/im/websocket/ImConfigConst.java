@@ -7,12 +7,12 @@ public class ImConfigConst {
     /**
      * 默认群组ID，注册时自动加入
      */
-    public static final int DEFAULT_GROUP_ID = -1;
+    public static final Long DEFAULT_GROUP_ID = -1L;
 
     /**
      * 系统消息ID
      */
-    public static final int DEFAULT_SYSTEM_MESSAGE_ID = -1;
+    public static final Long DEFAULT_SYSTEM_MESSAGE_ID = -1L;
 
     /**
      * 协议名字

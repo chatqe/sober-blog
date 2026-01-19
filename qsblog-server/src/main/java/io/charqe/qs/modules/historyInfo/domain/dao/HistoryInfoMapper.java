@@ -1,6 +1,6 @@
 package io.charqe.qs.modules.historyInfo.domain.dao;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import io.charqe.qs.common.model.mp.CoreMapper;
 import io.charqe.qs.modules.historyInfo.domain.pojo.HistoryInfo;
 import org.apache.ibatis.annotations.Select;
 
@@ -13,7 +13,7 @@ import java.util.Map;
  * @author Joy
  * @since 2026-01-17 10:47
  */
-public interface HistoryInfoMapper extends BaseMapper<HistoryInfo> {
+public interface HistoryInfoMapper extends CoreMapper<HistoryInfo> {
 
     /**
      * 访问IP最多的10个省

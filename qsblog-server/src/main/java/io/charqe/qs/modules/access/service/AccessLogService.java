@@ -1,4 +1,4 @@
-package io.charqe.qs.modules.system.service;
+package io.charqe.qs.modules.access.service;
 
 import io.charqe.qs.utils.CommonQuery;
 import lombok.extern.slf4j.Slf4j;

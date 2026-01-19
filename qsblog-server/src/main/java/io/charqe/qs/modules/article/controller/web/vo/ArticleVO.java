@@ -22,10 +22,12 @@ import java.time.LocalDateTime;
 public class ArticleVO {
 
     @Schema(name = "id", description = "文章ID", example = "1")
-    private Integer id;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Long id;
 
     @Schema(name = "userId", description = "用户ID", example = "1001")
-    private Integer userId;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Long userId;
 
     @Schema(name = "articleCover", description = "文章封面图片URL", example = "https://example.com/cover.jpg")
     //查询为空时，随机选择
@@ -105,7 +107,8 @@ public class ArticleVO {
         example = "1"
     )
     @NotNull(message = "文章分类不能为空")
-    private Integer sortId;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Long sortId;
 
     @Schema(
         name = "labelId",
@@ -114,7 +117,8 @@ public class ArticleVO {
         example = "1"
     )
     @NotNull(message = "文章标签不能为空")
-    private Integer labelId;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Long labelId;
 
     @Schema(name = "commentCount", description = "评论数量", example = "5")
     // 需要查询封装

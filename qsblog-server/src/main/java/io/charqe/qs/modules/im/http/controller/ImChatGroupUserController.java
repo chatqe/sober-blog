@@ -56,7 +56,7 @@ public class ImChatGroupUserController {
      */
     @GetMapping("/enterGroup")
     @LoginCheck
-    public R enterGroup(@RequestParam("id") Integer id, @RequestParam(value = "remark", required = false) String remark) {
+    public R enterGroup(@RequestParam("id") Long id, @RequestParam(value = "remark", required = false) String remark) {
         ImChatGroup chatGroup = imChatGroupService.getById(id);
         if (chatGroup == null) {
             return R.fail("群组不存在！");
@@ -66,7 +66,7 @@ public class ImChatGroupUserController {
             return R.fail("话题无需申请！");
         }
 
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
 
         LambdaQueryChainWrapper<ImChatGroupUser> lambdaQuery = imChatGroupUserService.lambdaQuery();
         lambdaQuery.eq(ImChatGroupUser::getGroupId, id);
@@ -104,8 +104,8 @@ public class ImChatGroupUserController {
      */
     @GetMapping("/changeUserStatus")
     @LoginCheck
-    public R changeUserStatus(@RequestParam("groupId") Integer groupId,
-                              @RequestParam("userId") Integer userId,
+    public R changeUserStatus(@RequestParam("groupId") Long groupId,
+                              @RequestParam("userId") Long userId,
                               @RequestParam("userStatus") Integer userStatus,
                               @RequestParam("oldUserStatus") Integer oldUserStatus) {
         ImChatGroup chatGroup = imChatGroupService.getById(groupId);
@@ -117,7 +117,7 @@ public class ImChatGroupUserController {
             return R.fail("话题无需操作！");
         }
 
-        Integer currentUserId = BlogUtil.getUserId();
+        Long currentUserId = BlogUtil.getUserId();
         LambdaQueryChainWrapper<ImChatGroupUser> lambdaQuery = imChatGroupUserService.lambdaQuery();
         lambdaQuery.eq(ImChatGroupUser::getGroupId, groupId);
         lambdaQuery.eq(ImChatGroupUser::getUserId, currentUserId);
@@ -176,8 +176,8 @@ public class ImChatGroupUserController {
      */
     @GetMapping("/changeAdmin")
     @LoginCheck
-    public R changeAdmin(@RequestParam("groupId") Integer groupId,
-                         @RequestParam("userId") Integer userId,
+    public R changeAdmin(@RequestParam("groupId") Long groupId,
+                         @RequestParam("userId") Long userId,
                          @RequestParam("adminFlag") Boolean adminFlag) {
         ImChatGroup chatGroup = imChatGroupService.getById(groupId);
         if (chatGroup == null) {
@@ -188,8 +188,8 @@ public class ImChatGroupUserController {
             return R.fail("话题无需操作！");
         }
 
-        Integer currentUserId = BlogUtil.getUserId();
-        if (chatGroup.getMasterUserId().intValue() != currentUserId.intValue()) {
+        Long currentUserId = BlogUtil.getUserId();
+        if (!chatGroup.getMasterUserId().equals(currentUserId)) {
             return R.fail("群主才能设置管理员！");
         }
 
@@ -207,7 +207,7 @@ public class ImChatGroupUserController {
      */
     @GetMapping("/quitGroup")
     @LoginCheck
-    public R quitGroup(@RequestParam("id") Integer id) {
+    public R quitGroup(@RequestParam("id") Long id) {
         ImChatGroup chatGroup = imChatGroupService.getById(id);
         if (chatGroup == null) {
             return R.fail("群组不存在！");
@@ -217,9 +217,9 @@ public class ImChatGroupUserController {
             return R.fail("话题无需操作！");
         }
 
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
 
-        if (chatGroup.getMasterUserId().intValue() == userId.intValue()) {
+        if (chatGroup.getMasterUserId().equals(userId)) {
             //转让群
             LambdaQueryChainWrapper<ImChatGroupUser> wrapper = imChatGroupUserService.lambdaQuery();
             wrapper.ne(ImChatGroupUser::getUserId, userId);
@@ -259,11 +259,11 @@ public class ImChatGroupUserController {
      */
     @GetMapping("/getGroupUserByStatus")
     @LoginCheck
-    public R<Page> getGroupUserByStatus(@RequestParam(value = "groupId", required = false) Integer groupId,
+    public R<Page> getGroupUserByStatus(@RequestParam(value = "groupId", required = false) Long groupId,
                                         @RequestParam(value = "userStatus", required = false) Integer userStatus,
                                         @RequestParam(value = "current", defaultValue = "1") Long current,
                                         @RequestParam(value = "size", defaultValue = "20") Long size) {
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         Page<ImChatGroupUser> page = new Page<>();
         page.setCurrent(current);
         page.setSize(size);
@@ -296,7 +296,7 @@ public class ImChatGroupUserController {
                 // 该用户没有管理任何群
                 return R.success();
             } else {
-                List<Integer> groupIds = groupUsers.stream().map(ImChatGroupUser::getGroupId).collect(Collectors.toList());
+                List<Long> groupIds = groupUsers.stream().map(ImChatGroupUser::getGroupId).collect(Collectors.toList());
                 lambdaQuery.in(ImChatGroupUser::getGroupId, groupIds);
             }
         }
@@ -309,9 +309,9 @@ public class ImChatGroupUserController {
 
         List<GroupUserVO> groupUserVOList = new ArrayList<>(page.getRecords().size());
         List<ImChatGroupUser> records = page.getRecords();
-        Map<Integer, List<ImChatGroupUser>> map = records.stream().collect(Collectors.groupingBy(ImChatGroupUser::getGroupId));
+        Map<Long, List<ImChatGroupUser>> map = records.stream().collect(Collectors.groupingBy(ImChatGroupUser::getGroupId));
         List<ImChatGroup> groups = imChatGroupService.lambdaQuery().select(ImChatGroup::getId, ImChatGroup::getGroupName).in(ImChatGroup::getId, map.keySet()).list();
-        Map<Integer, String> collect = groups.stream().collect(Collectors.toMap(ImChatGroup::getId, ImChatGroup::getGroupName));
+        Map<Long, String> collect = groups.stream().collect(Collectors.toMap(ImChatGroup::getId, ImChatGroup::getGroupName));
         map.forEach((key, value) -> {
             String groupName = collect.get(key);
             value.forEach(g -> {
@@ -340,7 +340,7 @@ public class ImChatGroupUserController {
      */
     @GetMapping("/getGroupUser")
     @LoginCheck
-    public R<Page> getGroupUser(@RequestParam("groupId") Integer groupId,
+    public R<Page> getGroupUser(@RequestParam("groupId") Long groupId,
                                 @RequestParam(value = "current", defaultValue = "1") Long current,
                                 @RequestParam(value = "size", defaultValue = "20") Long size) {
         ImChatGroup chatGroup = imChatGroupService.getById(groupId);
@@ -352,7 +352,7 @@ public class ImChatGroupUserController {
             return R.fail("话题没有用户！");
         }
 
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         LambdaQueryChainWrapper<ImChatGroupUser> wrapper = imChatGroupUserService.lambdaQuery();
         wrapper.eq(ImChatGroupUser::getUserId, userId);
         wrapper.eq(ImChatGroupUser::getGroupId, groupId);

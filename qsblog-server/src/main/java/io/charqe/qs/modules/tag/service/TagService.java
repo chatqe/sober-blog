@@ -1,6 +1,6 @@
 package io.charqe.qs.modules.tag.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import io.charqe.qs.common.model.mp.CoreService;
 import io.charqe.qs.modules.tag.domain.pojo.Tag;
 
 /**
@@ -9,6 +9,6 @@ import io.charqe.qs.modules.tag.domain.pojo.Tag;
  * @author Joy
  * @since 2026-01-16 22:08
  */
-public interface TagService extends IService<Tag> {
+public interface TagService extends CoreService<Tag> {
 
 }

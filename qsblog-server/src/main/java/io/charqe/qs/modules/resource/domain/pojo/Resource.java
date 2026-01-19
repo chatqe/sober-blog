@@ -21,7 +21,7 @@ public class Resource extends BaseDO {
      * 用户ID
      */
     @TableField("user_id")
-    private Integer userId;
+    private Long userId;
 
     /**
      * 资源类型

@@ -21,7 +21,7 @@ public class HistoryInfo extends BaseDO {
      * 用户ID
      */
     @TableField("user_id")
-    private Integer userId;
+    private Long userId;
 
     /**
      * ip

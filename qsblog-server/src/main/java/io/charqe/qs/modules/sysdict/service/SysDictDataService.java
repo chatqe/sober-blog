@@ -1,6 +1,6 @@
 package io.charqe.qs.modules.sysdict.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import io.charqe.qs.common.model.mp.CoreService;
 import io.charqe.qs.modules.sysdict.domain.pojo.SysDictData;
 
 /**
@@ -9,6 +9,6 @@ import io.charqe.qs.modules.sysdict.domain.pojo.SysDictData;
  * @author Joy
  * @since 2026-01-16 22:08
  */
-public interface SysDictDataService extends IService<SysDictData> {
+public interface SysDictDataService extends CoreService<SysDictData> {
 
 }

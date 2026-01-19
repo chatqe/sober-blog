@@ -112,12 +112,12 @@ public class ImChatUserMessageController {
     @LoginCheck
     public R<Page> listFriendMessage(@RequestParam(value = "current", defaultValue = "1") Long current,
                                      @RequestParam(value = "size", defaultValue = "40") Long size,
-                                     @RequestParam(value = "friendId") Integer friendId) {
+                                     @RequestParam(value = "friendId") Long friendId) {
         Page<ImChatUserMessage> page = new Page<>();
         page.setCurrent(current);
         page.setSize(size);
 
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
 
         LambdaQueryChainWrapper<ImChatUserMessage> lambdaQuery = imChatUserMessageService.lambdaQuery();
         lambdaQuery.and(wrapper -> wrapper.eq(ImChatUserMessage::getFromId, userId).eq(ImChatUserMessage::getToId, friendId))

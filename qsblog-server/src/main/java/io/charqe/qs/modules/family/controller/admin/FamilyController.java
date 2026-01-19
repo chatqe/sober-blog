@@ -50,12 +50,12 @@ public class FamilyController {
     @PostMapping("/saveFamily")
     @LoginCheck
     public R saveFamily(@Validated @RequestBody FamilyVO familyVO) {
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         familyVO.setUserId(userId);
         Family oldFamily = familyService.lambdaQuery().select(Family::getId).eq(Family::getUserId, userId).one();
         Family family = new Family();
         BeanUtils.copyProperties(familyVO, family);
-        if (userId.intValue() == BlogUtil.getAdminUser().getId().intValue()) {
+        if (userId.equals(BlogUtil.getAdminUser().getId())) {
             family.setStatus(Boolean.TRUE);
         } else {
             family.setStatus(Boolean.FALSE);
@@ -68,7 +68,7 @@ public class FamilyController {
             family.setId(null);
             familyService.save(family);
         }
-        if (userId.intValue() == BlogUtil.getAdminUser().getId().intValue()) {
+        if (userId.equals(BlogUtil.getAdminUser().getId())) {
             // PoetryCache.put(CommonConst.ADMIN_FAMILY, family);
             qingSiCache.put(CommonConst.ADMIN_FAMILY, family);
         }
@@ -82,7 +82,7 @@ public class FamilyController {
      */
     @GetMapping("/deleteFamily")
     @LoginCheck(0)
-    public R deleteFamily(@RequestParam("id") Integer id) {
+    public R deleteFamily(@RequestParam("id") Long id) {
         familyService.removeById(id);
         // PoetryCache.remove(CommonConst.FAMILY_LIST);
         qingSiCache.del(CommonConst.FAMILY_LIST);
@@ -95,7 +95,7 @@ public class FamilyController {
     @GetMapping("/getFamily")
     @LoginCheck
     public R<FamilyVO> getFamily() {
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         Family family = familyService.lambdaQuery().eq(Family::getUserId, userId).one();
         if (family == null) {
             return R.success();

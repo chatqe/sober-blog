@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
 /**
  * 动态管理
@@ -77,10 +79,10 @@ public class MomentController {
         }
 
         if (momentVO.getCreateTime() == null) {
-            momentVO.setCreateTime(LocalDateTime.now());
+            momentVO.setCreateTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
         }
 
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
 
         LambdaQueryChainWrapper<Article> wrapper = new LambdaQueryChainWrapper<>(articleMapper);
         Integer count = Math.toIntExact(wrapper.eq(Article::getId, momentVO.getSource()).eq(Article::getUserId, userId).count());
@@ -123,7 +125,7 @@ public class MomentController {
     @GetMapping("/del")
     @LoginCheck
     public R deleteMoment(@RequestParam("id") Integer id) {
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         momentService.lambdaUpdate().eq(Moment::getId, id)
                 .eq(Moment::getUserId, userId)
                 .remove();

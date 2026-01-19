@@ -24,7 +24,7 @@ public class ImChatGroup implements Serializable {
      * id
      */
     @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+    private Long id;
 
     /**
      * 群名称
@@ -36,7 +36,7 @@ public class ImChatGroup implements Serializable {
      * 群主用户ID
      */
     @TableField("master_user_id")
-    private Integer masterUserId;
+    private Long masterUserId;
 
     /**
      * 类型[1:聊天群，2:话题]

@@ -21,13 +21,13 @@ public class Comment extends BaseDO {
      * 评论来源标识
      */
     @TableField("source")
-    private Integer source;
+    private Long source;
 
     /**
      * 父评论ID
      */
     @TableField("parent_comment_id")
-    private Integer parentCommentId;
+    private Long parentCommentId;
 
     /**
      * 评论来源类型
@@ -39,13 +39,13 @@ public class Comment extends BaseDO {
      * 发表用户ID
      */
     @TableField("user_id")
-    private Integer userId;
+    private Long userId;
 
     /**
      * 父发表用户名ID
      */
     @TableField("parent_user_id")
-    private Integer parentUserId;
+    private Long parentUserId;
 
     /**
      * 点赞数
@@ -69,7 +69,7 @@ public class Comment extends BaseDO {
      * 楼层评论ID
      */
     @TableField("floor_comment_id")
-    private Integer floorCommentId;
+    private Long floorCommentId;
 
 }
 

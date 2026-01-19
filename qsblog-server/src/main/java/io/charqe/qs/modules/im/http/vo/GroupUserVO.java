@@ -9,17 +9,17 @@ import java.time.LocalDateTime;
 @Data
 public class GroupUserVO {
 
-    private Integer id;
+    private Long id;
 
-    private Integer groupId;
+    private Long groupId;
 
-    private Integer userId;
+    private Long userId;
 
     private String username;
 
     private String avatar;
 
-    private Integer verifyUserId;
+    private Long verifyUserId;
 
     private Boolean adminFlag;
 

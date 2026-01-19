@@ -241,7 +241,7 @@ public class QiniuUtil implements StoreService {
                     re.setSize(Integer.valueOf(Long.toString(item.fsize)));
                     re.setMimeType(item.mimeType);
                     re.setStoreType(StoreEnum.QINIU.getCode());
-                    re.setUserId(CommonConst.ADMIN_USER_ID);
+                    re.setUserId(Long.valueOf(CommonConst.ADMIN_USER_ID));
                     resources.add(re);
                 }
             }

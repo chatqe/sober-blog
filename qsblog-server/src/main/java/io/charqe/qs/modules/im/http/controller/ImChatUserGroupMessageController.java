@@ -56,12 +56,12 @@ public class ImChatUserGroupMessageController {
     @LoginCheck
     public R<Page> listGroupMessage(@RequestParam(value = "current", defaultValue = "1") Long current,
                                     @RequestParam(value = "size", defaultValue = "40") Long size,
-                                    @RequestParam(value = "groupId") Integer groupId) {
+                                    @RequestParam(value = "groupId") Long groupId) {
         Page<ImChatUserGroupMessage> page = new Page<>();
         page.setCurrent(current);
         page.setSize(size);
 
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
 
         ImChatGroup chatGroup = imChatGroupService.getById(groupId);
         if (chatGroup == null) {
@@ -96,8 +96,7 @@ public class ImChatUserGroupMessageController {
                 groupMessageVO.setId(message.getId());
                 groupMessageVO.setGroupId(message.getGroupId());
                 groupMessageVO.setCreateTime(message.getCreateTime());
-                Integer messageUserId = message.getFromId();
-                User user = commonQuery.getUser(messageUserId);
+                User user = commonQuery.getUser(message.getFromId().longValue());
                 if (user != null) {
                     groupMessageVO.setUsername(user.getUsername());
                     groupMessageVO.setAvatar(user.getAvatar());

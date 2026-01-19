@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 public class UserVO {
 
     @Schema(name = "id", description = "用户ID", example = "1")
-    private Integer id;
+    private Long id;
 
     @Schema(name = "username", description = "用户名", required = true, example = "testuser")
     @NotBlank(message = "用户名不能为空")

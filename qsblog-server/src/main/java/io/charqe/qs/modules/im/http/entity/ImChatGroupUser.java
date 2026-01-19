@@ -24,25 +24,25 @@ public class ImChatGroupUser implements Serializable {
      * id
      */
     @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+    private Long id;
 
     /**
      * 群ID
      */
     @TableField("group_id")
-    private Integer groupId;
+    private Long groupId;
 
     /**
      * 用户ID
      */
     @TableField("user_id")
-    private Integer userId;
+    private Long userId;
 
     /**
      * 审核用户ID
      */
     @TableField("verify_user_id")
-    private Integer verifyUserId;
+    private Long verifyUserId;
 
     /**
      * 是否管理员[0:否，1:是]

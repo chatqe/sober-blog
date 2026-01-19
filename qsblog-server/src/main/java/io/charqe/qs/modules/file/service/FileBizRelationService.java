@@ -1,6 +1,6 @@
 package io.charqe.qs.modules.file.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import io.charqe.qs.common.model.mp.CoreService;
 import io.charqe.qs.modules.file.domain.pojo.FileBizRelation;
 
 /**
@@ -9,6 +9,6 @@ import io.charqe.qs.modules.file.domain.pojo.FileBizRelation;
  * @author Joy
  * @since 2026-01-16 22:08
  */
-public interface FileBizRelationService extends IService<FileBizRelation> {
+public interface FileBizRelationService extends CoreService<FileBizRelation> {
 
 }

@@ -16,24 +16,24 @@ import java.time.LocalDateTime;
 public class CommentVO {
 
     @Schema(name = "id", description = "评论ID", example = "1")
-    private Integer id;
+    private Long id;
 
     @Schema(name = "source", description = "评论来源标识，如文章ID、树洞ID等", required = true, example = "1")
     @NotNull(message = "评论来源标识不能为空")
-    private Integer source;
+    private Long source;
 
     @Schema(name = "type", description = "评论来源类型，如article、treehole等", required = true, example = "article")
     @NotBlank(message = "评论来源类型不能为空")
     private String type;
 
     @Schema(name = "parentCommentId", description = "父评论ID，层主评论为0，回复评论为父评论ID", example = "0")
-    private Integer parentCommentId;
+    private Long parentCommentId;
 
     @Schema(name = "parentUserId", description = "父评论用户ID，层主评论为null，回复评论为被回复用户ID", example = "1001")
-    private Integer parentUserId;
+    private Long parentUserId;
 
     @Schema(name = "userId", description = "评论用户ID", example = "1002")
-    private Integer userId;
+    private Long userId;
 
     @Schema(name = "likeCount", description = "点赞数", example = "10")
     private Integer likeCount;
@@ -46,7 +46,7 @@ public class CommentVO {
     private String commentInfo;
 
     @Schema(name = "floorCommentId", description = "评论楼层ID，子评论必须传递", example = "1")
-    private Integer floorCommentId;
+    private Long floorCommentId;
 
     @Schema(name = "createTime", description = "创建时间", format = "date-time", example = "2023-01-01 12:00:00")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

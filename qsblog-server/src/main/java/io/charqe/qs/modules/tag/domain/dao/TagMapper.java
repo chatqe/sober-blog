@@ -1,7 +1,7 @@
 package io.charqe.qs.modules.tag.domain.dao;
 
 import io.charqe.qs.modules.tag.domain.pojo.Tag;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import io.charqe.qs.common.model.mp.CoreMapper;
 
 /**
  * 标签表 Mapper 接口
@@ -9,6 +9,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author Joy
  * @since 2026-01-16 22:08
  */
-public interface TagMapper extends BaseMapper<Tag> {
+public interface TagMapper extends CoreMapper<Tag> {
 
 }

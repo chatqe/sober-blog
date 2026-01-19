@@ -54,8 +54,8 @@ public class TagController {
      */
     @GetMapping("/deleteTag")
     @LoginCheck(0)
-    public R deleteTag(@RequestParam("id") Integer id) {
-        tagService.deleteById(id);
+    public R deleteTag(@RequestParam("id") Long id) {
+        tagService.removeById(id);
         // PoetryCache.remove(CommonConst.SORT_INFO);
         qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
@@ -80,6 +80,6 @@ public class TagController {
      */
     @GetMapping("/listTag")
     public R<List<Tag>> listTag() {
-        return R.success(new LambdaQueryChainWrapper<>(tagService).list());
+        return R.success(tagService.list());
     }
 }

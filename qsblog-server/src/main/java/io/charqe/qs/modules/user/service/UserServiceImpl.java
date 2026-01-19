@@ -5,9 +5,10 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import io.charqe.qs.common.model.mp.Lb;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.user.domain.dao.UserMapper;
@@ -25,6 +26,9 @@ import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
 import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
+import io.charqe.qs.modules.behavior.domain.pojo.Behavior;
+import io.charqe.qs.modules.behavior.enums.BehaviorTypeEnums;
+import io.charqe.qs.modules.behavior.service.BehaviorService;
 import io.charqe.qs.modules.moment.domain.pojo.Moment;
 import io.charqe.qs.modules.moment.service.MomentService;
 import io.charqe.qs.utils.*;
@@ -55,7 +59,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implements UserService {
 
 
     @Autowired
@@ -81,6 +85,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Resource
     private SvgCaptchaUtils svgCaptchaUtils;
+
+    @Autowired
+    private BehaviorService behaviorService;
 
     @Value("${user.code.format}")
     private String codeFormat;
@@ -168,7 +175,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public R exit() {
         String token = BlogUtil.getToken();
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         if (token.contains(CommonConst.USER_ACCESS_TOKEN)) {
             // PoetryCache.remove(CommonConst.USER_TOKEN + userId);
             qingSiCache.del(CommonConst.USER_TOKEN + userId);
@@ -633,6 +640,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 user.setSubscribe(JSON.toJSONString(sub));
                 updateById(user);
 
+                // 记录订阅行为
+                Behavior behavior = new Behavior();
+                behavior.setUserId(BlogUtil.getUserId());
+                behavior.setBizType(2); // 2表示标签类型
+                behavior.setBizId(labelId.longValue());
+                behavior.setBehaviorType(BehaviorTypeEnums.SUBSCRIBE.code());
+                behavior.setCreateTime(new Date());
+                behaviorService.save(behavior);
+
                 userVO = new UserVO();
                 BeanUtils.copyProperties(one, userVO);
                 userVO.setPassword(null);
@@ -646,6 +662,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 user.setId(one.getId());
                 user.setSubscribe(JSON.toJSONString(sub));
                 updateById(user);
+
+                // 记录取消订阅行为
+                Behavior behavior = new Behavior();
+                behavior.setUserId(BlogUtil.getUserId());
+                behavior.setBizType(2); // 2表示标签类型
+                behavior.setBizId(labelId.longValue());
+                behavior.setBehaviorType(BehaviorTypeEnums.UNSUBSCRIBE.code());
+                behavior.setCreateTime(new Date());
+                behaviorService.save(behavior);
 
                 userVO = new UserVO();
                 BeanUtils.copyProperties(one, userVO);
@@ -805,11 +830,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private String getCodeMail(String code, String bizType) {
         String info = "";
 
-        if (EmailBizType.REGISTER.getKey().equals(bizType)) {
+        if (EmailBizType.REGISTER.getCode().equals(bizType)) {
             info = String.format(codeFormat, code);
-        } else if (EmailBizType.RESET_PWD.getKey().equals(bizType)) {
+        } else if (EmailBizType.RESET_PWD.getCode().equals(bizType)) {
             info = String.format(fwdFormat, code);
-        } else if (EmailBizType.LOGIN.getKey().equals(bizType)) {
+        } else if (EmailBizType.LOGIN.getCode().equals(bizType)) {
             info = String.format(codeFormat, code);
         }
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);

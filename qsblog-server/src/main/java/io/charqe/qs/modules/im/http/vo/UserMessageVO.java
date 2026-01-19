@@ -11,9 +11,9 @@ public class UserMessageVO {
 
     private Long id;
 
-    private Integer fromId;
+    private Long fromId;
 
-    private Integer toId;
+    private Long toId;
 
     private String content;
 

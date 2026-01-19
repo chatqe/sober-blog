@@ -42,13 +42,13 @@ public class ImChatUserFriendController {
      */
     @GetMapping("/addFriend")
     @LoginCheck
-    public R addFriend(@RequestParam("friendId") Integer friendId, @RequestParam(value = "remark", required = false) String remark) {
+    public R addFriend(@RequestParam("friendId") Long friendId, @RequestParam(value = "remark", required = false) String remark) {
         User friend = commonQuery.getUser(friendId);
         if (friend == null) {
             return R.fail("用户不存在！");
         }
 
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
 
         Integer count = Math.toIntExact(userFriendService.lambdaQuery()
                 .and(wrapper -> wrapper.eq(ImChatUserFriend::getUserId, userId).eq(ImChatUserFriend::getFriendId, friendId))
@@ -73,7 +73,7 @@ public class ImChatUserFriendController {
     @GetMapping("/getFriend")
     @LoginCheck
     public R<List<UserFriendVO>> getFriend(@RequestParam(value = "friendStatus", required = false) Integer friendStatus) {
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         LambdaQueryChainWrapper<ImChatUserFriend> wrapper = userFriendService.lambdaQuery().eq(ImChatUserFriend::getUserId, userId);
         if (friendStatus != null) {
             wrapper.eq(ImChatUserFriend::getFriendStatus, friendStatus);
@@ -108,10 +108,10 @@ public class ImChatUserFriendController {
      */
     @GetMapping("/changeFriend")
     @LoginCheck
-    public R changeFriend(@RequestParam("friendId") Integer friendId,
+    public R changeFriend(@RequestParam("friendId") Long friendId,
                           @RequestParam(value = "friendStatus", required = false) Integer friendStatus,
                           @RequestParam(value = "remark", required = false) String remark) {
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         ImChatUserFriend userFriend = userFriendService.lambdaQuery()
                 .eq(ImChatUserFriend::getUserId, userId)
                 .eq(ImChatUserFriend::getFriendId, friendId).one();

@@ -8,7 +8,7 @@ import io.charqe.qs.modules.article.controller.web.vo.ArticleVO;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.modules.article.controller.web.dto.ArticleDTO;
 import io.charqe.qs.modules.article.domain.pojo.Article;
-import com.baomidou.mybatisplus.extension.service.IService;
+import io.charqe.qs.common.model.mp.CoreService;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +19,7 @@ import java.util.Map;
  * @author Joy
  * @since 2026-01-17 10:47
  */
-public interface ArticleService extends IService<Article> {
+public interface ArticleService extends CoreService<Article> {
 
     R saveArticle(ArticleVO articleVO);
 
@@ -36,7 +36,7 @@ public interface ArticleService extends IService<Article> {
 
     R<ArticleVO> getArticleByIdForUser(Integer id);
 
-    R<Map<Integer, List<ArticleVO>>> listSortArticle();
+    R<Map<Long, List<ArticleVO>>> listSortArticle();
 
     String addArticleLikeCount(ArticleDTO dto);
 

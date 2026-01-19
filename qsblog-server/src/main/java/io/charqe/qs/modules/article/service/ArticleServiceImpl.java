@@ -7,11 +7,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.aop.ResourceCheck;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.enums.CommentTypeEnum;
-import io.charqe.qs.common.enums.LikeTargetEnum;
 import io.charqe.qs.common.enums.StatusEnum;
 import io.charqe.qs.common.exception.ServiceException;
 import io.charqe.qs.common.model.BaseReqVO;
@@ -24,10 +23,11 @@ import io.charqe.qs.modules.article.controller.web.vo.ArticlePageVO;
 import io.charqe.qs.modules.article.controller.web.vo.ArticleVO;
 import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
 import io.charqe.qs.modules.article.domain.pojo.Article;
+import io.charqe.qs.modules.behavior.domain.pojo.Behavior;
+import io.charqe.qs.modules.behavior.enums.BehaviorTypeEnums;
+import io.charqe.qs.modules.behavior.service.BehaviorService;
 import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
 import io.charqe.qs.modules.category.domain.pojo.Category;
-import io.charqe.qs.modules.like.domain.pojo.Like;
-import io.charqe.qs.modules.like.service.LikeService;
 import io.charqe.qs.modules.tag.domain.dao.TagMapper;
 import io.charqe.qs.modules.tag.domain.pojo.Tag;
 import io.charqe.qs.modules.user.domain.pojo.User;
@@ -36,6 +36,7 @@ import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.CommonQuery;
 import io.charqe.qs.utils.cache.QingSiCache;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,8 +56,9 @@ import java.util.stream.Collectors;
  * @author Joy
  * @since 2026-01-17 10:47
  */
+@Slf4j
 @Service
-public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
+public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> implements ArticleService {
 
     @Autowired
     private ArticleMapper articleMapper;
@@ -80,8 +82,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     private QingSiCache qingSiCache;
 
 
-    @Resource
-    private LikeService likeService;
+    @Autowired
+    private BehaviorService behaviorService;
 
     @Value("${user.subscribe.format}")
     private String subscribeFormat;
@@ -126,8 +128,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
                 if (!CollectionUtils.isEmpty(emails)) {
                     LambdaQueryChainWrapper<Tag> wrapper = new LambdaQueryChainWrapper<>(tagMapper);
-                    Tag tag = wrapper.select(Tag::getTagName).eq(Tag::getId, articleVO.getLabelId()).one();
-                    String text = getSubscribeMail(tag.getTagName(), articleVO.getArticleTitle());
+                    Tag tag = wrapper.select(Tag::getName).eq(Tag::getId, articleVO.getLabelId()).one();
+                    String text = getSubscribeMail(tag.getName(), articleVO.getArticleTitle());
                     // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
                     WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
                     mailUtil.sendMailMessage(emails, "您有一封来自" + (webInfo == null ? "POETIZE" : webInfo.getWebName()) + "的回执！", text);
@@ -154,7 +156,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Override
     public R deleteArticle(Integer id) {
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         lambdaUpdate().eq(Article::getId, id)
                 .eq(Article::getUserId, userId)
                 .remove();
@@ -169,7 +171,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             return R.fail("请设置文章密码！");
         }
 
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
         LambdaUpdateChainWrapper<Article> updateChainWrapper = lambdaUpdate()
                 .eq(Article::getId, articleVO.getId())
                 .eq(Article::getUserId, userId)
@@ -341,19 +343,19 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
      * @return
      */
     @Override
-    public R<Map<Integer, List<ArticleVO>>> listSortArticle() {
+    public R<Map<Long, List<ArticleVO>>> listSortArticle() {
         // Map<Integer, List<ArticleVO>> result = (Map<Integer, List<ArticleVO>>) PoetryCache.get(CommonConst.SORT_ARTICLE_LIST);
-        Map<Integer, List<ArticleVO>> result = JSON.parseObject(qingSiCache.get(CommonConst.SORT_ARTICLE_LIST), new TypeReference<Map<Integer, List<ArticleVO>>>() {
+        Map<Long, List<ArticleVO>> result = JSON.parseObject(qingSiCache.get(CommonConst.SORT_ARTICLE_LIST), new TypeReference<Map<Long, List<ArticleVO>>>() {
         });
         if (result != null) {
             return R.success(result);
         }
 
         synchronized (CommonConst.SORT_ARTICLE_LIST.intern()) {
-            result = JSON.parseObject(qingSiCache.get(CommonConst.SORT_ARTICLE_LIST), new TypeReference<Map<Integer, List<ArticleVO>>>() {
+            result = JSON.parseObject(qingSiCache.get(CommonConst.SORT_ARTICLE_LIST), new TypeReference<Map<Long, List<ArticleVO>>>() {
             });
             if (result == null) {
-                Map<Integer, List<ArticleVO>> map = new HashMap<>();
+                Map<Long, List<ArticleVO>> map = new HashMap<>();
 
                 // 获取所有展示分类
                 List<Category> categories = new LambdaQueryChainWrapper<>(categoryMapper)
@@ -361,10 +363,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                         .select(Category::getId).list();
 
                 List<Article> articles = list(Wrappers.<Article>lambdaQuery()
-                        .eq(Article::getDeleted, 0));
+                        .eq(Article::getIsDel, 0));
 
                 // stream 分组
-                Map<Integer, List<Article>> sortArticleMap = articles.stream().collect(Collectors.groupingBy(Article::getSortId));
+                Map<Long, List<Article>> sortArticleMap = articles.stream().collect(Collectors.groupingBy(Article::getSortId));
                 sortArticleMap.forEach((sortId, articleList) -> {
                     // 根据权重计算倒序排序
                     articleList.sort(Comparator.comparing(Article::getWeight).reversed());
@@ -430,28 +432,32 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         if (Objects.isNull(byId)) {
             throw new ServiceException("文章不存在");
         }
-        // 如果用户id不为空,点赞表新增记录
+        // 如果用户id不为空,行为表新增记录
         if (Objects.nonNull(dto.getUserId())) {
             // 判断用户是否已经点赞
             Boolean hasLike = qingSiCache.hasHashKey(CommonConst.USER_LIKES.concat(dto.getArticleId().toString()), dto.getUserId().toString());
             // 点赞
             if (dto.getOperation() == 1 && !hasLike) {
-                // 点赞
-                Like like = new Like();
-                like.setUserId(dto.getUserId());
-                like.setTargetType(LikeTargetEnum.ARTICLE.getCode());
-                like.setTargetId(dto.getArticleId());
-                like.setCreateTime(new Date());
-                likeService.save(like);
+                // 新增点赞行为记录
+                Behavior behavior = new Behavior();
+                behavior.setUserId(dto.getUserId());
+                behavior.setBizType(1); // 1表示文章类型
+                behavior.setBizId(dto.getArticleId().longValue());
+                behavior.setBehaviorType(BehaviorTypeEnums.LIKE.code());
+                behavior.setCreateTime(new Date());
+                behaviorService.save(behavior);
             }
             // 取消点赞
             if (dto.getOperation() == 0 && hasLike) {
                 qingSiCache.delHashKey(CommonConst.USER_LIKES.concat(dto.getArticleId().toString()), dto.getUserId().toString());
-                // 删除点赞记录
-                likeService.remove(Wrappers.<Like>lambdaQuery()
-                        .eq(Like::getUserId, dto.getUserId())
-                        .eq(Like::getTargetId, dto.getArticleId())
-                        .eq(Like::getTargetType, LikeTargetEnum.ARTICLE.getCode()));
+                // 新增取消点赞行为记录
+                Behavior behavior = new Behavior();
+                behavior.setUserId(dto.getUserId());
+                behavior.setBizType(1); // 1表示文章类型
+                behavior.setBizId(dto.getArticleId().longValue());
+                behavior.setBehaviorType(BehaviorTypeEnums.CANCEL_LIKE.code());
+                behavior.setCreateTime(new Date());
+                behaviorService.save(behavior);
 
                 this.update(Wrappers.<Article>lambdaUpdate().
                         eq(Article::getId, dto.getArticleId())
@@ -481,12 +487,13 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         if (Objects.isNull(byId)) {
             throw new ServiceException("文章不存在");
         }
-        Integer userId = BlogUtil.getUserId();
+        Long userId = BlogUtil.getUserId();
 
-        Like one = likeService.getOne(Wrappers.<Like>lambdaQuery()
-                .eq(Like::getUserId, userId)
-                .eq(Like::getTargetId, articleId)
-                .eq(Like::getTargetType, LikeTargetEnum.ARTICLE.getCode()));
+        Behavior one = behaviorService.getOne(Wrappers.<Behavior>lambdaQuery()
+                .eq(Behavior::getUserId, userId)
+                .eq(Behavior::getBizId, Long.valueOf(articleId))
+                .eq(Behavior::getBizType, 1) // 1表示文章类型
+                .eq(Behavior::getBehaviorType, BehaviorTypeEnums.LIKE.code()));
         if (Objects.nonNull(one)) {
             return true;
         }
@@ -502,8 +509,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     @Override
     public ArticlePageVO listArticle(ArticlePageDTO dto) {
 
-        List<Integer> ids = null;
-        List<List<Integer>> idList = null;
+        List<Long> ids = null;
+        List<List<Long>> idList = null;
         if (StringUtils.hasText(dto.getArticleSearch())) {
             idList = commonQuery.getArticleIds(dto.getArticleSearch());
             ids = idList.stream().flatMap(Collection::stream).collect(Collectors.toList());

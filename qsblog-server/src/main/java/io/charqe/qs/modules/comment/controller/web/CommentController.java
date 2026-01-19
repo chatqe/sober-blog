@@ -37,10 +37,10 @@ import javax.annotation.Resource;
 public class CommentController {
 
 
-    @Autowired
+    @Resource
     private CommentService commentService;
 
-    @Autowired
+    @Resource
     private CommonQuery commonQuery;
 
     @Resource
@@ -99,8 +99,8 @@ public class CommentController {
     @GetMapping("/delete")
     @LoginCheck
     public R deleteComment(
-        @Parameter(name = "id", description = "评论ID", required = true, example = "1") 
-        @RequestParam("id") Integer id) {
+        @Parameter(name = "id", description = "评论ID", required = true, example = "1")
+        @RequestParam("id") Long id) {
         return commentService.deleteComment(id);
     }
 
@@ -123,7 +123,7 @@ public class CommentController {
     @GetMapping("/getCount")
     public R<Integer> getCommentCount(
         @Parameter(name = "source", description = "来源ID，如文章ID、树洞ID等", required = true, example = "1") 
-        @RequestParam("source") Integer source, 
+        @RequestParam("source") Long source,
         @Parameter(name = "type", description = "来源类型，如article、treehole等", required = true, example = "article") 
         @RequestParam("type") String type) {
         return R.success(commonQuery.getCommentCount(source, type));

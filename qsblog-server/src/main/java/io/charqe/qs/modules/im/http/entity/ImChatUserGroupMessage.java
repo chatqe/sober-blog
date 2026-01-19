@@ -36,19 +36,19 @@ public class ImChatUserGroupMessage implements Serializable {
      * 群ID
      */
     @TableField("group_id")
-    private Integer groupId;
+    private Long groupId;
 
     /**
      * 发送ID
      */
     @TableField("from_id")
-    private Integer fromId;
+    private Long fromId;
 
     /**
      * 接收ID
      */
     @TableField("to_id")
-    private Integer toId;
+    private Long toId;
 
     /**
      * 内容

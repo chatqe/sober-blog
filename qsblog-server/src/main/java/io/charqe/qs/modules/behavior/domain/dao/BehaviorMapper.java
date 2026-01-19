@@ -1,7 +1,7 @@
 package io.charqe.qs.modules.behavior.domain.dao;
 
 import io.charqe.qs.modules.behavior.domain.pojo.Behavior;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import io.charqe.qs.common.model.mp.CoreMapper;
 
 /**
  * 用户行为表 Mapper 接口
@@ -9,6 +9,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author Joy
  * @since 2026-01-16 22:08
  */
-public interface BehaviorMapper extends BaseMapper<Behavior> {
+public interface BehaviorMapper extends CoreMapper<Behavior> {
 
 }

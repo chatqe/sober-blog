@@ -92,7 +92,7 @@ public class MailSendUtil {
      * fromName：评论人
      * toName：被评论人
      */
-    private String getCommentMail(String commentType, String source, String fromName, String fromContent, String toName, Integer toCommentId, CommentService commentService) {
+    private String getCommentMail(String commentType, String source, String fromName, String fromContent, String toName, Long toCommentId, CommentService commentService) {
         // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
         String webName = (webInfo == null ? "youngwanton" : webInfo.getWebName());

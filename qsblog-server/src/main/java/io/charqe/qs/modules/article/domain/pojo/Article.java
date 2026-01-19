@@ -21,19 +21,19 @@ public class Article extends BaseDO {
      * 用户ID
      */
     @TableField("user_id")
-    private Integer userId;
+    private Long  userId;
 
     /**
      * 分类ID
      */
     @TableField("sort_id")
-    private Integer sortId;
+    private Long sortId;
 
     /**
      * 标签ID
      */
     @TableField("label_id")
-    private Integer labelId;
+    private Long labelId;
 
     /**
      * 封面

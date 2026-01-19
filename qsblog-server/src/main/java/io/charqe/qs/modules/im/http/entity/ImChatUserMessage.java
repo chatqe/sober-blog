@@ -36,13 +36,13 @@ public class ImChatUserMessage implements Serializable {
      * 发送ID
      */
     @TableField("from_id")
-    private Integer fromId;
+    private Long fromId;
 
     /**
      * 接收ID
      */
     @TableField("to_id")
-    private Integer toId;
+    private Long toId;
 
     /**
      * 内容

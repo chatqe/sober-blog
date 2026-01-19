@@ -14,14 +14,14 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("wei_yan")
+@TableName("moment")
 public class Moment extends BaseDO {
 
     /**
      * 用户ID
      */
     @TableField("user_id")
-    private Integer userId;
+    private Long userId;
 
     /**
      * 点赞数
@@ -51,6 +51,6 @@ public class Moment extends BaseDO {
      * 来源标识
      */
     @TableField("source")
-    private Integer source;
+    private Long source;
 
 }

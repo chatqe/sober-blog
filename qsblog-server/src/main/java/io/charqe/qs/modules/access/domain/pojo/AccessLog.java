@@ -1,4 +1,4 @@
-package io.charqe.qs.modules.sysaccess.domain.pojo;
+package io.charqe.qs.modules.access.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.charqe.qs.common.model.BaseDO;
@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
  * @since 2026-01-18 21:03
  */
 @Data
-@TableName("sys_access")
-public class SysAccess extends BaseDO {
+@TableName("access_log")
+public class AccessLog extends BaseDO {
     /**
      * 链路追踪ID
      */

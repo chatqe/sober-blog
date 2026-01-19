@@ -10,9 +10,9 @@ import java.time.LocalDateTime;
 @Data
 public class FamilyVO {
 
-    private Integer id;
+    private Long id;
 
-    private Integer userId;
+    private Long userId;
 
     /**
      * 背景封面

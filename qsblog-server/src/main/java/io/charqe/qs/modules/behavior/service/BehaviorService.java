@@ -1,6 +1,6 @@
 package io.charqe.qs.modules.behavior.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import io.charqe.qs.common.model.mp.CoreService;
 import io.charqe.qs.modules.behavior.domain.pojo.Behavior;
 
 /**
@@ -9,6 +9,6 @@ import io.charqe.qs.modules.behavior.domain.pojo.Behavior;
  * @author Joy
  * @since 2026-01-16 22:08
  */
-public interface BehaviorService extends IService<Behavior> {
+public interface BehaviorService extends CoreService<Behavior> {
 
 }

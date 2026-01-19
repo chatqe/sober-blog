@@ -3,7 +3,7 @@ package io.charqe.qs.modules.moment.service;
 import io.charqe.qs.modules.moment.domain.dao.MomentMapper;
 import io.charqe.qs.modules.moment.domain.pojo.Moment;
 import io.charqe.qs.modules.moment.service.MomentService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
  * @since 2026-01-17 10:47
  */
 @Service
-public class MomentServiceImpl extends ServiceImpl<MomentMapper, Moment> implements MomentService {
+public class MomentServiceImpl extends CoreServiceImpl<MomentMapper, Moment> implements MomentService {
 
 }
 

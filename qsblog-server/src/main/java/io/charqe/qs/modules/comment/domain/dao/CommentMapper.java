@@ -1,7 +1,7 @@
 package io.charqe.qs.modules.comment.domain.dao;
 
 import io.charqe.qs.modules.comment.domain.pojo.Comment;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import io.charqe.qs.common.model.mp.CoreMapper;
 import org.apache.ibatis.annotations.Mapper;
 
 
@@ -12,7 +12,7 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 2026-01-17 10:47
  */
 @Mapper
-public interface CommentMapper extends BaseMapper<Comment> {
+public interface CommentMapper extends CoreMapper<Comment> {
 
 }
 

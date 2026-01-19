@@ -1,7 +1,7 @@
 package io.charqe.qs.modules.danmaku.service;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.modules.danmaku.domain.dao.DanmakuMapper;
 import io.charqe.qs.modules.danmaku.domain.pojo.Danmaku;
 import io.charqe.qs.modules.danmaku.service.DanmakuService;
@@ -18,7 +18,7 @@ import java.util.List;
  * @since 2025-03-03 15:00
  */
 @Service
-public class DanmakuServiceImpl extends ServiceImpl<DanmakuMapper, Danmaku> implements DanmakuService {
+public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> implements DanmakuService {
 
 
     /**

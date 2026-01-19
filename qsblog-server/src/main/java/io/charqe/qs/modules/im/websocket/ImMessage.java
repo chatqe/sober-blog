@@ -9,11 +9,11 @@ public class ImMessage {
 
     private String content;
 
-    private Integer fromId;
+    private Long fromId;
 
-    private Integer toId;
+    private Long toId;
 
-    private Integer groupId;
+    private Long groupId;
 
     private String avatar;
 

@@ -1,7 +1,7 @@
 package io.charqe.qs.modules.family.service;
 
 import io.charqe.qs.modules.family.domain.pojo.Family;
-import com.baomidou.mybatisplus.extension.service.IService;
+import io.charqe.qs.common.model.mp.CoreService;
 
 /**
  * *
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @author Joy
  * @since 2026-01-17 10:47
  */
-public interface FamilyService extends IService<Family> {
+public interface FamilyService extends CoreService<Family> {
 
 }
 

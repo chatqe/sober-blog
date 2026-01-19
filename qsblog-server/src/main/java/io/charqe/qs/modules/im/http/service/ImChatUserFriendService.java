@@ -1,7 +1,7 @@
 package io.charqe.qs.modules.im.http.service;
 
 import io.charqe.qs.modules.im.http.entity.ImChatUserFriend;
-import com.baomidou.mybatisplus.extension.service.IService;
+import io.charqe.qs.common.model.mp.CoreService;
 
 /**
  * *
@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @author Joy
  * @since 2026-01-17 10:47
  */
-public interface ImChatUserFriendService extends IService<ImChatUserFriend> {
+public interface ImChatUserFriendService extends CoreService<ImChatUserFriend> {
 
 }
 

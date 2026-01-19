@@ -1,7 +1,7 @@
 package io.charqe.qs.modules.sysdict.domain.dao;
 
 import io.charqe.qs.modules.sysdict.domain.pojo.SysDictData;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import io.charqe.qs.common.model.mp.CoreMapper;
 
 /**
  * 字典数据表 Mapper 接口
@@ -9,6 +9,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author Joy
  * @since 2026-01-16 22:08
  */
-public interface SysDictDataMapper extends BaseMapper<SysDictData> {
+public interface SysDictDataMapper extends CoreMapper<SysDictData> {
 
 }

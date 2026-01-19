@@ -9,17 +9,17 @@ import java.time.LocalDateTime;
 @Data
 public class UserFriendVO {
 
-    private Integer id;
+    private Long id;
 
     /**
      * 用户ID
      */
-    private Integer userId;
+    private Long userId;
 
     /**
      * 好友ID
      */
-    private Integer friendId;
+    private Long friendId;
 
     private String username;
 

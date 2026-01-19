@@ -1,22 +1,22 @@
 package io.charqe.qs.modules.user.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
+import io.charqe.qs.common.model.mp.CoreService;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * *
+ * 用户Service接口，继承自CoreService，享受通用CRUD及扩展功能
  *
  * @author Joy
  * @since 2026-01-17 10:47
  */
-public interface UserService extends IService<User> {
+public interface UserService extends CoreService<User> {
 
     /**
      * 用户名、邮箱、手机号/密码登录

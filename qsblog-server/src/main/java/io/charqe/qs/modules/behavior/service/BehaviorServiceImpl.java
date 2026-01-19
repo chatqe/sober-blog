@@ -1,6 +1,6 @@
 package io.charqe.qs.modules.behavior.service;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.modules.behavior.domain.dao.BehaviorMapper;
 import io.charqe.qs.modules.behavior.domain.pojo.Behavior;
 import io.charqe.qs.modules.behavior.service.BehaviorService;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Service;
  * @since 2026-01-16 22:08
  */
 @Service
-public class BehaviorServiceImpl extends ServiceImpl<BehaviorMapper, Behavior> implements BehaviorService {
+public class BehaviorServiceImpl extends CoreServiceImpl<BehaviorMapper, Behavior> implements BehaviorService {
 
 }

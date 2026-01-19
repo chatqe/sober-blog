@@ -1,7 +1,7 @@
 package io.charqe.qs.modules.file.domain.dao;
 
 import io.charqe.qs.modules.file.domain.pojo.FileStorage;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import io.charqe.qs.common.model.mp.CoreMapper;
 
 /**
  * 文件存储表 Mapper 接口
@@ -9,6 +9,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author Joy
  * @since 2026-01-16 22:08
  */
-public interface FileStorageMapper extends BaseMapper<FileStorage> {
+public interface FileStorageMapper extends CoreMapper<FileStorage> {
 
 }

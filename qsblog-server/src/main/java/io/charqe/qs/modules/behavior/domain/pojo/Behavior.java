@@ -1,6 +1,7 @@
 package io.charqe.qs.modules.behavior.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,7 +21,8 @@ public class Behavior extends BaseDO {
      * 用户ID
      */
     @TableField("user_id")
-    private Integer userId;
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Long userId;
 
     /**
      * 行为类型
@@ -32,6 +34,7 @@ public class Behavior extends BaseDO {
      * 业务ID
      */
     @TableField("biz_id")
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long bizId;
 
     /**
