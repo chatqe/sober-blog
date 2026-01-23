@@ -36,7 +36,7 @@ import java.util.Random;
 @Tag(name = "danmaku", description = "弹幕管理")
 public class DanmakuController {
 
-    @Autowired
+    @Resource
     private DanmakuMapper danmakuMapper;
 
     @Resource
@@ -60,7 +60,7 @@ public class DanmakuController {
     })
     @PostMapping("/save")
     @SaveCheck
-    public R<Danmaku> saveDanmaku(
+    public R<Danmaku> save(
         @Parameter(name = "danmaku", description = "弹幕留言信息", required = true, example = "{\"message\":\"这是一条测试弹幕\",\"nickname\":\"匿名用户\"}")
         @RequestBody Danmaku danmaku) {
         if (!StringUtils.hasText(danmaku.getMessage())) {
@@ -69,7 +69,7 @@ public class DanmakuController {
         if (!StringUtils.hasText(danmaku.getAvatar())) {
             danmaku.setAvatar(qingsiUtil.getRandomAvatar());
         }
-        danmakuMapper.insert(danmaku);
+        danmakuService.save(danmaku);
         return R.success(danmaku);
     }
 
@@ -89,7 +89,7 @@ public class DanmakuController {
     })
     @GetMapping("/del")
     @LoginCheck(0)
-    public R deleteDanmaku(
+    public R del(
         @Parameter(name = "id", description = "弹幕留言ID", required = true, example = "1")
         @RequestParam("id") Integer id) {
         danmakuMapper.deleteById(id);
@@ -108,22 +108,9 @@ public class DanmakuController {
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     @GetMapping("/list")
-    public R<List<Danmaku>> listDanmaku() {
-        List<Danmaku> danmakus;
-        Integer count = Math.toIntExact(new LambdaQueryChainWrapper<>(danmakuMapper).count());
-        if (count > CommonConst.TREE_HOLE_COUNT) {
-            int i = new Random().nextInt(count + 1 - CommonConst.TREE_HOLE_COUNT);
-            danmakus = danmakuMapper.queryAllByLimit(i, CommonConst.TREE_HOLE_COUNT);
-        } else {
-            danmakus = new LambdaQueryChainWrapper<>(danmakuMapper).list();
-        }
+    public R<List<Danmaku>> list() {
 
-        danmakus.forEach(danmaku -> {
-            if (!StringUtils.hasText(danmaku.getAvatar())) {
-                danmaku.setAvatar(BlogUtil.getRandomAvatar(danmaku.getId().toString()));
-            }
-        });
-        return R.success(danmakus);
+        return R.success(danmakuService.racdomList());
     }
 
     /**
@@ -161,12 +148,6 @@ public class DanmakuController {
         return R.success(danmakuService.latestDanmaku());
     }
 
-
-    public static void main(String[] args) {
-
-
-        // DanmakuService.
-    }
 
 }
 

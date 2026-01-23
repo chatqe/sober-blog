@@ -2,6 +2,7 @@ package io.charqe.qs.common.model;
 
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.data.domain.Sort;
@@ -48,6 +49,8 @@ public class PageQuery implements Serializable {
      */
     @Schema(description = "排序条件")
     private String orderBy;
+
+
 
     // ------------------- 扩展方法：适配ORM框架 -------------------
 

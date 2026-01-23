@@ -1,10 +1,12 @@
 package io.charqe.qs.modules.webInfo.domain.pojo;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.util.Date;
 
 /**
  * *
@@ -13,10 +15,12 @@ import lombok.EqualsAndHashCode;
  * @since 2026-01-17 10:47
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
-@TableName("web_info")
-public class WebInfo extends BaseDO {
 
+@TableName("web_info")
+public class WebInfo  {
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
     /**
      * 网站名称
      */
@@ -76,7 +80,17 @@ public class WebInfo extends BaseDO {
      */
     @TableField("waifu_json")
     private String waifuJson;
-
+    /**
+     * 创建时间（自动填充）
+     */
+    // @TableField(fill = FieldFill.INSERT)
+    // private Date createTime;
+    //
+    // /**
+    //  * 更新时间（自动填充）
+    //  */
+    // @TableField(fill = FieldFill.INSERT_UPDATE)
+    // private Date updateTime;
     /**
      * 是否启用[0:否，1:是]
      */

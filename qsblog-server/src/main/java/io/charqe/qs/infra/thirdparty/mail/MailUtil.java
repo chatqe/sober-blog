@@ -13,6 +13,8 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.mail.MessagingException;
 import java.io.UnsupportedEncodingException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
@@ -125,7 +127,7 @@ public class MailUtil {
             //邮件内容
             mimeMessageHelper.setText(text, true);
             //邮件发送时间
-            mimeMessageHelper.setSentDate(new Date());
+            mimeMessageHelper.setSentDate(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
 
             //发送邮件
             mailSender.send(mimeMessageHelper.getMimeMessage());

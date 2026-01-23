@@ -1,9 +1,7 @@
 package io.charqe.qs.infra.storage;
 
 import cn.hutool.core.io.FileUtil;
-import io.charqe.qs.modules.resource.domain.pojo.Resource;
 import io.charqe.qs.common.exception.BizException;
-import io.charqe.qs.modules.resource.service.ResourceService;
 import io.charqe.qs.common.FileVO;
 import io.charqe.qs.utils.StrUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +27,7 @@ public class LocalUtil implements StoreService {
     @Value("${local.downloadUrl}")
     private String downloadUrl;
 
-    @Autowired
-    private ResourceService resourceService;
+    
 
     @Override
     public void deleteFile(List<String> files) {
@@ -43,7 +40,6 @@ public class LocalUtil implements StoreService {
             if (file.exists() && file.isFile()) {
                 if (file.delete()) {
                     log.info("文件删除成功：" + filePath);
-                    resourceService.lambdaUpdate().eq(Resource::getPath, filePath).remove();
                 } else {
                     log.error("文件删除失败：" + filePath);
                 }

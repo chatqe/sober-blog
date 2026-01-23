@@ -38,6 +38,12 @@ public class R<T> implements Serializable {
         this.msg = msg;
     }
 
+    public R(int code, String msg, T data) {
+        this.code = code;
+        this.msg = msg;
+        this.data = data;
+    }
+
     public R(T data) {
         this.code = 200;
         this.data = data;
@@ -46,6 +52,12 @@ public class R<T> implements Serializable {
     public R(String msg) {
         this.code = 500;
         this.msg = msg;
+    }
+
+    public R(String msg, T data) {
+        this.code = 200;
+        this.msg = msg;
+        this.data = data;
     }
 
     public static <T> R<T> fail(String message) {
@@ -63,6 +75,11 @@ public class R<T> implements Serializable {
     public static <T> R<T> success(T data) {
         return new R(data);
     }
+
+    public static <T> R<T> success(String msg, T data) {
+        return new R(msg, data);
+    }
+
 
     public static <T> R<T> success() {
         return new R();

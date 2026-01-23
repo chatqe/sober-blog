@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("sys_dict_data")
-public class SysDictData extends BaseDO {
+public class SysDictData  {
 
     /**
      * 字典类型
@@ -63,5 +63,12 @@ public class SysDictData extends BaseDO {
      */
     @TableField("update_by")
     private String updateBy;
+
+    /**
+     * 是否删除[0:未删除，1:已删除]
+     */
+    @TableField("is_del")
+    @TableLogic
+    private Boolean deleted;
 
 }

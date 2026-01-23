@@ -16,6 +16,12 @@ public interface DanmakuService extends CoreService<Danmaku> {
 
     List<Danmaku> latestDanmaku();
 
+    /**
+     * 随机获取弹幕留言
+     *
+     * @return
+     */
+    List<Danmaku> racdomList();
 }
 
 

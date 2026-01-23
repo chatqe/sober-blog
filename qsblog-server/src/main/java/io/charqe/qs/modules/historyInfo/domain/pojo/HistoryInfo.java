@@ -1,10 +1,12 @@
 package io.charqe.qs.modules.historyInfo.domain.pojo;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.time.LocalDateTime;
 
 /**
  * *
@@ -15,8 +17,13 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("history_info")
-public class HistoryInfo extends BaseDO {
-
+public class HistoryInfo  {
+    /**
+     * 主键（自增）
+     */
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
     /**
      * 用户ID
      */
@@ -46,5 +53,11 @@ public class HistoryInfo extends BaseDO {
      */
     @TableField("city")
     private String city;
+
+    /**
+     * 创建时间（自动填充）
+     */
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createTime;
 
 }

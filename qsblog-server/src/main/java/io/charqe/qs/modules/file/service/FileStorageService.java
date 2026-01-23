@@ -1,6 +1,8 @@
 package io.charqe.qs.modules.file.service;
 
 import io.charqe.qs.common.model.mp.CoreService;
+import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
+import io.charqe.qs.modules.file.controller.admin.vo.FileRespVO;
 import io.charqe.qs.modules.file.domain.pojo.FileStorage;
 
 /**
@@ -11,4 +13,6 @@ import io.charqe.qs.modules.file.domain.pojo.FileStorage;
  */
 public interface FileStorageService extends CoreService<FileStorage> {
 
+
+    public FileRespVO save(FileCreateReqVO vo);
 }

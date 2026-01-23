@@ -1,7 +1,7 @@
 package io.charqe.qs.framework.filter;
 
 import io.charqe.qs.infra.storage.FileFilter;
-import io.charqe.qs.modules.access.service.AccessLogService;
+import io.charqe.qs.modules.access.service.AccessLogAsyncService;
 import io.charqe.qs.utils.IPUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Order;
@@ -30,7 +30,7 @@ import java.io.IOException;
 public class BizFilter extends OncePerRequestFilter {
     
     @Resource
-    private AccessLogService accessLogService;
+    private AccessLogAsyncService accessLogAsyncService;
 
     @Resource
     private FileFilter fileFilter;
@@ -79,7 +79,7 @@ public class BizFilter extends OncePerRequestFilter {
             long responseTime = System.currentTimeMillis() - startTime;
 
             // 异步记录到数据库
-            accessLogService.saveAccessLogAsync(ip);
+            accessLogAsyncService.saveAccessLogAsync(ip);
 
             // 同时记录到日志文件（可选）
             log.info("访问记录 - IP: {}, Method: {}, URI: {}, Status: {}, ResponseTime: {}ms", 

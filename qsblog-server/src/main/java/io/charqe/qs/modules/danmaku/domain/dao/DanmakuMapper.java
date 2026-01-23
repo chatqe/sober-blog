@@ -14,7 +14,6 @@ import java.util.List;
  */
 public interface DanmakuMapper extends CoreMapper<Danmaku> {
 
-    List<Danmaku> queryAllByLimit(@Param("offset") int offset, @Param("limit") int limit);
 
 }
 

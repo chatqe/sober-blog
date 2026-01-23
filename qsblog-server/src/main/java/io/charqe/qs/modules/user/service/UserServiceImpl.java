@@ -4,6 +4,7 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson2.JSON;
+import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import io.charqe.qs.common.model.mp.Lb;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
@@ -646,7 +647,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
                 behavior.setBizType(2); // 2表示标签类型
                 behavior.setBizId(labelId.longValue());
                 behavior.setBehaviorType(BehaviorTypeEnums.SUBSCRIBE.code());
-                behavior.setCreateTime(new Date());
+                behavior.setCreateTime(LocalDateTime.now());
                 behaviorService.save(behavior);
 
                 userVO = new UserVO();
@@ -669,7 +670,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
                 behavior.setBizType(2); // 2表示标签类型
                 behavior.setBizId(labelId.longValue());
                 behavior.setBehaviorType(BehaviorTypeEnums.UNSUBSCRIBE.code());
-                behavior.setCreateTime(new Date());
+                behavior.setCreateTime(LocalDateTime.now());
                 behaviorService.save(behavior);
 
                 userVO = new UserVO();

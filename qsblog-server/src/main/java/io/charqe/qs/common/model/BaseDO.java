@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * 通用实体基类 Base Domain Object 业务领域对象基类
@@ -16,7 +16,7 @@ import java.util.Date;
 @Data
 public abstract class BaseDO implements Serializable {
     /**
-     * 主键（雪花算法，大厂首选，替代自增）
+     * 主键（自增）
      */
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     @TableId(type = IdType.ASSIGN_ID)
@@ -33,13 +33,13 @@ public abstract class BaseDO implements Serializable {
      * 创建时间（自动填充）
      */
     @TableField(fill = FieldFill.INSERT)
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 更新时间（自动填充）
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Date updateTime;
+    private LocalDateTime updateTime;
 
     /**
      * 乐观锁版本号（并发控制，新增）

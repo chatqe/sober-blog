@@ -1,10 +1,14 @@
 package io.charqe.qs.modules.file.service;
 
 import io.charqe.qs.common.model.mp.CoreServiceImpl;
+import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
+import io.charqe.qs.modules.file.controller.admin.vo.FileRespVO;
+import io.charqe.qs.modules.file.convert.FileConvert;
 import io.charqe.qs.modules.file.domain.dao.FileStorageMapper;
 import io.charqe.qs.modules.file.domain.pojo.FileStorage;
-import io.charqe.qs.modules.file.service.FileStorageService;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
 
 /**
  * 文件存储表 服务实现类
@@ -15,4 +19,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class FileStorageServiceImpl extends CoreServiceImpl<FileStorageMapper, FileStorage> implements FileStorageService {
 
+    @Resource
+    private FileConvert fileConvert;
+
+    @Override
+    public FileRespVO save(FileCreateReqVO vo) {
+
+        FileStorage convert = fileConvert.convert(vo);
+
+        save(convert);
+        return fileConvert.convert(convert);
+    }
 }

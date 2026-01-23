@@ -2,6 +2,8 @@ package io.charqe.qs.infra.storage;
 
 
 import io.charqe.qs.common.exception.BizException;
+import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
+import io.charqe.qs.modules.file.controller.admin.vo.FileRespVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +21,7 @@ import java.util.Map;
  * 用来处理文件存储，对接多个平台
  */
 @Slf4j
-@Component
+@Component("storeFileService")
 public class FileStorageService implements ApplicationContextAware {
 
     @Value("${store.type}")
@@ -62,6 +64,8 @@ public class FileStorageService implements ApplicationContextAware {
 
         return storeServiceMap.get(storeType);
     }
+
+
 }
 
 

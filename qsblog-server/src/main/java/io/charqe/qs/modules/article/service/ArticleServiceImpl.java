@@ -60,29 +60,29 @@ import java.util.stream.Collectors;
 @Service
 public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> implements ArticleService {
 
-    @Autowired
+    @Resource
     private ArticleMapper articleMapper;
 
-    @Autowired
+    @Resource
     private CommonQuery commonQuery;
 
-    @Autowired
+    @Resource
     private UserService userService;
 
-    @Autowired
+    @Resource
     private MailUtil mailUtil;
 
-    @Autowired
+    @Resource
     private CategoryMapper categoryMapper;
 
-    @Autowired
+    @Resource
     private TagMapper tagMapper;
 
     @Resource
     private QingSiCache qingSiCache;
 
 
-    @Autowired
+    @Resource
     private BehaviorService behaviorService;
 
     @Value("${user.subscribe.format}")
@@ -132,7 +132,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                     String text = getSubscribeMail(tag.getName(), articleVO.getArticleTitle());
                     // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
                     WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
-                    mailUtil.sendMailMessage(emails, "您有一封来自" + (webInfo == null ? "POETIZE" : webInfo.getWebName()) + "的回执！", text);
+                    mailUtil.sendMailMessage(emails, "您有一封来自" + (webInfo == null ? "青肆" : webInfo.getWebName()) + "的回执！", text);
                 }
             }
         } catch (Exception e) {
@@ -444,7 +444,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 behavior.setBizType(1); // 1表示文章类型
                 behavior.setBizId(dto.getArticleId().longValue());
                 behavior.setBehaviorType(BehaviorTypeEnums.LIKE.code());
-                behavior.setCreateTime(new Date());
+                behavior.setCreateTime(LocalDateTime.now());
                 behaviorService.save(behavior);
             }
             // 取消点赞
@@ -456,7 +456,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 behavior.setBizType(1); // 1表示文章类型
                 behavior.setBizId(dto.getArticleId().longValue());
                 behavior.setBehaviorType(BehaviorTypeEnums.CANCEL_LIKE.code());
-                behavior.setCreateTime(new Date());
+                behavior.setCreateTime(LocalDateTime.now());
                 behaviorService.save(behavior);
 
                 this.update(Wrappers.<Article>lambdaUpdate().

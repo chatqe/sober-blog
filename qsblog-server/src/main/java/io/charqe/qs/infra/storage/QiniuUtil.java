@@ -17,8 +17,6 @@ import com.qiniu.util.StringMap;
 import com.qiniu.util.UrlSafeBase64;
 import io.charqe.qs.common.FileVO;
 import io.charqe.qs.common.constants.CommonConst;
-import io.charqe.qs.modules.resource.domain.pojo.Resource;
-import io.charqe.qs.modules.resource.service.ResourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,8 +63,7 @@ public class QiniuUtil implements StoreService {
     private static final long EXPIRE_SECONDS = 60L;
     private static final long F_SIZE_LIMIT = 20971520L;
 
-    @Autowired
-    private ResourceService resourceService;
+    
 
     public String getToken(String key) {
         StringMap putPolicy = new StringMap();
@@ -96,7 +93,6 @@ public class QiniuUtil implements StoreService {
                 String key = keyList[i];
                 if (status.code == 200) {
                     log.info("文件删除成功：" + key);
-                    resourceService.lambdaUpdate().eq(Resource::getPath, downloadUrl + key).remove();
                 } else {
                     log.error("文件删除失败：" + key + "，原因：" + status.data.error);
                 }
@@ -212,46 +208,11 @@ public class QiniuUtil implements StoreService {
         return result;
     }
 
+    /**
+     * 保存文件信息到数据库（暂时移除实现，因为Resource模块不存在）
+     */
     public void saveFileInfo() {
-        List<Resource> resourceList = resourceService.lambdaQuery().select(Resource::getPath).list();
-        List<String> paths = resourceList.stream().map(Resource::getPath).collect(Collectors.toList());
-
-        //构造一个带指定 Region 对象的配置类
-        Configuration cfg = new Configuration(Region.region0());
-        Auth auth = Auth.create(accessKey, secretKey);
-        BucketManager bucketManager = new BucketManager(auth, cfg);
-        //文件名前缀
-        String prefix = "";
-        //每次迭代的长度限制，最大1000，推荐值 1000
-        int limit = 1000;
-        //指定目录分隔符，列出所有公共前缀（模拟列出目录效果）。缺省值为空字符串
-        String delimiter = "";
-        //列举空间文件列表
-        BucketManager.FileListIterator fileListIterator = bucketManager.createFileListIterator(bucket, prefix, limit, delimiter);
-
-        List<Resource> resources = new ArrayList<>();
-
-        while (fileListIterator.hasNext()) {
-            FileInfo[] items = fileListIterator.next();
-            for (FileInfo item : items) {
-                if (item.fsize != 0L && !paths.contains(downloadUrl + item.key)) {
-                    Resource re = new Resource();
-                    re.setPath(downloadUrl + item.key);
-                    re.setType(CommonConst.PATH_TYPE_ASSETS);
-                    re.setSize(Integer.valueOf(Long.toString(item.fsize)));
-                    re.setMimeType(item.mimeType);
-                    re.setStoreType(StoreEnum.QINIU.getCode());
-                    re.setUserId(Long.valueOf(CommonConst.ADMIN_USER_ID));
-                    resources.add(re);
-                }
-            }
-        }
-
-        if (!CollectionUtils.isEmpty(resources)) {
-            resourceService.saveBatch(resources);
-            System.out.println("保存数量：" + resources.size());
-        }
-        System.out.println("同步完成");
+        System.out.println("文件信息同步功能已暂时移除");
     }
 
     /**

@@ -20,8 +20,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 
 /**
  * 动态管理
@@ -79,7 +77,7 @@ public class MomentController {
         }
 
         if (momentVO.getCreateTime() == null) {
-            momentVO.setCreateTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+            momentVO.setCreateTime(LocalDateTime.now());
         }
 
         Long userId = BlogUtil.getUserId();

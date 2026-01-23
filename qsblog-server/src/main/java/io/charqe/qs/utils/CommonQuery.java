@@ -123,7 +123,7 @@ public class CommonQuery {
      *
      * @param ip
      */
-    public void saveHistoryByBaidu(String ip) {
+    public void saveAccessLogByBaidu(String ip) {
         Long userId = BlogUtil.getUserId();
         String ipUser = ip + (userId != null ? "_" + userId : "");
 

@@ -2,7 +2,9 @@ package io.charqe.qs.utils;
 
 import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.constants.CommonConst;
+import io.charqe.qs.common.enums.CodeMsg;
 import io.charqe.qs.common.exception.BizException;
+import io.charqe.qs.common.exception.LoginException;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.utils.cache.QingSiCache;
@@ -20,7 +22,11 @@ public class BlogUtil {
 
     public static void checkEmail() {
         // User user = (User) PoetryCache.get(BlogUtil.getToken());
-        User user = JSON.parseObject(qingSiCache.get(BlogUtil.getToken()), User.class);
+        String token = BlogUtil.getToken();
+        if (!StringUtils.hasText(token)) {
+            throw new LoginException(CodeMsg.NOT_LOGIN.getMsg());
+        }
+        User user = JSON.parseObject(qingSiCache.get(token), User.class);
         if (!StringUtils.hasText(user.getEmail())) {
             throw new BizException("请先绑定邮箱！");
         }
@@ -32,7 +38,11 @@ public class BlogUtil {
     }
 
     public static User getCurrentUser() {
-        return JSON.parseObject(qingSiCache.get(BlogUtil.getToken()), User.class);
+        String token = BlogUtil.getToken();
+        if (!StringUtils.hasText(token)) {
+            return null;
+        }
+        return JSON.parseObject(qingSiCache.get(token), User.class);
     }
 
     public static User getAdminUser() {
@@ -50,10 +60,14 @@ public class BlogUtil {
     }
 
     public static String getUsername() {
-        if (qingSiCache.get(BlogUtil.getToken()) == null) {
+        String token = BlogUtil.getToken();
+        if (!StringUtils.hasText(token)) {
             return null;
         }
-        User user = JSON.parseObject(qingSiCache.get(BlogUtil.getToken()), User.class);
+        if (qingSiCache.get(token) == null) {
+            return null;
+        }
+        User user = JSON.parseObject(qingSiCache.get(token), User.class);
         return user == null ? null : user.getUsername();
     }
 

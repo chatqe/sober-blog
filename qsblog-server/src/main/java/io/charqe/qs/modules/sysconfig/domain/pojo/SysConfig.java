@@ -1,7 +1,10 @@
 package io.charqe.qs.modules.sysconfig.domain.pojo;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,8 +18,13 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("sys_config")
-public class SysConfig extends BaseDO {
-
+public class SysConfig  {
+    /**
+     * 主键（自增）
+     */
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
     /**
      * 名称
      */
