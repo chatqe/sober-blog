@@ -4,15 +4,17 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import io.charqe.qs.common.constants.CommonConst;
-import io.charqe.qs.modules.historyInfo.domain.dao.HistoryInfoMapper;
-import io.charqe.qs.modules.webInfo.domain.dao.WebInfoMapper;
 import io.charqe.qs.common.enums.UserTypeEnum;
+import io.charqe.qs.common.model.mp.Lb;
+import io.charqe.qs.modules.access.domain.pojo.AccessLog;
+import io.charqe.qs.modules.access.service.AccessLogService;
 import io.charqe.qs.modules.family.domain.pojo.Family;
-import io.charqe.qs.modules.historyInfo.domain.pojo.HistoryInfo;
-import io.charqe.qs.modules.user.domain.pojo.User;
-import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.modules.family.service.FamilyService;
+import io.charqe.qs.modules.historyInfo.domain.dao.HistoryInfoMapper;
+import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.service.UserService;
+import io.charqe.qs.modules.webInfo.domain.dao.WebInfoMapper;
+import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +60,9 @@ public class TaskSchedule {
     private HistoryInfoMapper historyInfoMapper;
 
     @Resource
+    private AccessLogService accessLogService;
+
+    @Resource
     private QingSiCache qingSiCache;
 
 
@@ -87,10 +92,15 @@ public class TaskSchedule {
 
         // 查询 HistoryInfo 表中所有在今天零点之后创建的记录。
         // 只返回 ip 和 userId 字段。
-        List<HistoryInfo> infoList = new LambdaQueryChainWrapper<>(historyInfoMapper)
-                .select(HistoryInfo::getIp, HistoryInfo::getUserId)
-                .ge(HistoryInfo::getCreateTime, LocalDateTime.now().with(LocalTime.MIN))
-                .list();
+        // List<HistoryInfo> infoList = new LambdaQueryChainWrapper<>(historyInfoMapper)
+        //         .select(HistoryInfo::getIp, HistoryInfo::getUserId)
+        //         .ge(HistoryInfo::getCreateTime, LocalDateTime.now().with(LocalTime.MIN))
+        //         .list();
+
+        List<AccessLog> infoList = accessLogService.list(
+                Lb.<AccessLog>q()
+                        .ge(AccessLog::getCreateTime, LocalDateTime.now().with(LocalTime.MIN))
+                        .select(AccessLog::getIp, AccessLog::getUserId));
 
         CopyOnWriteArraySet<String> strings = new CopyOnWriteArraySet<>(
                 infoList.stream().map(info -> info.getIp() + (info.getUserId() != null ? "_" + info.getUserId().toString() : "")).collect(Collectors.toList()));
@@ -103,6 +113,10 @@ public class TaskSchedule {
         history.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
         history.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
         history.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount() + 1168);
+        history.put(CommonConst.IP_HISTORY_PROVINCE, accessLogService.getHistoryByProvince());
+        history.put(CommonConst.IP_HISTORY_IP, accessLogService.getHistoryByIp());
+        history.put(CommonConst.IP_HISTORY_HOUR, accessLogService.getHistoryBy24Hour());
+        history.put(CommonConst.IP_HISTORY_COUNT, accessLogService.getHistoryCount() + 1168);
 
         log.info("当天更新缓存历史信息:{}", history);
         qingSiCache.put(CommonConst.IP_HISTORY_STATISTICS, history);

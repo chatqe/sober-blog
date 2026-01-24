@@ -23,7 +23,7 @@ public class BaiduApiTest {
     public void test() {
        // String ip="113.105.68.23";//CN|广东省|深圳市|龙岗区|None|100|92|84
         String ip="111.60.23.2";//CN|湖北省|武汉市|黄陂区|None|100|89|88
-        String location = baiduIPLocator.getLocationByIp(ip);
+        String location = baiduIPLocator.getLocationJsonByIp(ip);
         log.info("location: {}", location);
     }
 }

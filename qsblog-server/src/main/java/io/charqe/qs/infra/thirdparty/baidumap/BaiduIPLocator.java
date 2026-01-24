@@ -1,11 +1,16 @@
 package io.charqe.qs.infra.thirdparty.baidumap;
 
+import com.alibaba.fastjson2.JSON;
+import io.charqe.qs.infra.thirdparty.baidumap.dto.AccessLogConvertDTO;
+import io.charqe.qs.infra.thirdparty.baidumap.dto.BaiduIPResult;
+import io.charqe.qs.infra.thirdparty.baidumap.enums.CountryEnums;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -23,12 +28,24 @@ public class BaiduIPLocator {
 
 
     @Value("${baidu.ak}")
-    private String AK ;
+    private String AK;
 
     @Value("${baidu.url.ip-location}")
-    private String IP_LOCATION_URL ;
+    private String IP_LOCATION_URL;
+
+    private static String ipLocationUrl;
+    private static String ak;
+
     /**
-     *
+     * 初始化时赋值到静态变量
+     */
+    @PostConstruct
+    public void init() {
+        ak = this.AK;
+        ipLocationUrl = this.IP_LOCATION_URL;
+    }
+
+    /**
      * 设置返回位置信息中，经纬度的坐标类型，分别如下：
      * coor不出现、或为空：百度墨卡托坐标，即百度米制坐标
      * coor = bd09ll：百度经纬度坐标，在国测局坐标基础之上二次加密而来
@@ -37,15 +54,14 @@ public class BaiduIPLocator {
     private static final String COOR = "bd09ll";
 
 
-
     /**
      * 根据 IP 获取地理位置信息
      *
      * @param ip 地址
      * @return 位置信息的 JSON 格式字符串
      */
-    public  String getLocationByIp(String ip) {
-        String urlString = IP_LOCATION_URL + "?ip=" + ip+"&coor=" + COOR +   "&ak=" + AK;
+    public static String getLocationJsonByIp(String ip) {
+        String urlString = ipLocationUrl + "?ip=" + ip + "&coor=" + COOR + "&ak=" + ak;
         return sendRequest(urlString);
     }
 
@@ -78,21 +94,80 @@ public class BaiduIPLocator {
                 }
                 in.close();
             } else {
-                System.out.println("请求失败，HTTP 错误代码: " + responseCode);
+                log.error("BaiduIPLocator-sendRequest 请求失败，HTTP 错误代码: " + responseCode);
             }
         } catch (Exception e) {
+            log.error("BaiduIPLocator-sendRequest 请求失败：", e);
             e.printStackTrace();
         }
         return result.toString();
     }
 
     /**
-     * 解析返回的 JSON 数据，获取具体位置信息
+     * 使用FastJSON2解析百度IP定位JSON，映射到accessLog实体
+     *
+     * @param ip 待解析IP
+     * @return 访问日志转换DTO
+     */
+    public static AccessLogConvertDTO getResultDTO(String ip) {
+
+        String baiduIpJson = getLocationJsonByIp(ip);
+        AccessLogConvertDTO convertDTO = new AccessLogConvertDTO();
+
+        // 空值兜底：JSON为空直接返回
+        if (StringUtils.isBlank(baiduIpJson)) {
+            log.warn("BaiduIPLocator-getResultDTO 百度IP定位JSON为空，跳过解析");
+            return initDefaultValue(convertDTO);
+        }
+
+        try {
+            // 核心：FastJSON2的解析API（一行完成，比Jackson更简洁）
+            BaiduIPResult ipResult = JSON.parseObject(baiduIpJson, BaiduIPResult.class);
+
+            // 校验API调用状态（0为成功）
+            if (ipResult.getStatus() == null || ipResult.getStatus() != 0) {
+                log.warn("BaiduIPLocator-getResultDTO 百度IP定位API调用失败，status={}", ipResult.getStatus());
+                return initDefaultValue(convertDTO);
+            }
+
+            // 逐层提取字段，做空值兜底
+            BaiduIPResult.Content content = ipResult.getContent();
+            if (content == null) {
+                log.warn("BaiduIPLocator-getResultDTO 百度IP定位返回content为空");
+                return initDefaultValue(convertDTO);
+
+            }
+
+            BaiduIPResult.Content.AddressDetail detail = content.getAddressDetail();
+            if (detail == null) {
+                log.warn("BaiduIPLocator-getResultDTO 百度IP定位返回address_detail为空");
+                return initDefaultValue(convertDTO);
+
+            }
+
+            // 映射到accessLog字段（标准化+空值兜底）
+            String countryCode = ipResult.getAddress().substring(0, 2);
+            convertDTO.setCountry(StringUtils.defaultString(CountryEnums.getNameByCode(countryCode), ""));
+            convertDTO.setProvince(StringUtils.defaultString(detail.getProvince(), ""));
+            convertDTO.setCity(StringUtils.defaultString(detail.getCity(), ""));
+            convertDTO.setDistrict(StringUtils.defaultString(detail.getDistrict(), ""));
+
+            return convertDTO;
+
+        } catch (Exception e) {
+            // 捕获解析异常，记录日志并兜底赋值
+            log.error("BaiduIPLocator-getResultDTO FastJSON2解析百度IP定位JSON失败，json={}", baiduIpJson, e);
+            return initDefaultValue(convertDTO);
+        }
+    }
+
+    /**
+     * 获取具体经纬度
      *
      * @param jsonResponse 返回的 JSON 字符串
      * @return 位置相关的信息
      */
-    public  String parseLocationInfo(String jsonResponse) {
+    public String parseGeoCoordinates(String jsonResponse) {
         try {
             // 解析 JSON 数据
             JSONObject jsonObject = new JSONObject(jsonResponse);
@@ -112,6 +187,17 @@ public class BaiduIPLocator {
         }
     }
 
+    /**
+     * 统一兜底赋值方法（抽离复用，符合代码规范）
+     */
+    private static AccessLogConvertDTO initDefaultValue(AccessLogConvertDTO dto) {
+        dto.setCountry("未知");
+        dto.setProvince("");
+        dto.setCity("");
+        dto.setDistrict("");
+
+        return dto;
+    }
     // public static void main(String[] args) {
     //     String ip = "111.60.23.2";  // 示例 IP，可以替换成任何你想查询的 IP
     //     String response = getLocationByIp(ip);

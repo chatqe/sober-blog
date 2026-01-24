@@ -16,7 +16,7 @@ import java.util.Map;
 public interface HistoryInfoMapper extends CoreMapper<HistoryInfo> {
 
     /**
-     * 访问IP最多的10个省
+     * 访问IP最多的10个省 各省份独立 IP 数
      */
     @Select("select nation, province, count(distinct ip) as num" +
             " from history_info" +
