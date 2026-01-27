@@ -4,13 +4,12 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import io.charqe.qs.common.constants.CommonConst;
-import io.charqe.qs.common.enums.UserTypeEnum;
+import io.charqe.qs.modules.user.enums.UserTypeEnum;
 import io.charqe.qs.common.model.mp.Lb;
 import io.charqe.qs.modules.access.domain.pojo.AccessLog;
 import io.charqe.qs.modules.access.service.AccessLogService;
 import io.charqe.qs.modules.family.domain.pojo.Family;
 import io.charqe.qs.modules.family.service.FamilyService;
-import io.charqe.qs.modules.historyInfo.domain.dao.HistoryInfoMapper;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.service.UserService;
 import io.charqe.qs.modules.webInfo.domain.dao.WebInfoMapper;
@@ -55,9 +54,6 @@ public class TaskSchedule {
 
     @Autowired
     private FamilyService familyService;
-
-    @Autowired
-    private HistoryInfoMapper historyInfoMapper;
 
     @Resource
     private AccessLogService accessLogService;
@@ -108,18 +104,14 @@ public class TaskSchedule {
         // PoetryCache.put(CommonConst.IP_HISTORY, strings);
         qingSiCache.put(CommonConst.IP_HISTORY, strings);
 
-        Map<String, Object> history = new HashMap<>();
-        history.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
-        history.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
-        history.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
-        history.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount() + 1168);
-        history.put(CommonConst.IP_HISTORY_PROVINCE, accessLogService.getHistoryByProvince());
-        history.put(CommonConst.IP_HISTORY_IP, accessLogService.getHistoryByIp());
-        history.put(CommonConst.IP_HISTORY_HOUR, accessLogService.getHistoryBy24Hour());
-        history.put(CommonConst.IP_HISTORY_COUNT, accessLogService.getHistoryCount() + 1168);
+        Map<String, Object> ipStatisticsMap = new HashMap<>();
+        // history.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
+        // history.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
+        // history.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
+        // history.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount() + 1168);
+        log.info("当天更新缓存历史信息:{}", ipStatisticsMap);
+        accessLogService.addIPCache( ipStatisticsMap);
 
-        log.info("当天更新缓存历史信息:{}", history);
-        qingSiCache.put(CommonConst.IP_HISTORY_STATISTICS, history);
 
         // 初始化和启动WebSocket
         // TioUtil.buildTio();
@@ -132,14 +124,15 @@ public class TaskSchedule {
 
     @Scheduled(cron = "0 1 0 * * ?")
     public void cleanIpHistory() {
-        // CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
+
         CopyOnWriteArraySet<String> ipHistory = JSON.parseObject(qingSiCache.get(CommonConst.IP_HISTORY), new TypeReference<CopyOnWriteArraySet<String>>() {
         });
         if (ipHistory == null) {
             ipHistory = new CopyOnWriteArraySet<>();
-            // PoetryCache.put(CommonConst.IP_HISTORY, ipHistory);
+
             qingSiCache.put(CommonConst.IP_HISTORY, ipHistory);
         }
+
         ipHistory.clear();
 
         // PoetryCache.remove(CommonConst.IP_HISTORY_STATISTICS);

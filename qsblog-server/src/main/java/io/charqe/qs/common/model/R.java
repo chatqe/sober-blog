@@ -1,6 +1,7 @@
 package io.charqe.qs.common.model;
 
 import io.charqe.qs.common.enums.CodeMsg;
+import io.charqe.qs.common.exception.IErrorCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -66,6 +67,9 @@ public class R<T> implements Serializable {
 
     public static <T> R<T> fail(CodeMsg codeMsg) {
         return new R(codeMsg.getCode(), codeMsg.getMsg());
+    }
+    public static <T> R<T> fail(IErrorCode errorCode) {
+        return new R(errorCode.code(), errorCode.msg());
     }
 
     public static <T> R<T> fail(Integer code, String message) {

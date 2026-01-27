@@ -13,7 +13,7 @@ import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.comment.domain.pojo.Comment;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.common.enums.CodeMsg;
-import io.charqe.qs.common.enums.CommentTypeEnum;
+import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.CommonQuery;
 import io.charqe.qs.infra.thirdparty.mail.MailSendUtil;

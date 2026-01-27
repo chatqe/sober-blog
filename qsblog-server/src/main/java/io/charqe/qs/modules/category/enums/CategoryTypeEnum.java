@@ -1,39 +1,31 @@
-package io.charqe.qs.common.enums;
+package io.charqe.qs.modules.category.enums;
+
+import io.charqe.qs.common.enums.BaseEnum;
 
 import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * 点赞资源类型枚举
+ * 分类类型枚举
  *
  * @author system
  * @since 2026-01-17
  */
-public enum LikeTargetEnum implements BaseEnum<Integer> {
+public enum CategoryTypeEnum implements BaseEnum<Integer> {
     /**
-     * 文章点赞
+     * 导航栏分类
      */
-    ARTICLE(1, "文章"),
+    BAR(0, "导航栏分类"),
     
     /**
-     * 评论点赞
+     * 普通分类
      */
-    COMMENT(2, "评论"),
-    
-    /**
-     * 视频点赞
-     */
-    VIDEO(3, "视频"),
-    
-    /**
-     * 音乐点赞
-     */
-    MUSIC(4, "音乐");
+    NORMAL(1, "普通分类");
     
     private final int code;
     private final String desc;
     
-    LikeTargetEnum(int code, String desc) {
+    CategoryTypeEnum(int code, String desc) {
         this.code = code;
         this.desc = desc;
     }
@@ -54,7 +46,7 @@ public enum LikeTargetEnum implements BaseEnum<Integer> {
      * @param code 编码
      * @return 枚举实例，若不存在则返回null
      */
-    public static LikeTargetEnum getByCode(Integer code) {
+    public static CategoryTypeEnum getByCode(Integer code) {
         if (Objects.isNull(code)) {
             return null;
         }

@@ -2,7 +2,7 @@ package io.charqe.qs.infra.thirdparty.mail;
 
 import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.constants.CommonConst;
-import io.charqe.qs.common.enums.CommentTypeEnum;
+import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
 import io.charqe.qs.modules.im.http.entity.ImChatUserMessage;
 import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.comment.domain.pojo.Comment;

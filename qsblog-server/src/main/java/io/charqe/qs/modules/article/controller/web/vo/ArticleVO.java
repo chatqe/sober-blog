@@ -1,8 +1,8 @@
 package io.charqe.qs.modules.article.controller.web.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.charqe.qs.modules.tag.domain.pojo.Tag;
 import io.charqe.qs.modules.category.domain.pojo.Category;
+import io.charqe.qs.modules.tag.domain.pojo.Tag;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -34,21 +34,21 @@ public class ArticleVO {
     private String articleCover;
 
     @Schema(
-        name = "articleTitle",
-        description = "文章标题",
-        required = true,
-        example = "测试文章标题",
-        minLength = 1,
-        maxLength = 200
+            name = "articleTitle",
+            description = "文章标题",
+            required = true,
+            example = "测试文章标题",
+            minLength = 1,
+            maxLength = 200
     )
     @NotBlank(message = "文章标题不能为空")
     private String articleTitle;
 
     @Schema(
-        name = "articleContent",
-        description = "文章内容",
-        required = true,
-        example = "这是一篇测试文章的内容..."
+            name = "articleContent",
+            description = "文章内容",
+            required = true,
+            example = "这是一篇测试文章的内容..."
     )
     @NotBlank(message = "文章内容不能为空")
     private String articleContent;
@@ -78,20 +78,20 @@ public class ArticleVO {
     private Boolean viewStatus;
 
     @Schema(
-        name = "createTime",
-        description = "创建时间",
-        example = "2023-01-01 12:00:00",
-        format = "date-time"
+            name = "createTime",
+            description = "创建时间",
+            example = "2023-01-01 12:00:00",
+            format = "date-time"
     )
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
     @Schema(
-        name = "updateTime",
-        description = "更新时间",
-        example = "2023-01-02 14:30:00",
-        format = "date-time"
+            name = "updateTime",
+            description = "更新时间",
+            example = "2023-01-02 14:30:00",
+            format = "date-time"
     )
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -101,20 +101,20 @@ public class ArticleVO {
     private String updateBy;
 
     @Schema(
-        name = "sortId",
-        description = "文章分类ID",
-        required = true,
-        example = "1"
+            name = "sortId",
+            description = "文章分类ID",
+            required = true,
+            example = "1"
     )
     @NotNull(message = "文章分类不能为空")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long sortId;
 
     @Schema(
-        name = "labelId",
-        description = "文章标签ID",
-        required = true,
-        example = "1"
+            name = "labelId",
+            description = "文章标签ID",
+            required = true,
+            example = "1"
     )
     @NotNull(message = "文章标签不能为空")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
@@ -123,16 +123,16 @@ public class ArticleVO {
     @Schema(name = "commentCount", description = "评论数量", example = "5")
     // 需要查询封装
     private Integer commentCount;
-    
+
     @Schema(name = "username", description = "用户名", example = "testuser")
     private String username;
-    
+
     @Schema(name = "category", description = "文章分类信息")
     private Category category;
-    
+
     @Schema(name = "tag", description = "文章标签信息")
     private Tag tag;
-    
+
     @Schema(name = "hasVideo", description = "是否包含视频，true-是，false-否", example = "false")
     private Boolean hasVideo = false;
 }

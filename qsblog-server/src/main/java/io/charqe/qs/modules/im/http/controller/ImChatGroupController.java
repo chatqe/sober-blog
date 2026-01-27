@@ -19,7 +19,7 @@ import io.charqe.qs.modules.im.http.service.ImChatUserGroupMessageService;
 import io.charqe.qs.modules.im.http.vo.GroupVO;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.common.enums.CodeMsg;
-import io.charqe.qs.common.enums.UserTypeEnum;
+import io.charqe.qs.modules.user.enums.UserTypeEnum;
 import io.charqe.qs.utils.BlogUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;

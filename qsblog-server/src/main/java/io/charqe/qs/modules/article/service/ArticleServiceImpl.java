@@ -3,31 +3,36 @@ package io.charqe.qs.modules.article.service;
 import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.aop.ResourceCheck;
 import io.charqe.qs.common.constants.CommonConst;
-import io.charqe.qs.common.enums.CommentTypeEnum;
 import io.charqe.qs.common.enums.StatusEnum;
+import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.common.exception.ServiceException;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
+import io.charqe.qs.common.model.mp.CoreServiceImpl;
+import io.charqe.qs.common.model.mp.Lb;
 import io.charqe.qs.infra.thirdparty.mail.MailUtil;
 import io.charqe.qs.modules.article.controller.web.dto.ArticleDTO;
 import io.charqe.qs.modules.article.controller.web.dto.ArticlePageDTO;
 import io.charqe.qs.modules.article.controller.web.vo.ArticlePageVO;
 import io.charqe.qs.modules.article.controller.web.vo.ArticleVO;
+import io.charqe.qs.modules.article.convert.ArticleConvert;
 import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
 import io.charqe.qs.modules.article.domain.pojo.Article;
+import io.charqe.qs.modules.article.enums.ArticleIErrorCode;
 import io.charqe.qs.modules.behavior.domain.pojo.Behavior;
 import io.charqe.qs.modules.behavior.enums.BehaviorTypeEnums;
 import io.charqe.qs.modules.behavior.service.BehaviorService;
 import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
 import io.charqe.qs.modules.category.domain.pojo.Category;
+import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
 import io.charqe.qs.modules.tag.domain.dao.TagMapper;
 import io.charqe.qs.modules.tag.domain.pojo.Tag;
 import io.charqe.qs.modules.user.domain.pojo.User;
@@ -38,9 +43,9 @@ import io.charqe.qs.utils.CommonQuery;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -87,6 +92,9 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
     @Value("${user.subscribe.format}")
     private String subscribeFormat;
+
+    @Resource
+    private ArticleConvert articleConvert;
 
 
     @Override
@@ -264,7 +272,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
     @Override
     @ResourceCheck(CommonConst.RESOURCE_ARTICLE_DOC)
-    public R<ArticleVO> getArticleById(Integer id, String password) {
+    public R<ArticleVO> getArticleWithPwd(Long id, String password) {
         LambdaQueryChainWrapper<Article> lambdaQuery = lambdaQuery();
         lambdaQuery.eq(Article::getId, id);
 
@@ -325,16 +333,13 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
     }
 
     @Override
-    public R<ArticleVO> getArticleByIdForUser(Integer id) {
-        LambdaQueryChainWrapper<Article> lambdaQuery = lambdaQuery();
-        lambdaQuery.eq(Article::getId, id).eq(Article::getUserId, BlogUtil.getUserId());
-        Article article = lambdaQuery.one();
+    public R<ArticleVO> getArticleById(Long id) {
+        Article article = articleMapper.selectById(id);
         if (article == null) {
-            return R.fail("文章不存在！");
+            return R.fail(ArticleIErrorCode.NOT_FOUND);
         }
-        ArticleVO articleVO = new ArticleVO();
-        BeanUtils.copyProperties(article, articleVO);
-        return R.success(articleVO);
+
+        return R.success(articleConvert.convert(article));
     }
 
     /**
@@ -498,6 +503,35 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             return true;
         }
         return false;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void setArticleStatus(Long articleId, Boolean viewStatus, Boolean commentStatus, Boolean recommendStatus) {
+        LambdaUpdateWrapper<Article> wrapper = Lb.<Article>u()
+                .eq(Article::getId, articleId)
+                .eq(Article::getUserId, BlogUtil.getUserId());
+
+        if (Objects.nonNull(viewStatus)) {
+            wrapper.set(Article::getViewStatus, viewStatus);
+        }
+        if (Objects.nonNull(commentStatus)) {
+            wrapper.set(Article::getCommentStatus, commentStatus);
+        }
+        if (Objects.nonNull(recommendStatus)) {
+            wrapper.set(Article::getRecommendStatus, recommendStatus);
+        }
+
+        int row = articleMapper.update(wrapper);
+        if (row == 0) {
+            // 二次查询，明确失败原因（用于给前端准确的错误码）
+            Article exist = articleMapper.selectById(articleId);
+            if (exist == null) {
+                throw new BizException(ArticleIErrorCode.NOT_FOUND);
+            }
+            throw new BizException(ArticleIErrorCode.UPDATE_FAILED);
+        }
+
     }
 
     /**

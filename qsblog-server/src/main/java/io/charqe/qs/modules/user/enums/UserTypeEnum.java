@@ -1,4 +1,6 @@
-package io.charqe.qs.common.enums;
+package io.charqe.qs.modules.user.enums;
+
+import io.charqe.qs.common.enums.BaseEnum;
 
 import java.util.Arrays;
 import java.util.Objects;

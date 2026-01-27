@@ -1,13 +1,13 @@
-package io.charqe.qs.modules.historyInfo.controller.admin;
+package io.charqe.qs.modules.access.controller.admin;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import io.charqe.qs.aop.LoginCheck;
-import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
-import io.charqe.qs.modules.historyInfo.domain.dao.HistoryInfoMapper;
-import io.charqe.qs.modules.historyInfo.domain.pojo.HistoryInfo;
+import io.charqe.qs.common.model.R;
+import io.charqe.qs.common.model.mp.Lb;
+import io.charqe.qs.modules.access.domain.pojo.AccessLog;
+import io.charqe.qs.modules.access.service.AccessLogService;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.utils.CommonQuery;
 import io.charqe.qs.utils.cache.QingSiCache;
@@ -34,34 +34,35 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestController
-@RequestMapping("admin/historyInfo")
-@Tag(name = "adminHistoryInfo", description = "管理后台-历史数据")
-public class AdminHistoryInfoController {
+@RequestMapping("admin/accessLog")
+@Tag(name = "adminAccessLog", description = "管理后台-访问数据")
+public class AdminAccessLogController {
 
     @Resource
     private QingSiCache qingSiCache;
 
     @Resource
     private CommonQuery commonQuery;
+
     @Resource
-    private HistoryInfoMapper historyInfoMapper;
+    private AccessLogService accessLogService;
 
     /**
      * 获取网站统计信息
      */
     @LoginCheck(0)
-    @GetMapping("/get")
+    @GetMapping("/getData")
     public R<Map<String, Object>> getHistoryInfo() {
-        Map<String, Object> result = new HashMap<>();
 
-        // Map<String, Object> history = (Map<String, Object>) PoetryCache.get(CommonConst.IP_HISTORY_STATISTICS);
+        Map<String, Object> result = new HashMap<>();
         Map<String, Object> history = JSON.parseObject(
                 qingSiCache.get(CommonConst.IP_HISTORY_STATISTICS), new TypeReference<Map<String, Object>>() {
                 });
-        List<HistoryInfo> infoList = new LambdaQueryChainWrapper<>(historyInfoMapper)
-                .select(HistoryInfo::getIp, HistoryInfo::getUserId, HistoryInfo::getNation, HistoryInfo::getProvince, HistoryInfo::getCity)
-                .ge(HistoryInfo::getCreateTime, LocalDateTime.now().with(LocalTime.MIN))
-                .list();
+
+        // 获取今天之前的 ip,userId,国家,省,市
+        List<AccessLog> infoList = accessLogService.list(Lb.<AccessLog>q()
+                .select(AccessLog::getIp, AccessLog::getUserId, AccessLog::getCountry, AccessLog::getProvince, AccessLog::getCity)
+                .ge(AccessLog::getCreateTime, LocalDateTime.now().with(LocalTime.MIN)));
 
         result.put(CommonConst.IP_HISTORY_PROVINCE, history.get(CommonConst.IP_HISTORY_PROVINCE));
         result.put(CommonConst.IP_HISTORY_IP, history.get(CommonConst.IP_HISTORY_IP));
@@ -85,7 +86,7 @@ public class AdminHistoryInfoController {
         }).filter(Objects::nonNull).collect(Collectors.toList()));
 
         // 今日访问数
-        result.put("ip_count_today", infoList.stream().map(HistoryInfo::getIp).distinct().count());
+        result.put("ip_count_today", infoList.stream().map(AccessLog::getIp).distinct().count());
 
         // 今日访问用户
         result.put("username_today", infoList.stream().map(m -> {
@@ -103,7 +104,7 @@ public class AdminHistoryInfoController {
         }).filter(Objects::nonNull).collect(Collectors.toList()));
 
         List<Map<String, Object>> list = infoList.stream()
-                .map(HistoryInfo::getProvince).filter(Objects::nonNull)
+                .map(AccessLog::getProvince).filter(Objects::nonNull)
                 .collect(Collectors.groupingBy(m -> m, Collectors.counting()))
                 .entrySet().stream()
                 .map(entry -> {

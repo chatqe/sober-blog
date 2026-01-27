@@ -6,7 +6,7 @@ import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.comment.domain.pojo.Comment;
-import io.charqe.qs.common.enums.CommentTypeEnum;
+import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
 import io.charqe.qs.modules.article.service.ArticleService;
 import io.charqe.qs.modules.comment.service.CommentService;
 import io.charqe.qs.utils.BlogUtil;

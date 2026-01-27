@@ -1,6 +1,7 @@
 package io.charqe.qs.common.exception;
 
 import io.charqe.qs.common.enums.CodeMsg;
+import lombok.Getter;
 
 /**
  * 自定义后台异常
@@ -8,6 +9,7 @@ import io.charqe.qs.common.enums.CodeMsg;
  * @author sjq
  * @since 2025-03-21 18:29
  */
+@Getter
 public class ServiceException extends RuntimeException{
 
     private final Integer code; // 错误码
@@ -25,13 +27,6 @@ public class ServiceException extends RuntimeException{
         this.msg = msg;
     }
 
-    public Integer getCode() {
-        return code;
-    }
-
-    public String getMsg() {
-        return msg;
-    }
 }
 
 

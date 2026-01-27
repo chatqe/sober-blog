@@ -5,9 +5,9 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import io.charqe.qs.aop.LoginCheck;
-import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
-import io.charqe.qs.modules.historyInfo.domain.dao.HistoryInfoMapper;
+import io.charqe.qs.common.model.R;
+import io.charqe.qs.modules.access.service.AccessLogService;
 import io.charqe.qs.modules.historyInfo.domain.pojo.HistoryInfo;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
@@ -51,8 +51,10 @@ public class WebInfoController {
     @Resource
     private WebInfoService webInfoService;
 
+
+
     @Resource
-    private HistoryInfoMapper historyInfoMapper;
+    private AccessLogService accessLogService;
 
     @Resource
     private CommonQuery commonQuery;
@@ -69,15 +71,15 @@ public class WebInfoController {
      */
     @Operation(summary = "更新网站信息", description = "用于管理员更新网站信息，包括网站标题、描述、Logo等")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "更新成功"),
-        @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+            @ApiResponse(responseCode = "200", description = "更新成功"),
+            @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     @LoginCheck(0)
     @PostMapping("/update")
     public R<WebInfo> updateWebInfo(
-        @Parameter(name = "webInfo", description = "网站信息对象", required = true, example = "{\"webName\":\"清思博客\",\"webDescription\":\"一个技术博客网站\"}")
-        @RequestBody WebInfo webInfo) {
+            @Parameter(name = "webInfo", description = "网站信息对象", required = true, example = "{\"webName\":\"清思博客\",\"webDescription\":\"一个技术博客网站\"}")
+            @RequestBody WebInfo webInfo) {
         webInfoService.updateById(webInfo);
 
         LambdaQueryChainWrapper<WebInfo> wrapper = new LambdaQueryChainWrapper<>(webInfoService.getBaseMapper());
@@ -98,8 +100,8 @@ public class WebInfoController {
      */
     @Operation(summary = "获取网站信息", description = "用于获取网站的基本信息，包括网站标题、描述、Logo等")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功，返回网站信息"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+            @ApiResponse(responseCode = "200", description = "查询成功，返回网站信息"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     @GetMapping("/get")
     public R<WebInfo> getWebInfo() {
@@ -128,7 +130,6 @@ public class WebInfoController {
     }
 
 
-
     /**
      * 获取赞赏用户信息
      *
@@ -136,8 +137,8 @@ public class WebInfoController {
      */
     @Operation(summary = "获取赞赏用户信息", description = "用于获取赞赏用户列表")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功，返回赞赏用户列表"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+            @ApiResponse(responseCode = "200", description = "查询成功，返回赞赏用户列表"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     @GetMapping("/getAdmire")
     public R<List<User>> getAdmire() {
@@ -151,8 +152,8 @@ public class WebInfoController {
      */
     @Operation(summary = "获取看板娘消息", description = "用于获取网站看板娘的配置信息，返回JSON格式的配置数据")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功，返回看板娘配置JSON"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+            @ApiResponse(responseCode = "200", description = "查询成功，返回看板娘配置JSON"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     @GetMapping("/getWaifuJson")
     public String getWaifuJson() {
@@ -175,26 +176,21 @@ public class WebInfoController {
      */
     private void getHistoryCache(WebInfo webInfo) {
 
-        Map<String, Object> historyMap = new HashMap<>();
+        Map<String, Object> ipStatisticsMap = new HashMap<>();
         // 缓存中没有
         if (!StringUtils.hasText(qingSiCache.get(CommonConst.IP_HISTORY_STATISTICS))) {
-            historyMap.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
-            historyMap.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
-            historyMap.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
-            historyMap.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount() + 1168);
-            // 缓存
-            qingSiCache.put(CommonConst.IP_HISTORY_STATISTICS, JSON.toJSONString(historyMap));
+            accessLogService.addIPCache(ipStatisticsMap);
         } else {
-            historyMap = JSON.parseObject(qingSiCache.get(CommonConst.IP_HISTORY_STATISTICS), new TypeReference<Map<String, Object>>() {
+            ipStatisticsMap = JSON.parseObject(qingSiCache.get(CommonConst.IP_HISTORY_STATISTICS), new TypeReference<Map<String, Object>>() {
             });
         }
 
 
         // 设置总访问数
-        webInfo.setHistoryAllCount(historyMap.getOrDefault(CommonConst.IP_HISTORY_COUNT, 1168).toString());
+        webInfo.setHistoryAllCount(ipStatisticsMap.getOrDefault(CommonConst.IP_HISTORY_COUNT, 1168).toString());
 
         // 设置24小时内访问数
-        Object historyDayData = historyMap.get(CommonConst.IP_HISTORY_HOUR);
+        Object historyDayData = ipStatisticsMap.get(CommonConst.IP_HISTORY_HOUR);
         String dayHistoryStr = Objects.isNull(historyDayData)
                 ? "168"
                 : String.valueOf(JSON.parseObject(historyDayData.toString(), new TypeReference<List<HistoryInfo>>() {
@@ -206,13 +202,8 @@ public class WebInfoController {
 
     // 更新历史统计数据到缓存
     private void updateHistoryCache() {
-        Map<String, Object> history = new HashMap<>();
-        history.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
-        history.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
-        history.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
-        history.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount() + 1168);
-
-        qingSiCache.put(CommonConst.IP_HISTORY_STATISTICS, history);
+        Map<String, Object> ipStatisticsMap = new HashMap<>();
+        accessLogService.addIPCache(ipStatisticsMap);
         qingSiCache.put(CommonConst.WEB_INFO, webInfoService.list().get(0));
     }
 }

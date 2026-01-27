@@ -36,4 +36,9 @@ public interface AccessLogService extends CoreService<AccessLog> {
      * 获取总访问量
      */
     Long allAccessCount();
+
+    /**
+     * 添加IP统计相关数据缓存
+     */
+    void addIPCache(Map<String, Object> historyMap);
 }

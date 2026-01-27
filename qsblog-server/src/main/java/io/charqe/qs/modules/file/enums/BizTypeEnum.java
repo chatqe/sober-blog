@@ -1,50 +1,62 @@
-package io.charqe.qs.common.enums;
+package io.charqe.qs.modules.file.enums;
+
+import io.charqe.qs.common.enums.BaseEnum;
 
 import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * 分类类型枚举
+ * 资源类型枚举
  *
  * @author system
  * @since 2026-01-17
  */
-public enum SortTypeEnum implements BaseEnum<Integer> {
+public enum BizTypeEnum implements BaseEnum<Integer> {
     /**
-     * 导航栏分类
+     * 文章点赞
      */
-    BAR(0, "导航栏分类"),
-    
+    ARTICLE(1, "文章"),
+
     /**
-     * 普通分类
+     * 评论点赞
      */
-    NORMAL(1, "普通分类");
-    
+    COMMENT(2, "评论"),
+
+    /**
+     * 视频点赞
+     */
+    VIDEO(3, "视频"),
+
+    /**
+     * 音乐点赞
+     */
+    MUSIC(4, "音乐");
+
     private final int code;
     private final String desc;
-    
-    SortTypeEnum(int code, String desc) {
+
+    BizTypeEnum(int code, String desc) {
         this.code = code;
         this.desc = desc;
     }
-    
+
     @Override
     public Integer getCode() {
         return code;
     }
-    
+
     @Override
     public String getDesc() {
         return desc;
     }
-    
+
     /**
      * 根据编码获取枚举实例
      *
      * @param code 编码
      * @return 枚举实例，若不存在则返回null
      */
-    public static SortTypeEnum getByCode(Integer code) {
+    public static BizTypeEnum getByCode(Integer code) {
         if (Objects.isNull(code)) {
             return null;
         }
@@ -53,7 +65,7 @@ public enum SortTypeEnum implements BaseEnum<Integer> {
                 .findFirst()
                 .orElse(null);
     }
-    
+
     /**
      * 验证编码是否有效
      *

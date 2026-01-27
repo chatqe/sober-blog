@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.enums.CodeMsg;
-import io.charqe.qs.common.enums.UserTypeEnum;
+import io.charqe.qs.modules.user.enums.UserTypeEnum;
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.common.exception.LoginException;
 import io.charqe.qs.modules.user.domain.pojo.User;

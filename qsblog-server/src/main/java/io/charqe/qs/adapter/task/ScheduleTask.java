@@ -3,10 +3,9 @@ package io.charqe.qs.adapter.task;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import io.charqe.qs.common.constants.CommonConst;
-import io.charqe.qs.modules.historyInfo.domain.dao.HistoryInfoMapper;
+import io.charqe.qs.modules.access.service.AccessLogService;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 
@@ -20,8 +19,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @Slf4j
 public class ScheduleTask {
 
-    @Autowired
-    private HistoryInfoMapper historyInfoMapper;
+
+    @Resource
+    private AccessLogService accessLogService;
     @Resource
     private QingSiCache qingSiCache;
 
@@ -41,13 +41,13 @@ public class ScheduleTask {
 
         // PoetryCache.remove(CommonConst.IP_HISTORY_STATISTICS);
         qingSiCache.del(CommonConst.IP_HISTORY_STATISTICS);
-        Map<String, Object> history = new HashMap<>();
-        history.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
-        history.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
-        history.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
-        history.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount());
-        // PoetryCache.put(CommonConst.IP_HISTORY_STATISTICS, history);
-        qingSiCache.put(CommonConst.IP_HISTORY_STATISTICS, history);
+        Map<String, Object> ipStatisticsMap = new HashMap<>();
+        // history.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
+        // history.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
+        // history.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
+        // history.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount());
+
+        accessLogService.addIPCache(ipStatisticsMap);
     }
 }
 

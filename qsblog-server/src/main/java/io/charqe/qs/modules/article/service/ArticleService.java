@@ -30,17 +30,31 @@ public interface ArticleService extends CoreService<Article> {
     // R<Page> listArticle(BaseReqVO baseReqVO);
     ArticlePageVO listArticle(ArticlePageDTO dto);
 
-    R<ArticleVO> getArticleById(Integer id, String password);
+    /**
+     * 获取加密文章
+     *
+     * @param id
+     * @return
+     */
+    R<ArticleVO> getArticleWithPwd(Long id, String password);
 
     R<Page> listAdminArticle(BaseReqVO baseReqVO, Boolean isBoss);
 
-    R<ArticleVO> getArticleByIdForUser(Integer id);
+    R<ArticleVO> getArticleById(Long id);
 
     R<Map<Long, List<ArticleVO>>> listSortArticle();
 
     String addArticleLikeCount(ArticleDTO dto);
 
     boolean checkHasLike(String articleId);
-    
 
+    /**
+     * 更新文章状态
+     *
+     * @param articleId
+     * @param viewStatus
+     * @param commentStatus
+     * @param recommendStatus
+     */
+    void setArticleStatus(Long articleId, Boolean viewStatus, Boolean commentStatus, Boolean recommendStatus);
 }

@@ -1,12 +1,14 @@
 package io.charqe.qs.modules.behavior.enums;
 
+import io.charqe.qs.common.enums.BaseEnum;
+
 /**
  * 行为类型枚举
  *
  * @author Joy
  * @since 2026-01-19 17:07
  */
-public enum BehaviorTypeEnums {
+public enum BehaviorTypeEnums implements BaseEnum<Integer> {
     /**
      * 点赞操作
      */
@@ -38,28 +40,30 @@ public enum BehaviorTypeEnums {
     CANCEL_DISLIKE(6, "取消点踩");
 
     // 操作编码
-    private final int code;
+    private final Integer code;
     // 操作描述
     private final String desc;
 
     /**
      * 枚举构造方法
+     *
      * @param code 操作编码
      * @param desc 操作描述
      */
-    BehaviorTypeEnums(int code, String desc) {
+    BehaviorTypeEnums(Integer code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
     /**
      * 根据编码获取枚举实例
+     *
      * @param code 操作编码
      * @return 对应的枚举实例
      */
     public static BehaviorTypeEnums getByCode(int code) {
         for (BehaviorTypeEnums b : BehaviorTypeEnums.values()) {
-            if (b.code() == code) {
+            if (b.getCode().equals(code)) {
                 return b;
             }
         }
@@ -67,12 +71,14 @@ public enum BehaviorTypeEnums {
         throw new IllegalArgumentException("无效的操作类型编码: " + code);
     }
 
-    // Getter方法
-    public int code() {
+
+    @Override
+    public Integer getCode() {
         return code;
     }
 
-    public String desc() {
+    @Override
+    public String getDesc() {
         return desc;
     }
 }

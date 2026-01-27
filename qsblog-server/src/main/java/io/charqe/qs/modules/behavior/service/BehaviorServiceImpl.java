@@ -1,9 +1,9 @@
 package io.charqe.qs.modules.behavior.service;
 
 import io.charqe.qs.common.model.mp.CoreServiceImpl;
+import io.charqe.qs.modules.behavior.controller.web.dto.BehaviorReqDTO;
 import io.charqe.qs.modules.behavior.domain.dao.BehaviorMapper;
 import io.charqe.qs.modules.behavior.domain.pojo.Behavior;
-import io.charqe.qs.modules.behavior.service.BehaviorService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,4 +15,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class BehaviorServiceImpl extends CoreServiceImpl<BehaviorMapper, Behavior> implements BehaviorService {
 
+    @Override
+    public Object handleBehavior(BehaviorReqDTO dto) {
+
+        return null;
+    }
 }

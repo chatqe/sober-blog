@@ -1,10 +1,10 @@
-package io.charqe.qs.common.enums;
+package io.charqe.qs.modules.comment.enums;
 
+import io.charqe.qs.common.enums.BaseEnum;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**

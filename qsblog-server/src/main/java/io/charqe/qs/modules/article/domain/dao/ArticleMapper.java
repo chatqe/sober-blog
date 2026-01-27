@@ -16,7 +16,7 @@ import org.apache.ibatis.annotations.Update;
 public interface ArticleMapper extends CoreMapper<Article> {
 
     @Update("update article set view_count=view_count+1 where id=#{id}")
-    int updateViewCount(@Param("id") Integer id);
+    int updateViewCount(@Param("id") Long id);
 }
 
 

@@ -6,6 +6,8 @@ import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import io.charqe.qs.common.constants.CommonConst;
+import io.charqe.qs.modules.access.domain.pojo.AccessLog;
+import io.charqe.qs.modules.access.service.AccessLogService;
 import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
 import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
@@ -15,8 +17,6 @@ import io.charqe.qs.modules.comment.domain.pojo.Comment;
 import io.charqe.qs.modules.family.controller.web.vo.FamilyVO;
 import io.charqe.qs.modules.family.domain.dao.FamilyMapper;
 import io.charqe.qs.modules.family.domain.pojo.Family;
-import io.charqe.qs.modules.historyInfo.domain.dao.HistoryInfoMapper;
-import io.charqe.qs.modules.historyInfo.domain.pojo.HistoryInfo;
 import io.charqe.qs.modules.tag.domain.dao.TagMapper;
 import io.charqe.qs.modules.tag.domain.pojo.Tag;
 import io.charqe.qs.modules.user.domain.pojo.User;
@@ -42,8 +42,9 @@ public class CommonQuery {
     @Resource
     private CommentMapper commentMapper;
 
+
     @Resource
-    private HistoryInfoMapper historyInfoMapper;
+    private AccessLogService accessLogService;
 
     @Resource
     private UserService userService;
@@ -92,26 +93,28 @@ public class CommonQuery {
             synchronized (ipUser.intern()) {
                 if (!ipHistory.contains(ipUser)) {
                     ipHistory.add(ipUser);
-                    HistoryInfo historyInfo = new HistoryInfo();
-                    historyInfo.setIp(ip);
-                    historyInfo.setUserId(userId);
+                    // HistoryInfo accessLog = new HistoryInfo();
+                    AccessLog accessLog = new AccessLog();
+                    accessLog.setIp(ip);
+                    accessLog.setUserId(userId);
                     if (searcher != null) {
                         try {
                             String search = searcher.search(ip);
                             String[] region = search.split("\\|");
                             if (!"0".equals(region[0])) {
-                                historyInfo.setNation(region[0]);
+                                accessLog.setCountry(region[0]);
                             }
                             if (!"0".equals(region[2])) {
-                                historyInfo.setProvince(region[2]);
+                                accessLog.setProvince(region[2]);
                             }
                             if (!"0".equals(region[3])) {
-                                historyInfo.setCity(region[3]);
+                                accessLog.setCity(region[3]);
                             }
                         } catch (Exception e) {
                         }
                     }
-                    historyInfoMapper.insert(historyInfo);
+                    // historyInfoMapper.insert(accessLog);
+                    accessLogService.save(accessLog);
                 }
             }
         }
@@ -136,26 +139,28 @@ public class CommonQuery {
             synchronized (ipUser.intern()) {
                 if (!ipHistory.contains(ipUser)) {
                     ipHistory.add(ipUser);
-                    HistoryInfo historyInfo = new HistoryInfo();
-                    historyInfo.setIp(ip);
-                    historyInfo.setUserId(userId);
+                    // HistoryInfo accessLog = new HistoryInfo();
+                    AccessLog accessLog = new AccessLog();
+                    accessLog.setIp(ip);
+                    accessLog.setUserId(userId);
                     if (searcher != null) {
                         try {
                             String search = searcher.search(ip);
                             String[] region = search.split("\\|");
                             if (!"0".equals(region[0])) {
-                                historyInfo.setNation(region[0]);
+                                accessLog.setCountry(region[0]);
                             }
                             if (!"0".equals(region[2])) {
-                                historyInfo.setProvince(region[2]);
+                                accessLog.setProvince(region[2]);
                             }
                             if (!"0".equals(region[3])) {
-                                historyInfo.setCity(region[3]);
+                                accessLog.setCity(region[3]);
                             }
                         } catch (Exception e) {
                         }
                     }
-                    historyInfoMapper.insert(historyInfo);
+                    // historyInfoMapper.insert(accessLog);
+                    accessLogService.save(accessLog);
                 }
             }
         }
