@@ -13,22 +13,22 @@ import java.util.Objects;
  */
 public enum BizTypeEnum implements BaseEnum<Integer> {
     /**
-     * 文章点赞
+     * 文章
      */
     ARTICLE(1, "文章"),
 
     /**
-     * 评论点赞
+     * 评论
      */
     COMMENT(2, "评论"),
 
     /**
-     * 视频点赞
+     * 视频
      */
     VIDEO(3, "视频"),
 
     /**
-     * 音乐点赞
+     * 音乐
      */
     MUSIC(4, "音乐");
 
@@ -41,12 +41,12 @@ public enum BizTypeEnum implements BaseEnum<Integer> {
     }
 
     @Override
-    public Integer getCode() {
+    public Integer code() {
         return code;
     }
 
     @Override
-    public String getDesc() {
+    public String desc() {
         return desc;
     }
 

@@ -111,7 +111,7 @@ public class MomentController {
         LambdaQueryChainWrapper<Moment> lambdaQuery = momentService.lambdaQuery();
         lambdaQuery.eq(Moment::getType, CommonConst.MOMENT_TYPE_NEWS);
         lambdaQuery.eq(Moment::getSource, baseReqVO.getSource());
-        lambdaQuery.eq(Moment::getIsPublic, VisibilityEnum.PUBLIC.getCode());
+        lambdaQuery.eq(Moment::getIsPublic, VisibilityEnum.PUBLIC.code());
 
         lambdaQuery.orderByDesc(Moment::getCreateTime).page(baseReqVO);
         return R.success(baseReqVO);
@@ -142,12 +142,12 @@ public class MomentController {
             if (BlogUtil.getUserId() != null) {
                 lambdaQuery.eq(Moment::getUserId, BlogUtil.getUserId());
             } else {
-                lambdaQuery.eq(Moment::getIsPublic, VisibilityEnum.PUBLIC.getCode());
+                lambdaQuery.eq(Moment::getIsPublic, VisibilityEnum.PUBLIC.code());
                 lambdaQuery.eq(Moment::getUserId, BlogUtil.getAdminUser().getId());
             }
         } else {
             if (!baseReqVO.getUserId().equals(BlogUtil.getUserId())) {
-                lambdaQuery.eq(Moment::getIsPublic, VisibilityEnum.PUBLIC.getCode());
+                lambdaQuery.eq(Moment::getIsPublic, VisibilityEnum.PUBLIC.code());
             }
             lambdaQuery.eq(Moment::getUserId, baseReqVO.getUserId());
         }

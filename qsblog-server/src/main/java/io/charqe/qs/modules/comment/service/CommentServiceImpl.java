@@ -53,7 +53,7 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
             return R.fail("评论来源类型不存在！");
         }
         Article one = null;
-        if (CommentTypeEnum.ARTICLE.getCode().equals(commentVO.getType())) {
+        if (CommentTypeEnum.ARTICLE.code().equals(commentVO.getType())) {
             LambdaQueryChainWrapper<Article> articleWrapper = new LambdaQueryChainWrapper<>(articleMapper);
             one = articleWrapper.eq(Article::getId, commentVO.getSource()).select(Article::getUserId, Article::getArticleTitle, Article::getCommentStatus).one();
 
@@ -104,7 +104,7 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
             return R.fail(CodeMsg.PARAMETER_ERROR);
         }
 
-        if (CommentTypeEnum.ARTICLE.getCode().equals(baseReqVO.getCommentType())) {
+        if (CommentTypeEnum.ARTICLE.code().equals(baseReqVO.getCommentType())) {
             LambdaQueryChainWrapper<Article> articleWrapper = new LambdaQueryChainWrapper<>(articleMapper);
             Article one = articleWrapper.eq(Article::getId, baseReqVO.getSource()).select(Article::getCommentStatus).one();
 
@@ -163,9 +163,9 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
                 baseReqVO.setRecords(new ArrayList());
             } else {
                 if (baseReqVO.getSource() != null) {
-                    wrapper.eq(Comment::getSource, baseReqVO.getSource()).eq(Comment::getType, CommentTypeEnum.ARTICLE.getCode());
+                    wrapper.eq(Comment::getSource, baseReqVO.getSource()).eq(Comment::getType, CommentTypeEnum.ARTICLE.code());
                 } else {
-                    wrapper.eq(Comment::getType, CommentTypeEnum.ARTICLE.getCode()).in(Comment::getSource, userArticleIds);
+                    wrapper.eq(Comment::getType, CommentTypeEnum.ARTICLE.code()).in(Comment::getSource, userArticleIds);
                 }
                 wrapper.orderByDesc(Comment::getCreateTime).page(baseReqVO);
             }

@@ -17,7 +17,7 @@ public class BehaviorServiceImpl extends CoreServiceImpl<BehaviorMapper, Behavio
 
     @Override
     public Object handleBehavior(BehaviorReqDTO dto) {
-
+        // 封装一个工厂方法 根据传过来的业务类型使用对应资源类型service进行操作
         return null;
     }
 }

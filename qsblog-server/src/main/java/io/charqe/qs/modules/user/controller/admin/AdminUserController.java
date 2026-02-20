@@ -13,7 +13,6 @@ import io.charqe.qs.modules.im.websocket.TioWebsocketStarter;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.service.UserService;
 import io.charqe.qs.utils.BlogUtil;
-import io.charqe.qs.utils.cache.PoetryCache;
 import io.charqe.qs.utils.cache.QingSiCache;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -95,9 +94,9 @@ public class AdminUserController {
 
         LambdaUpdateChainWrapper<User> updateChainWrapper = userService.lambdaUpdate().eq(User::getId, userId);
         if (flag) {
-            updateChainWrapper.eq(User::getUserStatus, StatusEnum.DISABLE.getCode()).set(User::getUserStatus, StatusEnum.ENABLE.getCode()).update();
+            updateChainWrapper.eq(User::getUserStatus, StatusEnum.DISABLE.code()).set(User::getUserStatus, StatusEnum.ENABLE.code()).update();
         } else {
-            updateChainWrapper.eq(User::getUserStatus, StatusEnum.ENABLE.getCode()).set(User::getUserStatus, StatusEnum.DISABLE.getCode()).update();
+            updateChainWrapper.eq(User::getUserStatus, StatusEnum.ENABLE.code()).set(User::getUserStatus, StatusEnum.DISABLE.code()).update();
         }
         logout(userId);
         return R.success();

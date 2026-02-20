@@ -12,14 +12,14 @@ public interface BaseEnum<T> {
      *
      * @return 枚举编码
      */
-    T getCode();
+    T code();
 
     /**
      * 获取枚举描述
      *
      * @return 枚举描述
      */
-    String getDesc();
+    String desc();
 
 
 }

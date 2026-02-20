@@ -38,12 +38,12 @@ public enum CommentTypeEnum implements BaseEnum<String> {
     }
 
     @Override
-    public String getCode() {
+    public String code() {
         return code;
     }
 
     @Override
-    public String getDesc() {
+    public String desc() {
         return desc;
     }
 
@@ -96,7 +96,7 @@ public enum CommentTypeEnum implements BaseEnum<String> {
      */
     public static Map<String, String> getEnumMap() {
         return Arrays.stream(values())
-                .collect(Collectors.toMap(CommentTypeEnum::getCode, CommentTypeEnum::getDesc));
+                .collect(Collectors.toMap(CommentTypeEnum::code, CommentTypeEnum::desc));
     }
 }
 

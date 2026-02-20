@@ -78,7 +78,7 @@ public class TaskSchedule {
             qingSiCache.put(CommonConst.WEB_INFO, list.get(0));
         }
 
-        User admin = userService.lambdaQuery().eq(User::getUserType, UserTypeEnum.ADMIN.getCode()).one();
+        User admin = userService.lambdaQuery().eq(User::getUserType, UserTypeEnum.ADMIN.code()).one();
         // PoetryCache.put(CommonConst.ADMIN, admin);
         qingSiCache.put(CommonConst.ADMIN, admin);
 

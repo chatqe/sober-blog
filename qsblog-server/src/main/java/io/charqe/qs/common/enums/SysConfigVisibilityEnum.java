@@ -29,12 +29,12 @@ public enum SysConfigVisibilityEnum implements BaseEnum<Integer> {
     }
     
     @Override
-    public Integer getCode() {
+    public Integer code() {
         return code;
     }
     
     @Override
-    public String getDesc() {
+    public String desc() {
         return desc;
     }
     

@@ -28,7 +28,7 @@ import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
 import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.article.enums.ArticleIErrorCode;
 import io.charqe.qs.modules.behavior.domain.pojo.Behavior;
-import io.charqe.qs.modules.behavior.enums.BehaviorTypeEnums;
+import io.charqe.qs.modules.behavior.enums.BehTypeEnums;
 import io.charqe.qs.modules.behavior.service.BehaviorService;
 import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
 import io.charqe.qs.modules.category.domain.pojo.Category;
@@ -128,7 +128,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
         try {
             if (articleVO.getViewStatus()) {
-                List<User> users = userService.lambdaQuery().select(User::getEmail, User::getSubscribe).eq(User::getUserStatus, StatusEnum.ENABLE.getCode()).list();
+                List<User> users = userService.lambdaQuery().select(User::getEmail, User::getSubscribe).eq(User::getUserStatus, StatusEnum.ENABLE.code()).list();
                 List<String> emails = users.stream().filter(u -> {
                     List<Integer> sub = JSON.parseArray(u.getSubscribe(), Integer.class);
                     return !CollectionUtils.isEmpty(sub) && sub.contains(articleVO.getLabelId());
@@ -230,7 +230,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
     //     ArticlePageDTO articlePage = articleMapper.selectPage(, Wrappers.<Article>lambdaQuery()
     //             .in(!CollectionUtils.isEmpty(ids), Article::getId, ids)
     //             .like(StringUtils.hasText(baseReqVO.getSearchKey()), Article::getArticleTitle, baseReqVO.getArticleSearch())
-    //             .eq(baseReqVO.getRecommendStatus() != null && baseReqVO.getRecommendStatus(), Article::getRecommendStatus, StatusEnum.ENABLE.getCode())
+    //             .eq(baseReqVO.getRecommendStatus() != null && baseReqVO.getRecommendStatus(), Article::getRecommendStatus, StatusEnum.ENABLE.code())
     //             .eq(baseReqVO.getLabelId() != null, Article::getLabelId, baseReqVO.getLabelId())
     //             .eq(baseReqVO.getSortId() != null, Article::getSortId, baseReqVO.getSortId())
     //             .orderByDesc(Article::getCreateTime));
@@ -307,7 +307,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             lambdaQuery.like(Article::getArticleTitle, baseReqVO.getSearchKey());
         }
         if (baseReqVO.getRecommendStatus() != null && baseReqVO.getRecommendStatus()) {
-            lambdaQuery.eq(Article::getRecommendStatus, StatusEnum.ENABLE.getCode());
+            lambdaQuery.eq(Article::getRecommendStatus, StatusEnum.ENABLE.code());
         }
 
         if (baseReqVO.getLabelId() != null) {
@@ -448,7 +448,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 behavior.setUserId(dto.getUserId());
                 behavior.setBizType(1); // 1表示文章类型
                 behavior.setBizId(dto.getArticleId().longValue());
-                behavior.setBehaviorType(BehaviorTypeEnums.LIKE.code());
+                behavior.setBehaviorType(BehTypeEnums.LIKE.code());
                 behavior.setCreateTime(LocalDateTime.now());
                 behaviorService.save(behavior);
             }
@@ -460,7 +460,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 behavior.setUserId(dto.getUserId());
                 behavior.setBizType(1); // 1表示文章类型
                 behavior.setBizId(dto.getArticleId().longValue());
-                behavior.setBehaviorType(BehaviorTypeEnums.CANCEL_LIKE.code());
+                behavior.setBehaviorType(BehTypeEnums.CANCEL_LIKE.code());
                 behavior.setCreateTime(LocalDateTime.now());
                 behaviorService.save(behavior);
 
@@ -498,7 +498,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 .eq(Behavior::getUserId, userId)
                 .eq(Behavior::getBizId, Long.valueOf(articleId))
                 .eq(Behavior::getBizType, 1) // 1表示文章类型
-                .eq(Behavior::getBehaviorType, BehaviorTypeEnums.LIKE.code()));
+                .eq(Behavior::getBehaviorType, BehTypeEnums.LIKE.code()));
         if (Objects.nonNull(one)) {
             return true;
         }
@@ -558,7 +558,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         Page<Article> articlePage = articleMapper.selectPage(page, Wrappers.<Article>lambdaQuery()
                 .like(StringUtils.hasText(dto.getSearchKey()), Article::getArticleTitle, dto.getSearchKey())
                 .like(StringUtils.hasText(dto.getArticleSearch()), Article::getArticleTitle, dto.getArticleSearch())
-                .eq((Objects.nonNull(dto.getRecommendStatus()) && dto.getRecommendStatus()), Article::getRecommendStatus, StatusEnum.ENABLE.getCode())
+                .eq((Objects.nonNull(dto.getRecommendStatus()) && dto.getRecommendStatus()), Article::getRecommendStatus, StatusEnum.ENABLE.code())
                 .eq(Objects.nonNull(dto.getSortId()), Article::getSortId, dto.getSortId())
                 .eq(Objects.nonNull(dto.getLabelId()), Article::getLabelId, dto.getLabelId())
                 .orderByDesc(Article::getCreateTime));
@@ -619,7 +619,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             articleVO.setUsername(BlogUtil.getRandomName(articleVO.getUserId().toString()));
         }
         if (articleVO.getCommentStatus()) {
-            articleVO.setCommentCount(commonQuery.getCommentCount(articleVO.getId(), CommentTypeEnum.ARTICLE.getCode()));
+            articleVO.setCommentCount(commonQuery.getCommentCount(articleVO.getId(), CommentTypeEnum.ARTICLE.code()));
         } else {
             articleVO.setCommentCount(0);
         }

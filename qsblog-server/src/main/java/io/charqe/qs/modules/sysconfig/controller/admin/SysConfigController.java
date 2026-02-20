@@ -53,7 +53,7 @@ public class SysConfigController {
         @Parameter(hidden = true) HttpServletRequest request) {
         log.info("{} 访问listSysConfig()",request.getRequestURI());
         LambdaQueryChainWrapper<SysConfig> wrapper = new LambdaQueryChainWrapper<>(sysConfigService.getBaseMapper());
-        List<SysConfig> sysConfigs = wrapper.eq(SysConfig::getConfigType, Integer.toString(SysConfigVisibilityEnum.PUBLIC.getCode()))
+        List<SysConfig> sysConfigs = wrapper.eq(SysConfig::getConfigType, Integer.toString(SysConfigVisibilityEnum.PUBLIC.code()))
                 .list();
         Map<String, String> collect = sysConfigs.stream().collect(Collectors.toMap(SysConfig::getConfigKey, SysConfig::getConfigValue));
         return R.success(collect);
@@ -83,8 +83,8 @@ public class SysConfigController {
             return R.fail("请完善所有配置信息！");
         }
         String configType = sysConfig.getConfigType();
-        if (!Integer.toString(SysConfigVisibilityEnum.PUBLIC.getCode()).equals(configType) &&
-                !Integer.toString(SysConfigVisibilityEnum.PRIVATE.getCode()).equals(configType)) {
+        if (!Integer.toString(SysConfigVisibilityEnum.PUBLIC.code()).equals(configType) &&
+                !Integer.toString(SysConfigVisibilityEnum.PRIVATE.code()).equals(configType)) {
             return R.fail("配置类型不正确！");
         }
         sysConfigService.saveOrUpdate(sysConfig);

@@ -45,13 +45,13 @@ public class LoginCheckAspect {
         }
 
         if (token.contains(CommonConst.USER_ACCESS_TOKEN)) {
-            if (loginCheck.value() == UserTypeEnum.ADMIN.getCode() || loginCheck.value() == UserTypeEnum.DEV.getCode()) {
+            if (loginCheck.value() == UserTypeEnum.ADMIN.code() || loginCheck.value() == UserTypeEnum.DEV.code()) {
                 return R.fail("请输入管理员账号！");
             }
         } else if (token.contains(CommonConst.ADMIN_ACCESS_TOKEN)) {
             // log.info("请求IP：" + BlogUtil.getIpAddr(BlogUtil.getRequest()));
             log.info("请求IP：" + IPUtil.getRealIp(IPUtil.getRequest()));
-            if (loginCheck.value() == UserTypeEnum.ADMIN.getCode() && user.getId().intValue() != CommonConst.ADMIN_USER_ID) {
+            if (loginCheck.value() == UserTypeEnum.ADMIN.code() && user.getId().intValue() != CommonConst.ADMIN_USER_ID) {
                 return R.fail("请输入管理员账号！");
             }
         } else {

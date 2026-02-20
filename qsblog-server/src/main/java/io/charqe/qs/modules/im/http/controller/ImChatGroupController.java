@@ -148,7 +148,7 @@ public class ImChatGroupController {
     public R deleteGroup(@RequestParam("id") Long id) {
         User currentUser = BlogUtil.getCurrentUser();
         boolean isSuccess;
-        if (currentUser.getUserType().intValue() == UserTypeEnum.ADMIN.getCode()) {
+        if (currentUser.getUserType().intValue() == UserTypeEnum.ADMIN.code()) {
             isSuccess = imChatGroupService.removeById(id);
         } else {
             LambdaUpdateChainWrapper<ImChatGroup> lambdaUpdate = imChatGroupService.lambdaUpdate();

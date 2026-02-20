@@ -8,7 +8,7 @@ import io.charqe.qs.common.enums.BaseEnum;
  * @author Joy
  * @since 2026-01-19 17:07
  */
-public enum BehaviorTypeEnums implements BaseEnum<Integer> {
+public enum BehTypeEnums implements BaseEnum<Integer> {
     /**
      * 点赞操作
      */
@@ -50,7 +50,7 @@ public enum BehaviorTypeEnums implements BaseEnum<Integer> {
      * @param code 操作编码
      * @param desc 操作描述
      */
-    BehaviorTypeEnums(Integer code, String desc) {
+    BehTypeEnums(Integer code, String desc) {
         this.code = code;
         this.desc = desc;
     }
@@ -61,9 +61,9 @@ public enum BehaviorTypeEnums implements BaseEnum<Integer> {
      * @param code 操作编码
      * @return 对应的枚举实例
      */
-    public static BehaviorTypeEnums getByCode(int code) {
-        for (BehaviorTypeEnums b : BehaviorTypeEnums.values()) {
-            if (b.getCode().equals(code)) {
+    public static BehTypeEnums getByCode(int code) {
+        for (BehTypeEnums b : BehTypeEnums.values()) {
+            if (b.code().equals(code)) {
                 return b;
             }
         }
@@ -73,12 +73,12 @@ public enum BehaviorTypeEnums implements BaseEnum<Integer> {
 
 
     @Override
-    public Integer getCode() {
+    public Integer code() {
         return code;
     }
 
     @Override
-    public String getDesc() {
+    public String desc() {
         return desc;
     }
 }

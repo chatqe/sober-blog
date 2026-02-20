@@ -58,7 +58,7 @@ public class AdminCommentController {
         if (comment == null) {
             return R.success();
         }
-        if (!CommentTypeEnum.ARTICLE.getCode().equals(comment.getType())) {
+        if (!CommentTypeEnum.ARTICLE.code().equals(comment.getType())) {
             return R.fail("权限不足！");
         }
         Article one = articleService.lambdaQuery().eq(Article::getId, comment.getSource()).select(Article::getUserId).one();

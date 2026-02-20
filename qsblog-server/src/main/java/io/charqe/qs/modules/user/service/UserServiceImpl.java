@@ -27,7 +27,7 @@ import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
 import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.modules.behavior.domain.pojo.Behavior;
-import io.charqe.qs.modules.behavior.enums.BehaviorTypeEnums;
+import io.charqe.qs.modules.behavior.enums.BehTypeEnums;
 import io.charqe.qs.modules.behavior.service.BehaviorService;
 import io.charqe.qs.modules.moment.domain.pojo.Moment;
 import io.charqe.qs.modules.moment.service.MomentService;
@@ -125,7 +125,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         String userToken = "";
 
         if (isAdmin) {
-            if (one.getUserType() != UserTypeEnum.ADMIN.getCode() && one.getUserType() != UserTypeEnum.DEV.getCode()) {
+            if (one.getUserType() != UserTypeEnum.ADMIN.code() && one.getUserType() != UserTypeEnum.DEV.code()) {
                 return R.fail("请输入管理员账号！");
             }
             // if (PoetryCache.get(CommonConst.ADMIN_TOKEN + one.getId()) != null) {
@@ -160,7 +160,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
         userVO.setPassword(null);
-        if (isAdmin && one.getUserType() == UserTypeEnum.ADMIN.getCode()) {
+        if (isAdmin && one.getUserType() == UserTypeEnum.ADMIN.code()) {
             userVO.setIsBoss(true);
         }
 
@@ -645,7 +645,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
                 behavior.setUserId(BlogUtil.getUserId());
                 behavior.setBizType(2); // 2表示标签类型
                 behavior.setBizId(labelId.longValue());
-                behavior.setBehaviorType(BehaviorTypeEnums.SUBSCRIBE.code());
+                behavior.setBehaviorType(BehTypeEnums.SUBSCRIBE.code());
                 behavior.setCreateTime(LocalDateTime.now());
                 behaviorService.save(behavior);
 
@@ -668,7 +668,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
                 behavior.setUserId(BlogUtil.getUserId());
                 behavior.setBizType(2); // 2表示标签类型
                 behavior.setBizId(labelId.longValue());
-                behavior.setBehaviorType(BehaviorTypeEnums.UNSUBSCRIBE.code());
+                behavior.setBehaviorType(BehTypeEnums.UNSUBSCRIBE.code());
                 behavior.setCreateTime(LocalDateTime.now());
                 behaviorService.save(behavior);
 
@@ -830,11 +830,11 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
     private String getCodeMail(String code, String bizType) {
         String info = "";
 
-        if (EmailBizType.REGISTER.getCode().equals(bizType)) {
+        if (EmailBizType.REGISTER.code().equals(bizType)) {
             info = String.format(codeFormat, code);
-        } else if (EmailBizType.RESET_PWD.getCode().equals(bizType)) {
+        } else if (EmailBizType.RESET_PWD.code().equals(bizType)) {
             info = String.format(fwdFormat, code);
-        } else if (EmailBizType.LOGIN.getCode().equals(bizType)) {
+        } else if (EmailBizType.LOGIN.code().equals(bizType)) {
             info = String.format(codeFormat, code);
         }
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
