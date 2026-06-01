@@ -125,7 +125,7 @@ public class CoreServiceImpl<M extends CoreMapper<T>, T> extends ServiceImpl<M, 
             return result;
         } catch (Exception e) {
             log.error("批量插入失败: {}", e.getMessage(), e);
-            throw new BizException("批量插入失败: " + e.getMessage(), e);
+            throw new BizException("批量插入失败: " + e.getMessage());
         }
     }
     
@@ -150,7 +150,7 @@ public class CoreServiceImpl<M extends CoreMapper<T>, T> extends ServiceImpl<M, 
             return result;
         } catch (Exception e) {
             log.error("批量更新失败: {}", e.getMessage(), e);
-            throw new BizException("批量更新失败: " + e.getMessage(), e);
+            throw new BizException("批量更新失败: " + e.getMessage());
         }
     }
     
@@ -167,7 +167,7 @@ public class CoreServiceImpl<M extends CoreMapper<T>, T> extends ServiceImpl<M, 
             return update(entity, updateWrapper);
         } catch (Exception e) {
             log.error("批量更新失败: {}", e.getMessage(), e);
-            throw new BizException("批量更新失败: " + e.getMessage(), e);
+            throw new BizException("批量更新失败: " + e.getMessage());
         }
     }
     
@@ -190,7 +190,7 @@ public class CoreServiceImpl<M extends CoreMapper<T>, T> extends ServiceImpl<M, 
             }
         } catch (Exception e) {
             log.error("幂等新增失败: {}", e.getMessage(), e);
-            throw new BizException("幂等新增失败: " + e.getMessage(), e);
+            throw new BizException("幂等新增失败: " + e.getMessage());
         }
     }
     
@@ -218,7 +218,7 @@ public class CoreServiceImpl<M extends CoreMapper<T>, T> extends ServiceImpl<M, 
             }
         } catch (Exception e) {
             log.error("幂等新增或更新失败: {}", e.getMessage(), e);
-            throw new BizException("幂等新增或更新失败: " + e.getMessage(), e);
+            throw new BizException("幂等新增或更新失败: " + e.getMessage());
         }
     }
     
@@ -407,7 +407,7 @@ public class CoreServiceImpl<M extends CoreMapper<T>, T> extends ServiceImpl<M, 
             Object val = field.get(entity);
             return val == null ? null : Long.valueOf(val.toString());
         } catch (Exception e) {
-            throw new BizException("获取主键值失败: " + e.getMessage(), e);
+            throw new BizException("获取主键值失败: " + e.getMessage());
         }
     }
     

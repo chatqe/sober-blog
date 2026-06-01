@@ -1,17 +1,13 @@
 package io.charqe.qs.modules.file.controller.admin;
 
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.FileVO;
-import io.charqe.qs.common.constants.CommonConst;
-import io.charqe.qs.common.enums.StatusEnum;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.infra.storage.StoreService;
 import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
-import io.charqe.qs.modules.file.service.FileStorageService;
-import io.charqe.qs.utils.BlogUtil;
+import io.charqe.qs.modules.file.service.FileInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
@@ -19,9 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * *
@@ -36,7 +29,7 @@ public class FileController {
 
 
     @Resource
-    private io.charqe.qs.modules.file.service.FileStorageService fileStorageService;
+    private FileInfoService fileInfoService;
 
     @Resource(name = "storeFileService")
     private io.charqe.qs.infra.storage.FileStorageService storeService;
@@ -53,7 +46,7 @@ public class FileController {
         if (!StringUtils.hasText(vo.getFileType()) || !StringUtils.hasText(vo.getFilePath())) {
             return R.fail("资源类型和资源路径不能为空！");
         }
-        return R.success("新增成功", fileStorageService.save(vo));
+        return R.success("新增成功", fileInfoService.save(vo));
     }
 
     /**
@@ -81,7 +74,7 @@ public class FileController {
     @PostMapping("/delete")
     @LoginCheck
     public R delete(@RequestParam("id") Long id) {
-        fileStorageService.removeById(id);
+        fileInfoService.removeById(id);
         return R.success();
     }
 
@@ -91,7 +84,7 @@ public class FileController {
     @PostMapping("/list")
     @LoginCheck
     public R list(@RequestBody BaseReqVO baseReqVO) {
-        fileStorageService.page(baseReqVO, null);
+        fileInfoService.page(baseReqVO, null);
         return R.success(baseReqVO);
     }
 }

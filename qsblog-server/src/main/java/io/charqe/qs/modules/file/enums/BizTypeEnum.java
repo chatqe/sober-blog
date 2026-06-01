@@ -30,7 +30,11 @@ public enum BizTypeEnum implements BaseEnum<Integer> {
     /**
      * 音乐
      */
-    MUSIC(4, "音乐");
+    MUSIC(4, "音乐"),
+
+    MOMENT(5,"微言"),
+    CATEGORY(6,"专栏"),
+    TAG(7,"标签");
 
     private final int code;
     private final String desc;
@@ -75,4 +79,4 @@ public enum BizTypeEnum implements BaseEnum<Integer> {
     public static boolean isValid(Integer code) {
         return getByCode(code) != null;
     }
-}
+    }

@@ -330,33 +330,7 @@ public class UserController {
         return userService.getUserByUsername(username);
     }
 
-    /**
-     * 订阅/取消订阅专栏（标签）
-     * <p>
-     * flag = true：订阅
-     * flag = false：取消订阅
-     * 
-     * @param labelId 标签ID
-     * @param flag 订阅状态，true-订阅，false-取消订阅
-     * @return 更新结果，包含更新后的用户信息
-     */
-    @Operation(summary = "订阅/取消订阅专栏", description = "用于订阅或取消订阅专栏（标签）。订阅成功后，用户将收到该专栏的最新文章通知。")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "操作成功，返回更新后的用户信息"),
-        @ApiResponse(responseCode = "400", description = "请求参数错误，如标签ID为空"),
-        @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
-    @GetMapping("/subscribe")
-    @LoginCheck
-    public R<UserVO> subscribe(
-        @Parameter(name = "labelId", description = "标签ID", required = true, example = "1") 
-        @RequestParam("labelId") Integer labelId, 
-        @Parameter(name = "flag", description = "订阅状态，true-订阅，false-取消订阅", required = true, example = "true") 
-        @RequestParam("flag") Boolean flag) {
-        PoetryCache.remove(CommonConst.USER_CACHE + BlogUtil.getUserId().toString());
-        return userService.subscribe(labelId, flag);
-    }
+
 
 
     /**

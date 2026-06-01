@@ -1,6 +1,8 @@
 package io.charqe.qs.modules.behavior.domain.pojo;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,31 +15,44 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("user_behavior_cnt")
+@TableName("behavior_cnt")
 public class BehaviorCnt extends BaseDO {
 
     /**
-     * 统计日期
+     * 行为主体id
      */
-    @TableField("stat_date")
-    private String statDate;
+    @TableField("biz_id")
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Long bizId;
 
     /**
-     * 行为类型
-     */
-    @TableField("behavior_type")
-    private Integer behaviorType;
-
-    /**
-     * 业务类型
+     * 主体类型
      */
     @TableField("biz_type")
     private Integer bizType;
 
     /**
-     * 访问次数
+     * 行为类型
      */
-    @TableField("count")
+    @TableField("action")
+    private Integer action;
+
+    /**
+     * 行为主体id
+     */
+    @TableField("user_id")
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Long userId;
+
+    /**
+     * 行为数量
+     */
+    @TableField
     private Integer count;
+    /**
+     * 乐观锁 版本号
+     */
+    @TableField("version")
+    private String version;
 
 }

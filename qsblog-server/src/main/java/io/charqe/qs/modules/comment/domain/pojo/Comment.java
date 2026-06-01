@@ -18,58 +18,84 @@ import lombok.EqualsAndHashCode;
 public class Comment extends BaseDO {
 
     /**
-     * 评论来源标识
+     * 父评论ID，0表示根评论
      */
-    @TableField("source")
-    private Long source;
+    private Long parentId;
 
     /**
-     * 父评论ID
+     * 顶级祖先评论ID，0表示自身就是根评论
      */
-    @TableField("parent_comment_id")
-    private Long parentCommentId;
+    private Long rootId;
 
     /**
-     * 评论来源类型
+     * 业务类型：1文章 2评论 3视频
      */
-    @TableField("type")
-    private String type;
+    private Integer bizType;
 
     /**
-     * 发表用户ID
+     * 对应业务的主键ID
      */
-    @TableField("user_id")
-    private Long userId;
+    private Long bizId;
 
     /**
-     * 父发表用户名ID
+     * 评论人ID
      */
-    @TableField("parent_user_id")
-    private Long parentUserId;
+    private Long authorId;
 
     /**
-     * 点赞数
+     * 评论人名称（冗余字段）
      */
-    @TableField("like_count")
-    private Integer likeCount;
+    private String authorName;
+
+    /**
+     * 评论人头像（冗余字段）
+     */
+    private String authorAvatar;
 
     /**
      * 评论内容
      */
-    @TableField("comment_content")
-    private String commentContent;
+    private String content;
 
     /**
-     * 评论额外信息
+     * 回复的目标用户ID，0表示无特定回复对象
      */
-    @TableField("comment_info")
-    private String commentInfo;
+    private Long replyToUserId;
 
     /**
-     * 楼层评论ID
+     * 评论状态：1=正常 2=禁言 3=审核中
      */
-    @TableField("floor_comment_id")
-    private Long floorCommentId;
+    private Integer status;
+
+    /**
+     * 评论提交时的IP地址
+     */
+    private String ip;
+
+    /**
+     * 评论提交时的用户代理
+     */
+    private String ua;
+
+    /**
+     * 是否为内容作者：0=否 1=是
+     */
+    private Integer isOwner;
+
+    /**
+     * 是否置顶：0=否 1=是
+     */
+    private Integer isTop;
+
+    /**
+     * 评论点赞数
+     */
+    private Integer likeCnt;
+
+    /**
+     * 直接子评论数量
+     */
+    private Integer childCnt;
 
 }
 

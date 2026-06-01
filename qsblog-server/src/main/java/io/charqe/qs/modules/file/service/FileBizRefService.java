@@ -1,7 +1,7 @@
 package io.charqe.qs.modules.file.service;
 
 import io.charqe.qs.common.model.mp.CoreService;
-import io.charqe.qs.modules.file.domain.pojo.FileBizRelation;
+import io.charqe.qs.modules.file.domain.pojo.FileBizRef;
 
 /**
  * 文件业务关系表 服务类
@@ -9,6 +9,6 @@ import io.charqe.qs.modules.file.domain.pojo.FileBizRelation;
  * @author Joy
  * @since 2026-01-16 22:08
  */
-public interface FileBizRelationService extends CoreService<FileBizRelation> {
+public interface FileBizRefService extends CoreService<FileBizRef> {
 
 }

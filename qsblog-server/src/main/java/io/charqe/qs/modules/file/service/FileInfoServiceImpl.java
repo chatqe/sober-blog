@@ -5,7 +5,7 @@ import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileRespVO;
 import io.charqe.qs.modules.file.convert.FileConvert;
 import io.charqe.qs.modules.file.domain.dao.FileStorageMapper;
-import io.charqe.qs.modules.file.domain.pojo.FileStorage;
+import io.charqe.qs.modules.file.domain.pojo.FileInfo;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -17,7 +17,7 @@ import javax.annotation.Resource;
  * @since 2026-01-16 22:08
  */
 @Service
-public class FileStorageServiceImpl extends CoreServiceImpl<FileStorageMapper, FileStorage> implements FileStorageService {
+public class FileInfoServiceImpl extends CoreServiceImpl<FileStorageMapper, FileInfo> implements FileInfoService {
 
     @Resource
     private FileConvert fileConvert;
@@ -25,7 +25,7 @@ public class FileStorageServiceImpl extends CoreServiceImpl<FileStorageMapper, F
     @Override
     public FileRespVO save(FileCreateReqVO vo) {
 
-        FileStorage convert = fileConvert.convert(vo);
+        FileInfo convert = fileConvert.convert(vo);
 
         save(convert);
         return fileConvert.convert(convert);

@@ -3,7 +3,7 @@ package io.charqe.qs.modules.file.convert;
 
 import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileRespVO;
-import io.charqe.qs.modules.file.domain.pojo.FileStorage;
+import io.charqe.qs.modules.file.domain.pojo.FileInfo;
 import org.mapstruct.Mapper;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
@@ -28,12 +28,12 @@ public interface FileConvert {
      * reqVO → entity：新增用户时的转换
      * 说明：字段名一致时无需配置@Mapping，不一致时需指定
      */
-    FileStorage convert(FileCreateReqVO reqVO);
+    FileInfo convert(FileCreateReqVO reqVO);
 
     /**
      * entity → respVO：返回给前端的转换
      */
-    FileRespVO convert(FileStorage file);
+    FileRespVO convert(FileInfo file);
 
     /**
      * 自定义转换方法：LocalDateTime → 格式化的String

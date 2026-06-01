@@ -31,6 +31,12 @@ public class BizException extends RuntimeException {
         this.code = code;
     }
 
+    public BizException(String msg) {
+        super(msg);
+        this.msg = msg;
+        this.code = "500";
+    }
+
 
     public BizException(Throwable cause, String code) {
         super(cause);

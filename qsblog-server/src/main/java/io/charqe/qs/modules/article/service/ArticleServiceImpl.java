@@ -27,12 +27,13 @@ import io.charqe.qs.modules.article.convert.ArticleConvert;
 import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
 import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.article.enums.ArticleIErrorCode;
-import io.charqe.qs.modules.behavior.domain.pojo.Behavior;
-import io.charqe.qs.modules.behavior.enums.BehTypeEnums;
-import io.charqe.qs.modules.behavior.service.BehaviorService;
+import io.charqe.qs.modules.behavior.domain.pojo.BehaviorState;
+import io.charqe.qs.modules.behavior.enums.BehActionType;
+import io.charqe.qs.modules.behavior.service.BehaviorLogService;
 import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
 import io.charqe.qs.modules.category.domain.pojo.Category;
 import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
+import io.charqe.qs.modules.file.enums.BizTypeEnum;
 import io.charqe.qs.modules.tag.domain.dao.TagMapper;
 import io.charqe.qs.modules.tag.domain.pojo.Tag;
 import io.charqe.qs.modules.user.domain.pojo.User;
@@ -88,7 +89,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
 
     @Resource
-    private BehaviorService behaviorService;
+    private BehaviorLogService behaviorLogService;
 
     @Value("${user.subscribe.format}")
     private String subscribeFormat;
@@ -444,25 +445,25 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             // 点赞
             if (dto.getOperation() == 1 && !hasLike) {
                 // 新增点赞行为记录
-                Behavior behavior = new Behavior();
-                behavior.setUserId(dto.getUserId());
-                behavior.setBizType(1); // 1表示文章类型
-                behavior.setBizId(dto.getArticleId().longValue());
-                behavior.setBehaviorType(BehTypeEnums.LIKE.code());
-                behavior.setCreateTime(LocalDateTime.now());
-                behaviorService.save(behavior);
+                BehaviorState behaviorState = new BehaviorState();
+                behaviorState.setUserId(dto.getUserId());
+                behaviorState.setBizType(BizTypeEnum.ARTICLE.code()); // 1表示文章类型
+                behaviorState.setBizId(dto.getArticleId());
+                behaviorState.setAction(BehActionType.LIKE.code());
+                behaviorState.setCreateTime(LocalDateTime.now());
+                behaviorLogService.save(behaviorState);
             }
             // 取消点赞
             if (dto.getOperation() == 0 && hasLike) {
                 qingSiCache.delHashKey(CommonConst.USER_LIKES.concat(dto.getArticleId().toString()), dto.getUserId().toString());
                 // 新增取消点赞行为记录
-                Behavior behavior = new Behavior();
-                behavior.setUserId(dto.getUserId());
-                behavior.setBizType(1); // 1表示文章类型
-                behavior.setBizId(dto.getArticleId().longValue());
-                behavior.setBehaviorType(BehTypeEnums.CANCEL_LIKE.code());
-                behavior.setCreateTime(LocalDateTime.now());
-                behaviorService.save(behavior);
+                BehaviorState behaviorState = new BehaviorState();
+                behaviorState.setUserId(dto.getUserId());
+                behaviorState.setBizType(BizTypeEnum.ARTICLE.code()); // 1表示文章类型
+                behaviorState.setBizId(dto.getArticleId());
+                behaviorState.setAction(BehActionType.UN_LIKE.code());
+                behaviorState.setCreateTime(LocalDateTime.now());
+                behaviorLogService.save(behaviorState);
 
                 this.update(Wrappers.<Article>lambdaUpdate().
                         eq(Article::getId, dto.getArticleId())
@@ -494,11 +495,11 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         }
         Long userId = BlogUtil.getUserId();
 
-        Behavior one = behaviorService.getOne(Wrappers.<Behavior>lambdaQuery()
-                .eq(Behavior::getUserId, userId)
-                .eq(Behavior::getBizId, Long.valueOf(articleId))
-                .eq(Behavior::getBizType, 1) // 1表示文章类型
-                .eq(Behavior::getBehaviorType, BehTypeEnums.LIKE.code()));
+        BehaviorState one = behaviorLogService.getOne(Wrappers.<BehaviorState>lambdaQuery()
+                .eq(BehaviorState::getUserId, userId)
+                .eq(BehaviorState::getBizId, Long.valueOf(articleId))
+                .eq(BehaviorState::getBizType, BizTypeEnum.ARTICLE.name()) // 1表示文章类型
+                .eq(BehaviorState::getAction, BehActionType.LIKE.name()));
         if (Objects.nonNull(one)) {
             return true;
         }

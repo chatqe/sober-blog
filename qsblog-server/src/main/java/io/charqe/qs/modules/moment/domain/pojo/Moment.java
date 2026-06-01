@@ -6,6 +6,8 @@ import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.LocalDateTime;
+
 /**
  * *
  *
@@ -18,39 +20,48 @@ import lombok.EqualsAndHashCode;
 public class Moment extends BaseDO {
 
     /**
-     * 用户ID
+     * 发布用户ID（关联用户表主键）
      */
-    @TableField("user_id")
     private Long userId;
+
+    /**
+     * 动态内容
+     */
+    private String content;
+
+    /**
+     * 图片/视频等文件JSON
+     */
+    private String fileJson;
 
     /**
      * 点赞数
      */
-    @TableField("like_count")
-    private Integer likeCount;
+    private Integer likes;
 
     /**
-     * 内容
+     * 是否公开 0-私密 1-公开
      */
-    @TableField("content")
-    private String content;
+    private Integer isPublic;
 
     /**
-     * 是否公开[0:仅自己可见，1:所有人可见]
+     * 动态状态 0-草稿 1-正常 2-审核中 3-违规下架
      */
-    @TableField("is_public")
-    private Boolean isPublic;
+    private Integer status;
 
     /**
-     * 类型
+     * 创建人
      */
-    @TableField("type")
-    private String type;
+    private String createBy;
 
     /**
-     * 来源标识
+     * 修改人
      */
-    @TableField("source")
-    private Long source;
+    private String updateBy;
+
+    /**
+     * 删除时间（NULL表示未删除）
+     */
+    private LocalDateTime delTime;
 
 }

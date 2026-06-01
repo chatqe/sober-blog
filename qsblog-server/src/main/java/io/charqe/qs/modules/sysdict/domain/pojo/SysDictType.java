@@ -20,41 +20,39 @@ import java.time.LocalDateTime;
 public class SysDictType extends BaseDO {
 
 
+    /**
+     * 字典类型编码，全局唯一, 如 "gender"
+     */
+    private String typeCode;
 
     /**
-     * 字典类型
+     * 字典类型名称, 用于展示，如 "性别"
      */
-    @TableField("dict_type")
-    private String dictType;
+    private String typeName;
 
     /**
-     * 字典名称
+     * 状态：0-禁用, 1-启用
      */
-    @TableField("dict_name")
-    private String dictName;
-
-    /**
-     * 状态[0:禁用，1:启用]
-     */
-    @TableField("status")
     private Integer status;
 
     /**
-     * 备注
+     * 备注说明
      */
-    @TableField("remark")
     private String remark;
+
+    /**
+     * 排序权重，值越小越靠前
+     */
+    private Integer sort;
 
     /**
      * 创建人
      */
-    @TableField("create_by")
     private String createBy;
 
     /**
      * 更新人
      */
-    @TableField("update_by")
     private String updateBy;
 
 

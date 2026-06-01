@@ -70,7 +70,7 @@ public class CustomEnvironmentPostProcessor implements EnvironmentPostProcessor 
             PropertySource<?> source = new MapPropertySource(SOURCE_NAME, map);
             propertySources.addFirst(source);
         } catch (Exception e) {
-            throw new BizException(e);
+            throw new BizException(e.getMessage());
         }
     }
 

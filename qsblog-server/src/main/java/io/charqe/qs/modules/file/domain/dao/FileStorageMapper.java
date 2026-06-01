@@ -1,6 +1,6 @@
 package io.charqe.qs.modules.file.domain.dao;
 
-import io.charqe.qs.modules.file.domain.pojo.FileStorage;
+import io.charqe.qs.modules.file.domain.pojo.FileInfo;
 import io.charqe.qs.common.model.mp.CoreMapper;
 
 /**
@@ -9,6 +9,6 @@ import io.charqe.qs.common.model.mp.CoreMapper;
  * @author Joy
  * @since 2026-01-16 22:08
  */
-public interface FileStorageMapper extends CoreMapper<FileStorage> {
+public interface FileStorageMapper extends CoreMapper<FileInfo> {
 
 }

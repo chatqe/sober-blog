@@ -127,13 +127,16 @@ public class AdminArticleController {
             @ApiResponse(responseCode = "404", description = "文章不存在"),
             @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @GetMapping("/getArticleById")
+    @GetMapping("/getArticleWithPwd")
     @LoginCheck(1)
-    public R<ArticleVO> getArticleById(
+    public R<ArticleVO> getArticleWithPwd(
             @Parameter(name = "id", description = "文章ID", required = true, example = "1")
             @NotNull
-            @RequestParam("id") Long id) {
-        return articleService.getArticleWithPwd(id);
+            @RequestParam("id") Long id,
+            @Parameter(name = "pwd", description = "文章访问密码", required = false, example = "123456")
+            @RequestParam(value = "pwd", required = false) String pwd) {
+
+        return articleService.getArticleWithPwd(id, pwd);
     }
 }
 

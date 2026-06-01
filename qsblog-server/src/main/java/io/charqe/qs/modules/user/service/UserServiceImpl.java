@@ -4,17 +4,20 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson2.JSON;
-import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import io.charqe.qs.common.model.mp.CoreServiceImpl;
-import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
-import io.charqe.qs.modules.user.domain.dao.UserMapper;
 import io.charqe.qs.common.enums.EmailBizType;
-import io.charqe.qs.modules.user.enums.UserTypeEnum;
 import io.charqe.qs.common.exception.BizException;
+import io.charqe.qs.common.model.BaseReqVO;
+import io.charqe.qs.common.model.R;
+import io.charqe.qs.common.model.mp.CoreServiceImpl;
+import io.charqe.qs.infra.thirdparty.mail.MailUtil;
+import io.charqe.qs.modules.behavior.domain.pojo.BehaviorState;
+import io.charqe.qs.modules.behavior.enums.BehActionType;
+import io.charqe.qs.modules.behavior.service.BehaviorLogService;
+import io.charqe.qs.modules.file.enums.BizTypeEnum;
 import io.charqe.qs.modules.im.http.dao.ImChatGroupUserMapper;
 import io.charqe.qs.modules.im.http.dao.ImChatUserFriendMapper;
 import io.charqe.qs.modules.im.http.entity.ImChatGroupUser;
@@ -22,22 +25,20 @@ import io.charqe.qs.modules.im.http.entity.ImChatUserFriend;
 import io.charqe.qs.modules.im.websocket.ImConfigConst;
 import io.charqe.qs.modules.im.websocket.TioUtil;
 import io.charqe.qs.modules.im.websocket.TioWebsocketStarter;
-import io.charqe.qs.common.model.BaseReqVO;
-import io.charqe.qs.modules.user.domain.pojo.User;
-import io.charqe.qs.modules.user.controller.web.vo.UserVO;
-import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
-import io.charqe.qs.modules.behavior.domain.pojo.Behavior;
-import io.charqe.qs.modules.behavior.enums.BehTypeEnums;
-import io.charqe.qs.modules.behavior.service.BehaviorService;
 import io.charqe.qs.modules.moment.domain.pojo.Moment;
 import io.charqe.qs.modules.moment.service.MomentService;
+import io.charqe.qs.modules.user.controller.web.dto.LoginUserInfo;
+import io.charqe.qs.modules.user.controller.web.vo.UserVO;
+import io.charqe.qs.modules.user.convert.UserConvert;
+import io.charqe.qs.modules.user.domain.dao.UserMapper;
+import io.charqe.qs.modules.user.domain.pojo.User;
+import io.charqe.qs.modules.user.enums.UserTypeEnum;
+import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.utils.*;
 import io.charqe.qs.utils.cache.PoetryCache;
 import io.charqe.qs.utils.cache.QingSiCache;
-import io.charqe.qs.infra.thirdparty.mail.MailUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -47,6 +48,7 @@ import org.tio.core.Tio;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -62,16 +64,16 @@ import java.util.stream.Collectors;
 public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implements UserService {
 
 
-    @Autowired
+    @Resource
     private MomentService momentService;
 
-    @Autowired
+    @Resource
     private ImChatGroupUserMapper imChatGroupUserMapper;
 
-    @Autowired
+    @Resource
     private ImChatUserFriendMapper imChatUserFriendMapper;
 
-    @Autowired
+    @Resource
     private MailUtil mailUtil;
 
     @Resource
@@ -86,8 +88,14 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
     @Resource
     private SvgCaptchaUtils svgCaptchaUtils;
 
-    @Autowired
-    private BehaviorService behaviorService;
+    @Resource
+    private BehaviorLogService behaviorLogService;
+
+    @Resource
+    private UserConvert userConvert;
+
+    @Resource
+    private  JWTUtils jwtUtils;
 
     @Value("${user.code.format}")
     private String codeFormat;
@@ -143,15 +151,87 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         if (isAdmin && !StringUtils.hasText(adminToken)) {
             String uuid = UUID.randomUUID().toString().replaceAll("-", "");
             adminToken = CommonConst.ADMIN_ACCESS_TOKEN + uuid;
-            // PoetryCache.put(adminToken, one, CommonConst.TOKEN_EXPIRE);
-            // PoetryCache.put(CommonConst.ADMIN_TOKEN + one.getId(), adminToken, CommonConst.TOKEN_EXPIRE);
+
             qingSiCache.put(adminToken, one, CommonConst.TOKEN_EXPIRE);
             qingSiCache.put(CommonConst.ADMIN_TOKEN + one.getId(), adminToken, CommonConst.TOKEN_EXPIRE);
         } else if (!isAdmin && !StringUtils.hasText(userToken)) {
-            String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+            String uuid = UUID.randomUUID().toString().replace("-", "");
             userToken = CommonConst.USER_ACCESS_TOKEN + uuid;
-            // PoetryCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
-            // PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
+
+            qingSiCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
+            qingSiCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
+        }
+
+
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(one, userVO);
+        userVO.setPassword(null);
+        if (isAdmin && one.getUserType() == UserTypeEnum.ADMIN.code()) {
+            userVO.setIsBoss(true);
+        }
+
+        if (isAdmin) {
+            userVO.setAccessToken(adminToken);
+        } else {
+            userVO.setAccessToken(userToken);
+        }
+        return R.success(userVO);
+    }
+
+    @Override
+    public R<UserVO> login2(String account, String password, Boolean isAdmin) {
+        password = new String(
+                // 解密网页密码
+                SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt(password));
+
+        User one = lambdaQuery().and(wrapper -> wrapper
+                        .eq(User::getUsername, account)
+                        .or()
+                        .eq(User::getEmail, account)
+                        .or()
+                        .eq(User::getPhoneNumber, account))
+                // 传入密码解密之后 进行MD5字符串加密 同数据库密码进行比对
+                // .eq(User::getPassword, DigestUtils.md5DigestAsHex(password.getBytes()))
+                .one();
+
+        if (one == null) {
+            return R.fail("账号不存在! 请先注册");
+        } else if (!one.getUserStatus()) {
+            return R.fail("账号被冻结！");
+        } else if (StringUtils.hasText(one.getPassword()) &&
+                !DigestUtils.md5DigestAsHex(password.getBytes()).equals(one.getPassword())) {
+            return R.fail("账号/密码错误，请重新输入！");
+        }
+
+
+        String adminToken = "";
+        String userToken = "";
+
+        if (isAdmin) {
+            if (one.getUserType() != UserTypeEnum.ADMIN.code() && one.getUserType() != UserTypeEnum.DEV.code()) {
+                return R.fail("请输入管理员账号！");
+            }
+            if (qingSiCache.get(CommonConst.ADMIN_TOKEN + one.getId()) != null) {
+                adminToken = qingSiCache.get(CommonConst.ADMIN_TOKEN + one.getId());
+            }
+        } else {
+            if (qingSiCache.get(CommonConst.USER_TOKEN + one.getId()) != null) {
+                userToken = qingSiCache.get(CommonConst.USER_TOKEN + one.getId());
+            }
+        }
+
+        UUID.randomUUID().toString().replaceAll("-", "");
+        if (isAdmin && !StringUtils.hasText(adminToken)) {
+            LoginUserInfo userInfo = userConvert.convert(one);
+            jwtUtils.createToken(userInfo);
+            adminToken = CommonConst.ADMIN_ACCESS_TOKEN + uuid;
+
+            qingSiCache.put(adminToken, one, CommonConst.TOKEN_EXPIRE);
+            qingSiCache.put(CommonConst.ADMIN_TOKEN + one.getId(), adminToken, CommonConst.TOKEN_EXPIRE);
+        } else if (!isAdmin && !StringUtils.hasText(userToken)) {
+            String uuid = UUID.randomUUID().toString().replace("-", "");
+            userToken = CommonConst.USER_ACCESS_TOKEN + uuid;
+
             qingSiCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
             qingSiCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
         }
@@ -626,6 +706,14 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         return R.success(userVO);
     }
 
+
+    /**
+     * todo 订阅属于行为处理   behHandle
+     *
+     * @param labelId
+     * @param flag
+     * @return
+     */
     @Override
     public R<UserVO> subscribe(Integer labelId, Boolean flag) {
         UserVO userVO = null;
@@ -641,13 +729,13 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
                 updateById(user);
 
                 // 记录订阅行为
-                Behavior behavior = new Behavior();
-                behavior.setUserId(BlogUtil.getUserId());
-                behavior.setBizType(2); // 2表示标签类型
-                behavior.setBizId(labelId.longValue());
-                behavior.setBehaviorType(BehTypeEnums.SUBSCRIBE.code());
-                behavior.setCreateTime(LocalDateTime.now());
-                behaviorService.save(behavior);
+                BehaviorState behaviorState = new BehaviorState();
+                behaviorState.setUserId(BlogUtil.getUserId());
+                behaviorState.setBizType(BizTypeEnum.TAG.code()); // 2表示标签类型
+                behaviorState.setBizId(labelId.longValue());
+                behaviorState.setAction(BehActionType.SUBSCRIBE.code());
+                behaviorState.setCreateTime(LocalDateTime.now());
+                // behaviorLogService.save(behaviorState);
 
                 userVO = new UserVO();
                 BeanUtils.copyProperties(one, userVO);
@@ -664,13 +752,13 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
                 updateById(user);
 
                 // 记录取消订阅行为
-                Behavior behavior = new Behavior();
-                behavior.setUserId(BlogUtil.getUserId());
-                behavior.setBizType(2); // 2表示标签类型
-                behavior.setBizId(labelId.longValue());
-                behavior.setBehaviorType(BehTypeEnums.UNSUBSCRIBE.code());
-                behavior.setCreateTime(LocalDateTime.now());
-                behaviorService.save(behavior);
+                BehaviorState behaviorState = new BehaviorState();
+                behaviorState.setUserId(BlogUtil.getUserId());
+                behaviorState.setBizType(BizTypeEnum.TAG.code()); // 2表示标签类型
+                behaviorState.setBizId(labelId.longValue());
+                behaviorState.setAction(BehActionType.UN_SUBSCRIBE.code());
+                behaviorState.setCreateTime(LocalDateTime.now());
+                // behaviorLogService.save(behaviorState);
 
                 userVO = new UserVO();
                 BeanUtils.copyProperties(one, userVO);

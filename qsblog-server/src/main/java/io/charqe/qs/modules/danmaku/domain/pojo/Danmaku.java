@@ -28,4 +28,10 @@ public class Danmaku extends BaseDO {
     @TableField("message")
     private String message;
 
+    /**
+     * 创建人
+     */
+    @TableField("create_by")
+    private String createBy;
+
 }

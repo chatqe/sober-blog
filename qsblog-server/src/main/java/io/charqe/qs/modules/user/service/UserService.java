@@ -27,6 +27,8 @@ public interface UserService extends CoreService<User> {
      */
     R<UserVO> login(String account, String password, Boolean isAdmin);
 
+    R<UserVO> login2(String account, String password, Boolean isAdmin);
+
     R exit();
 
     R<UserVO> regist(UserVO user);

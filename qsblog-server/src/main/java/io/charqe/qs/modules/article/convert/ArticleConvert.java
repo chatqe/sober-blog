@@ -3,10 +3,6 @@ package io.charqe.qs.modules.article.convert;
 
 import io.charqe.qs.modules.article.controller.web.vo.ArticleVO;
 import io.charqe.qs.modules.article.domain.pojo.Article;
-import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
-import io.charqe.qs.modules.file.controller.admin.vo.FileRespVO;
-import io.charqe.qs.modules.file.domain.pojo.FileStorage;
-import org.checkerframework.checker.units.qual.A;
 import org.mapstruct.Mapper;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;

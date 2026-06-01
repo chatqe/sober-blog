@@ -26,16 +26,20 @@ public class Category extends BaseDO {
      */
     private Integer isShow;
 
+    /**
+     * 分类类型 1:普通分类 2:导航栏分类
+     */
+    private  Integer type;
 
     /**
      * 分类名称
      */
-    private String categoryName;
+    private String name;
 
     /**
      * 分类描述
      */
-    private String description;
+    private String desc;
 
     /**
      * 排序
@@ -52,6 +56,8 @@ public class Category extends BaseDO {
      * 最终修改人
      */
     private String updateBy;
+
+    private String createBy;
 
 
 }

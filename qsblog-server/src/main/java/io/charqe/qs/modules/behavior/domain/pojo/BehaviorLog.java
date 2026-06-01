@@ -1,22 +1,22 @@
 package io.charqe.qs.modules.behavior.domain.pojo;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 用户行为表
+ * 用户行为流水表
  *
  * @author Joy
- * @since 2026-01-16 22:08
+ * @since 2026-03-15 19:53
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("user_behavior")
-public class Behavior extends BaseDO {
-
+@TableName("behavior_log")
+public class BehaviorLog extends BaseDO {
     /**
      * 用户ID
      */
@@ -27,8 +27,8 @@ public class Behavior extends BaseDO {
     /**
      * 行为类型
      */
-    @TableField("behavior_type")
-    private Integer behaviorType;
+    @TableField("action")
+    private Integer action;
 
     /**
      * 业务ID
@@ -38,21 +38,14 @@ public class Behavior extends BaseDO {
     private Long bizId;
 
     /**
-     * 业务类型
+     * 业务主体类型
      */
     @TableField("biz_type")
     private Integer bizType;
 
     /**
-     * 用户IP
+     * 匿名标识（未登录用户：设备ID/Token）
      */
-    @TableField("ip")
-    private String ip;
-
-    /**
-     * 用户代理
-     */
-    @TableField("ua")
-    private String ua;
-
+    @TableField("guest_id")
+    private String guestId;
 }

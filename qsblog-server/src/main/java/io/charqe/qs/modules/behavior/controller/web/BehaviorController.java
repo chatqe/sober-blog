@@ -1,11 +1,7 @@
 package io.charqe.qs.modules.behavior.controller.web;
 
-import io.charqe.qs.common.model.R;
-import io.charqe.qs.modules.behavior.controller.web.dto.BehaviorReqDTO;
-import io.charqe.qs.modules.behavior.service.BehaviorService;
+import io.charqe.qs.modules.behavior.service.BehaviorLogService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,16 +20,16 @@ public class BehaviorController {
 
 
     @Resource
-    private BehaviorService behaviorService;
+    private BehaviorLogService behaviorLogService;
 
     /**
-     * 处理用户行为操作
+     * 保存用户行为操作
      *
      * @param dto 行为请求参数
      * @return 点赞结果
      */
-    @PostMapping("/handleBehavior")
-    public R handleBehavior(@RequestBody BehaviorReqDTO dto) {
-        return R.success(behaviorService.handleBehavior(dto));
-    }
+    // @PostMapping("/handleBeh")
+    // public R handleBehavior(@RequestBody BehDTO dto) {
+    //     return R.success(behaviorLogService.handleBeh(dto));
+    // }
 }

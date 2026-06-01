@@ -2,8 +2,7 @@ package io.charqe.qs.modules.file.service;
 
 import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.modules.file.domain.dao.FileBizRelationMapper;
-import io.charqe.qs.modules.file.domain.pojo.FileBizRelation;
-import io.charqe.qs.modules.file.service.FileBizRelationService;
+import io.charqe.qs.modules.file.domain.pojo.FileBizRef;
 import org.springframework.stereotype.Service;
 
 /**
@@ -13,6 +12,6 @@ import org.springframework.stereotype.Service;
  * @since 2026-01-16 22:08
  */
 @Service
-public class FileBizRelationServiceImpl extends CoreServiceImpl<FileBizRelationMapper, FileBizRelation> implements FileBizRelationService {
+public class FileBizRefServiceImpl extends CoreServiceImpl<FileBizRelationMapper, FileBizRef> implements FileBizRefService {
 
 }
