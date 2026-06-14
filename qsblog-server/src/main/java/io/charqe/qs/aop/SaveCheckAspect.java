@@ -12,11 +12,12 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.TimeUnit;
 
 
 @Aspect
@@ -27,6 +28,9 @@ public class SaveCheckAspect {
 
     @Resource
     private QingSiCache qingSiCache;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @Around("@annotation(saveCheck)")
     public Object around(ProceedingJoinPoint joinPoint, SaveCheck saveCheck) throws Throwable {
@@ -40,28 +44,27 @@ public class SaveCheckAspect {
                     return joinPoint.proceed();
                 }
 
-                AtomicInteger atomicInteger = JSON.parseObject(qingSiCache.get(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString()), AtomicInteger.class);
-                if (atomicInteger == null) {
-                    atomicInteger = new AtomicInteger();
-                    qingSiCache.put(CommonConst.SAVE_COUNT_USER_ID + user.getId().toString(), atomicInteger, CommonConst.SAVE_EXPIRE);
+                String userKey = CommonConst.SAVE_COUNT_USER_ID + user.getId().toString();
+                Long userIdCount = stringRedisTemplate.opsForValue().increment(userKey, 1);
+                // 首次设置过期时间（24小时）
+                if (userIdCount != null && userIdCount == 1) {
+                    stringRedisTemplate.expire(userKey, CommonConst.SAVE_EXPIRE, TimeUnit.SECONDS);
                 }
-                int userIdCount = atomicInteger.getAndIncrement();
-                if (userIdCount >= CommonConst.SAVE_MAX_COUNT) {
-                    log.info("用户保存超限：" + user.getId().toString() + "，次数：" + userIdCount);
+                if (userIdCount != null && userIdCount > CommonConst.SAVE_MAX_COUNT) {
+                    log.info("用户保存超限：{}，次数：{}", user.getId(), userIdCount);
                     flag = true;
                 }
             }
         }
 
         String ip = IPUtil.getRealIp(IPUtil.getRequest());
-        AtomicInteger atomic = JSON.parseObject(qingSiCache.get(CommonConst.SAVE_COUNT_IP + ip), AtomicInteger.class);
-        if (atomic == null) {
-            atomic = new AtomicInteger();
-            qingSiCache.put(CommonConst.SAVE_COUNT_IP + ip, atomic, CommonConst.SAVE_EXPIRE);
+        String ipKey = CommonConst.SAVE_COUNT_IP + ip;
+        Long ipCount = stringRedisTemplate.opsForValue().increment(ipKey, 1);
+        if (ipCount != null && ipCount == 1) {
+            stringRedisTemplate.expire(ipKey, CommonConst.SAVE_EXPIRE, TimeUnit.SECONDS);
         }
-        int ipCount = atomic.getAndIncrement();
-        if (ipCount > CommonConst.SAVE_MAX_COUNT) {
-            log.info("IP保存超限：" + ip + "，次数：" + ipCount);
+        if (ipCount != null && ipCount > CommonConst.SAVE_MAX_COUNT) {
+            log.info("IP保存超限：{}，次数：{}", ip, ipCount);
             flag = true;
         }
 

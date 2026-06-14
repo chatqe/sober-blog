@@ -1,7 +1,6 @@
 package io.charqe.qs.aop;
 
 import com.alibaba.fastjson2.JSON;
-import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.enums.CodeMsg;
 import io.charqe.qs.modules.user.enums.UserTypeEnum;
@@ -46,13 +45,12 @@ public class LoginCheckAspect {
 
         if (token.contains(CommonConst.USER_ACCESS_TOKEN)) {
             if (loginCheck.value() == UserTypeEnum.ADMIN.code() || loginCheck.value() == UserTypeEnum.DEV.code()) {
-                return R.fail("请输入管理员账号！");
+                throw new LoginException("请输入管理员账号！");
             }
         } else if (token.contains(CommonConst.ADMIN_ACCESS_TOKEN)) {
-            // log.info("请求IP：" + BlogUtil.getIpAddr(BlogUtil.getRequest()));
-            log.info("请求IP：" + IPUtil.getRealIp(IPUtil.getRequest()));
+            log.debug("管理员请求IP：{}", IPUtil.getRealIp(IPUtil.getRequest()));
             if (loginCheck.value() == UserTypeEnum.ADMIN.code() && user.getId().intValue() != CommonConst.ADMIN_USER_ID) {
-                return R.fail("请输入管理员账号！");
+                throw new LoginException("请输入管理员账号！");
             }
         } else {
             throw new LoginException(CodeMsg.NOT_LOGIN.getMsg());

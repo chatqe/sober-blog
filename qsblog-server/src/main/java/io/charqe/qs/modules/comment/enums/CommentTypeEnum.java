@@ -1,44 +1,43 @@
 package io.charqe.qs.modules.comment.enums;
 
 import io.charqe.qs.common.enums.BaseEnum;
-import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 评论类型枚举
+ * 评论类型枚举（与Comment.bizType对应）
  *
  * @author system
  * @since 2026-01-17
  */
-public enum CommentTypeEnum implements BaseEnum<String> {
+public enum CommentTypeEnum implements BaseEnum<Integer> {
     /**
      * 文章评论
      */
-    ARTICLE("article", "文章评论"),
-    
+    ARTICLE(1, "文章评论"),
+
     /**
      * 树洞留言
      */
-    MESSAGE("message", "树洞留言"),
-    
+    MESSAGE(2, "树洞留言"),
+
     /**
      * 表白墙留言
      */
-    LOVE("love", "表白墙留言");
+    LOVE(3, "表白墙留言");
 
-    private final String code;
+    private final Integer code;
     private final String desc;
 
-    CommentTypeEnum(String code, String desc) {
+    CommentTypeEnum(Integer code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
     @Override
-    public String code() {
+    public Integer code() {
         return code;
     }
 
@@ -53,12 +52,12 @@ public enum CommentTypeEnum implements BaseEnum<String> {
      * @param code 编码
      * @return 枚举实例，若不存在则返回null
      */
-    public static CommentTypeEnum getByCode(String code) {
-        if (!StringUtils.hasText(code)) {
+    public static CommentTypeEnum getByCode(Integer code) {
+        if (code == null) {
             return null;
         }
         return Arrays.stream(values())
-                .filter(enumItem -> enumItem.code.equalsIgnoreCase(code))
+                .filter(enumItem -> enumItem.code.equals(code))
                 .findFirst()
                 .orElse(null);
     }
@@ -70,7 +69,7 @@ public enum CommentTypeEnum implements BaseEnum<String> {
      * @return 枚举实例，若不存在则返回null
      */
     public static CommentTypeEnum getByDesc(String desc) {
-        if (!StringUtils.hasText(desc)) {
+        if (desc == null || desc.isEmpty()) {
             return null;
         }
         return Arrays.stream(values())
@@ -85,7 +84,7 @@ public enum CommentTypeEnum implements BaseEnum<String> {
      * @param code 编码
      * @return true 有效，false 无效
      */
-    public static boolean isValid(String code) {
+    public static boolean isValid(Integer code) {
         return getByCode(code) != null;
     }
 
@@ -94,7 +93,7 @@ public enum CommentTypeEnum implements BaseEnum<String> {
      *
      * @return 枚举映射
      */
-    public static Map<String, String> getEnumMap() {
+    public static Map<Integer, String> getEnumMap() {
         return Arrays.stream(values())
                 .collect(Collectors.toMap(CommentTypeEnum::code, CommentTypeEnum::desc));
     }

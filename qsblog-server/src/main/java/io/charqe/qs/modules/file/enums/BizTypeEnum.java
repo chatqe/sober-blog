@@ -71,6 +71,32 @@ public enum BizTypeEnum implements BaseEnum<Integer> {
     }
 
     /**
+     * 根据编码获取描述
+     *
+     * @param code 编码
+     * @return 描述，若不存在则返回null
+     */
+    public static String getDescByCode(Integer code) {
+        BizTypeEnum bizTypeEnum = getByCode(code);
+        return bizTypeEnum == null ? null : bizTypeEnum.desc;
+    }
+
+    /**
+     * 根据描述获取编码
+     *
+     * @param desc 描述
+     * @return 编码，若不存在则返回null
+     */
+    public static Integer getCodeByDesc(String desc) {
+        for (BizTypeEnum value : values()) {
+            if (value.desc.equals(desc)) {
+                return value.code;
+            }
+        }
+        return null;
+    }
+
+    /**
      * 验证编码是否有效
      *
      * @param code 编码

@@ -27,9 +27,9 @@ import io.charqe.qs.modules.article.convert.ArticleConvert;
 import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
 import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.article.enums.ArticleIErrorCode;
-import io.charqe.qs.modules.behavior.domain.pojo.BehaviorState;
-import io.charqe.qs.modules.behavior.enums.BehActionType;
-import io.charqe.qs.modules.behavior.service.BehaviorLogService;
+import io.charqe.qs.modules.behavior.service.BehaviorStateService;
+import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
+import io.charqe.qs.modules.behavior.service.like.LikeService;
 import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
 import io.charqe.qs.modules.category.domain.pojo.Category;
 import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
@@ -89,7 +89,10 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
 
     @Resource
-    private BehaviorLogService behaviorLogService;
+    private LikeService likeService;
+
+    @Resource
+    private BehaviorStateService behaviorStateService;
 
     @Value("${user.subscribe.format}")
     private String subscribeFormat;
@@ -444,26 +447,18 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             Boolean hasLike = qingSiCache.hasHashKey(CommonConst.USER_LIKES.concat(dto.getArticleId().toString()), dto.getUserId().toString());
             // 点赞
             if (dto.getOperation() == 1 && !hasLike) {
-                // 新增点赞行为记录
-                BehaviorState behaviorState = new BehaviorState();
-                behaviorState.setUserId(dto.getUserId());
-                behaviorState.setBizType(BizTypeEnum.ARTICLE.code()); // 1表示文章类型
-                behaviorState.setBizId(dto.getArticleId());
-                behaviorState.setAction(BehActionType.LIKE.code());
-                behaviorState.setCreateTime(LocalDateTime.now());
-                behaviorLogService.save(behaviorState);
+                BehDTO behDTO = new BehDTO();
+                behDTO.setBizId(dto.getArticleId());
+                behDTO.setBizType(BizTypeEnum.ARTICLE.code());
+                likeService.like(behDTO, dto.getUserId());
             }
             // 取消点赞
             if (dto.getOperation() == 0 && hasLike) {
                 qingSiCache.delHashKey(CommonConst.USER_LIKES.concat(dto.getArticleId().toString()), dto.getUserId().toString());
-                // 新增取消点赞行为记录
-                BehaviorState behaviorState = new BehaviorState();
-                behaviorState.setUserId(dto.getUserId());
-                behaviorState.setBizType(BizTypeEnum.ARTICLE.code()); // 1表示文章类型
-                behaviorState.setBizId(dto.getArticleId());
-                behaviorState.setAction(BehActionType.UN_LIKE.code());
-                behaviorState.setCreateTime(LocalDateTime.now());
-                behaviorLogService.save(behaviorState);
+                BehDTO behDTO = new BehDTO();
+                behDTO.setBizId(dto.getArticleId());
+                behDTO.setBizType(BizTypeEnum.ARTICLE.code());
+                likeService.unlike(behDTO, dto.getUserId());
 
                 this.update(Wrappers.<Article>lambdaUpdate().
                         eq(Article::getId, dto.getArticleId())
@@ -494,16 +489,17 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             throw new ServiceException("文章不存在");
         }
         Long userId = BlogUtil.getUserId();
-
-        BehaviorState one = behaviorLogService.getOne(Wrappers.<BehaviorState>lambdaQuery()
-                .eq(BehaviorState::getUserId, userId)
-                .eq(BehaviorState::getBizId, Long.valueOf(articleId))
-                .eq(BehaviorState::getBizType, BizTypeEnum.ARTICLE.name()) // 1表示文章类型
-                .eq(BehaviorState::getAction, BehActionType.LIKE.name()));
-        if (Objects.nonNull(one)) {
-            return true;
+        if (userId == null) {
+            return false;
         }
-        return false;
+        // 通过行为状态表判断用户是否已点赞
+        return behaviorStateService.lambdaQuery()
+                .eq(io.charqe.qs.modules.behavior.domain.pojo.BehaviorState::getUserId, userId)
+                .eq(io.charqe.qs.modules.behavior.domain.pojo.BehaviorState::getBizId, Long.valueOf(articleId))
+                .eq(io.charqe.qs.modules.behavior.domain.pojo.BehaviorState::getBizType, BizTypeEnum.ARTICLE.code())
+                .eq(io.charqe.qs.modules.behavior.domain.pojo.BehaviorState::getAction, io.charqe.qs.modules.behavior.enums.BehActionType.LIKE.code())
+                .eq(io.charqe.qs.modules.behavior.domain.pojo.BehaviorState::getStatus, 1)
+                .count() > 0;
     }
 
     @Override

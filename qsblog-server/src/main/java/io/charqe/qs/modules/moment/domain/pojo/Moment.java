@@ -30,6 +30,16 @@ public class Moment extends BaseDO {
     private String content;
 
     /**
+     * 动态类型：friend-朋友圈 news-新闻动态
+     */
+    private String type;
+
+    /**
+     * 来源ID（如新闻动态关联的文章ID）
+     */
+    private Long source;
+
+    /**
      * 图片/视频等文件JSON
      */
     private String fileJson;

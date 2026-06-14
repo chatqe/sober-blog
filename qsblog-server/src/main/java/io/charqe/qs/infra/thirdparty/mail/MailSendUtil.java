@@ -40,20 +40,20 @@ public class MailSendUtil {
     public void sendCommentMail(CommentVO commentVO, Article one, CommentService commentService) {
         List<String> mail = new ArrayList<>();
         String toName = "";
-        if (commentVO.getParentUserId() != null) {
-            User user = commonQuery.getUser(commentVO.getParentUserId());
+        if (commentVO.getReplyToUserId() != null) {
+            User user = commonQuery.getUser(commentVO.getReplyToUserId());
             if (user != null && !user.getId().equals(BlogUtil.getUserId()) && StringUtils.hasText(user.getEmail())) {
                 toName = user.getUsername();
                 mail.add(user.getEmail());
             }
         } else {
-            if (CommentTypeEnum.MESSAGE.code().equals(commentVO.getType()) ||
-                    CommentTypeEnum.LOVE.code().equals(commentVO.getType())) {
+            if (CommentTypeEnum.MESSAGE.code().equals(commentVO.getBizType()) ||
+                    CommentTypeEnum.LOVE.code().equals(commentVO.getBizType())) {
                 User adminUser = BlogUtil.getAdminUser();
                 if (StringUtils.hasText(adminUser.getEmail()) && !Objects.equals(BlogUtil.getUserId(), adminUser.getId())) {
                     mail.add(adminUser.getEmail());
                 }
-            } else if (CommentTypeEnum.ARTICLE.code().equals(commentVO.getType())) {
+            } else if (CommentTypeEnum.ARTICLE.code().equals(commentVO.getBizType())) {
                 User user = commonQuery.getUser(one.getUserId());
                 if (user != null && StringUtils.hasText(user.getEmail()) && !user.getId().equals(BlogUtil.getUserId())) {
                     mail.add(user.getEmail());
@@ -63,14 +63,14 @@ public class MailSendUtil {
 
         if (!CollectionUtils.isEmpty(mail)) {
             String sourceName = "";
-            if (CommentTypeEnum.ARTICLE.code().equals(commentVO.getType())) {
+            if (CommentTypeEnum.ARTICLE.code().equals(commentVO.getBizType())) {
                 sourceName = one.getArticleTitle();
             }
-            String commentMail = getCommentMail(commentVO.getType(), sourceName,
+            String commentMail = getCommentMail(commentVO.getBizType(), sourceName,
                     BlogUtil.getUsername(),
-                    commentVO.getCommentContent(),
+                    commentVO.getContent(),
                     toName,
-                    commentVO.getParentCommentId(), commentService);
+                    commentVO.getParentId(), commentService);
 
             // AtomicInteger count = (AtomicInteger) PoetryCache.get(CommonConst.COMMENT_IM_MAIL + mail.get(0));
             AtomicInteger count = JSON.parseObject(qingSiCache.get(CommonConst.COMMENT_IM_MAIL + mail.get(0)), AtomicInteger.class);
@@ -92,7 +92,7 @@ public class MailSendUtil {
      * fromName：评论人
      * toName：被评论人
      */
-    private String getCommentMail(String commentType, String source, String fromName, String fromContent, String toName, Long toCommentId, CommentService commentService) {
+    private String getCommentMail(Integer commentType, String source, String fromName, String fromContent, String toName, Long toCommentId, CommentService commentService) {
         // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
         String webName = (webInfo == null ? "youngwanton" : webInfo.getWebName());
@@ -101,9 +101,9 @@ public class MailSendUtil {
         String toMail = "";
         if (StringUtils.hasText(toName)) {
             mailType = String.format(MailUtil.replyMail, fromName);
-            Comment toComment = commentService.lambdaQuery().select(Comment::getCommentContent).eq(Comment::getId, toCommentId).one();
+            Comment toComment = commentService.lambdaQuery().select(Comment::getContent).eq(Comment::getId, toCommentId).one();
             if (toComment != null) {
-                toMail = String.format(MailUtil.originalText, toName, toComment.getCommentContent());
+                toMail = String.format(MailUtil.originalText, toName, toComment.getContent());
             }
         } else {
             if (CommentTypeEnum.MESSAGE.code().equals(commentType)) {

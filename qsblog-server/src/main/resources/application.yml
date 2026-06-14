@@ -45,9 +45,17 @@ spring:
   profiles:
     active: dev
 
+# JWT 配置
+jwt:
+  secret: ${QS_JWT_SECRET}  # Base64编码的256位密钥，通过环境变量配置
+
+# AES 加密配置
+crypto:
+  aes-key: ${QS_AES_KEY}  # AES加密密钥，通过环境变量配置
+
 # baidu api 配置
 baidu:
-  ak: "8ZzlJzkuVMNxoauwcCDYt9IMxOwebhep"  # 替换为你自己的 API Key
+  ak: ${QS_BAIDU_AK}  # 百度地图API Key，通过环境变量配置
   url:
     ip-location: "http://api.map.baidu.com/location/ip"
 

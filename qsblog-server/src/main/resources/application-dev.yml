@@ -24,8 +24,8 @@
 spring:
   mail:
     host: smtp.qq.com
-    username: 918906714@qq.com
-    password: hrbrcvqrbcvubbde
+    username: ${QS_MAIL_USERNAME:918906714@qq.com}
+    password: ${QS_MAIL_PASSWORD}
     sender-name: "青肆博客"
     default-encoding: utf-8
     protocol: smtp
@@ -40,14 +40,14 @@ spring:
             enable: true
 
   redis:
-    #    host: 192.168.30.100
-    #    port: 6379
-    #    database: 8
-    #    password: daxiongroot
-    host: 115.190.22.240
+    host: 192.168.30.100
     port: 6379
     database: 8
-    password: daxiongroot
+    password: ${QS_REDIS_PASSWORD}
+#    host: 115.190.22.240
+#    port: 6379
+#    database: 8
+#    password: ${QS_REDIS_PASSWORD}
     timeout: 2s                # 命令超时
     connect-timeout: 2s        # 建立连接超时
     ssl: false
@@ -68,10 +68,10 @@ spring:
           period: 30s
 
   datasource:
-    username: root
-    password: daxiongroot
-    #    url: jdbc:mysql://192.168.30.100:3306/poetize?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    url: jdbc:mysql://115.190.22.240:3306/qingsi?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: ${QS_DB_USERNAME:root}
+    password: ${QS_DB_PASSWORD}
+    url: jdbc:mysql://192.168.30.100:3309/qingsi?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+#    url: jdbc:mysql://115.190.22.240:3306/qingsi?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
     #    type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
     # Druid 数据源专有配置
@@ -107,8 +107,8 @@ local:
 
 qiniu:
   enable: true
-  accessKey: j1zZHKcq4AXt7_mxWJT61-z3f6jHiNs98QCdcuH2
-  secretKey: 676CvJ7NYNwOLoqkSnfK5Fc_7X-xW9GTmKle2dPs
+  accessKey: ${QS_QINIU_AK}
+  secretKey: ${QS_QINIU_SK}
   bucket: pb-buckets
   downloadUrl: "https://cdn.youngwanton.top/" # 返回前端用的 CDN 域名
   pipeline: default.sys  # 私有队列可提速

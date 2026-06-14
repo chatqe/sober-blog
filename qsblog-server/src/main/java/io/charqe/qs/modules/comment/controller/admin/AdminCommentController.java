@@ -54,14 +54,14 @@ public class AdminCommentController {
     public R userDeleteComment(
         @Parameter(name = "id", description = "评论ID", required = true, example = "1")
         @RequestParam("id") Integer id) {
-        Comment comment = commentService.lambdaQuery().select(Comment::getSource, Comment::getType).eq(Comment::getId, id).one();
+        Comment comment = commentService.lambdaQuery().select(Comment::getBizId, Comment::getBizType).eq(Comment::getId, id).one();
         if (comment == null) {
             return R.success();
         }
-        if (!CommentTypeEnum.ARTICLE.code().equals(comment.getType())) {
+        if (!CommentTypeEnum.ARTICLE.code().equals(comment.getBizType())) {
             return R.fail("权限不足！");
         }
-        Article one = articleService.lambdaQuery().eq(Article::getId, comment.getSource()).select(Article::getUserId).one();
+        Article one = articleService.lambdaQuery().eq(Article::getId, comment.getBizId()).select(Article::getUserId).one();
         if (one == null || (BlogUtil.getUserId().intValue() != one.getUserId().intValue())) {
             return R.fail("权限不足！");
         }

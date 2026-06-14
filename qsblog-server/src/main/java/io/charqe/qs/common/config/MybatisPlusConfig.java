@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerIntercept
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
  * MyBatisPlus配置
@@ -26,6 +28,11 @@ public class MybatisPlusConfig {
         paginationInnerInterceptor.setOverflow(true);
         interceptor.addInnerInterceptor(paginationInnerInterceptor);
         return interceptor;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
 

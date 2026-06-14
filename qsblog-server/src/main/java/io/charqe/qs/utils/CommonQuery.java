@@ -17,6 +17,7 @@ import io.charqe.qs.modules.comment.domain.pojo.Comment;
 import io.charqe.qs.modules.family.controller.web.vo.FamilyVO;
 import io.charqe.qs.modules.family.domain.dao.FamilyMapper;
 import io.charqe.qs.modules.family.domain.pojo.Family;
+import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
 import io.charqe.qs.modules.tag.domain.dao.TagMapper;
 import io.charqe.qs.modules.tag.domain.pojo.Tag;
 import io.charqe.qs.modules.user.domain.pojo.User;
@@ -241,16 +242,46 @@ public class CommonQuery {
         }
     }
 
-    public Integer getCommentCount(Long source, String type) {
-        // Integer count = (Integer) PoetryCache.get(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type);
-        Integer count = JSON.parseObject(qingSiCache.get(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type), Integer.class);
+
+    /**
+     * 获取内容实体评论数（Integer类型编码，推荐使用）
+     *
+     * @param bizId   业务主键ID
+     * @param bizType 评论类型编码（CommentTypeEnum）
+     * @return 评论数
+     */
+    public Integer getCommentCount(Long bizId, Integer bizType) {
+        return getCommentCount(bizId, String.valueOf(bizType));
+    }
+
+    /**
+     * 获取内容实体评论数（String类型编码）
+     *
+     * @param bizId 业务主键ID
+     * @param type  评论类型（可以是编码数字字符串或描述）
+     * @return 评论数
+     */
+    public Integer getCommentCount(Long bizId, String type) {
+        Integer count = JSON.parseObject(qingSiCache.get(CommonConst.COMMENT_COUNT_CACHE + bizId + "_" + type), Integer.class);
         if (count != null) {
             return count;
         }
+        // 尝试解析为Integer编码，或通过描述查找
+        Integer bizType;
+        try {
+            bizType = Integer.parseInt(type);
+        } catch (NumberFormatException e) {
+            CommentTypeEnum cte = CommentTypeEnum.getByDesc(type);
+            bizType = cte != null ? cte.code() : null;
+        }
+        if (bizType == null) {
+            return 0;
+        }
         LambdaQueryChainWrapper<Comment> wrapper = new LambdaQueryChainWrapper<>(commentMapper);
-        Integer c = Math.toIntExact(wrapper.eq(Comment::getSource, source).eq(Comment::getType, type).count());
-        // PoetryCache.put(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type, c, CommonConst.EXPIRE);
-        qingSiCache.put(CommonConst.COMMENT_COUNT_CACHE + source.toString() + "_" + type, c, CommonConst.EXPIRE);
+        Integer c = Math.toIntExact(wrapper.eq(Comment::getBizId, bizId)
+                .eq(Comment::getBizType, bizType)
+                .eq(Comment::getIsDel, Boolean.FALSE).count());
+        qingSiCache.put(CommonConst.COMMENT_COUNT_CACHE + bizId + "_" + type, c, CommonConst.EXPIRE);
         return c;
     }
 

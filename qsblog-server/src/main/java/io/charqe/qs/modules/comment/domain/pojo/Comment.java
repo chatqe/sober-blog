@@ -2,9 +2,12 @@ package io.charqe.qs.modules.comment.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.time.LocalDateTime;
 
 /**
  * *
@@ -97,5 +100,25 @@ public class Comment extends BaseDO {
      */
     private Integer childCnt;
 
-}
+    /**
+     * 内容SHA256，防刷评
+     */
+    private String contentHash;
 
+    /**
+     * 乐观锁版本号
+     */
+    @Version
+    private Integer version;
+
+    /**
+     * 审核人ID
+     */
+    private Long moderatorId;
+
+    /**
+     * 审核时间
+     */
+    private LocalDateTime moderateTime;
+
+}

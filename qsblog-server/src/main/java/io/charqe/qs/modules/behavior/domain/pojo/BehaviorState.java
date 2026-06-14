@@ -18,6 +18,11 @@ import java.time.LocalDateTime;
 @TableName("behavior_state")
 public class BehaviorState {
 
+    /** 行为状态：正常 */
+    public static final int BEH_ACTIVE = 1;
+    /** 行为状态：已取消 */
+    public static final int BEH_CANCELLED = 2;
+
     /**
      * 主键（自增）
      */

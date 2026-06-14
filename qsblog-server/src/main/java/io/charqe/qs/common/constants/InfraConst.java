@@ -40,7 +40,7 @@ public final class InfraConst {
     public static final int  TREE_HOLE_COMMENT_SOURCE = 0;
 
     /* ====================== 加密 / 邮件前缀 ====================== */
-    public static final String CRYPOTJS_KEY           = "huo!!!jiuzhegeya";
+    public static String CRYPOTJS_KEY                  = ""; // 由CryptoConfig注入
     public static final String COMMENT_MAIL           = "comment_mail_";
     public static final String CODE_MAIL              = "code_mail_";
     public static final String CAPTCHA_PREFIX         = "captcha_prefix";

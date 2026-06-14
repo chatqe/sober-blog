@@ -5,15 +5,15 @@ import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-/**
+/**geng
  * *
- *
+ * 
  * @author Joy
  * @since 2026-01-17 10:47
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("tree_hole")
+@TableName("danmaku")
 public class Danmaku extends BaseDO {
 
     /**

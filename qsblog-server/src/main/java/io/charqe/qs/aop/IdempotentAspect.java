@@ -77,10 +77,12 @@ public class IdempotentAspect {
         }
         // SpEL 编译器，负责把字符串公式变成可运行的代码对象
         ExpressionParser parser = new SpelExpressionParser();
-        // 拿到key 的维度值
-        // String dimension = parser.parseExpression(idem.key()).getValue(ctx, String.class);
-        // String dimension = parser.parseExpression("ip").getValue(ctx, String.class);
-        String dimension = parser.parseExpression("#ip").getValue(ctx, String.class); //
+        // 使用注解中配置的 key() 表达式，默认为 "#ip"
+        String spelExpression = idem.key();
+        if (spelExpression == null || spelExpression.isEmpty()) {
+            spelExpression = "#ip";
+        }
+        String dimension = parser.parseExpression(spelExpression).getValue(ctx, String.class);
         // key：前缀:方法名:维度值  例：idempotent:createOrder:123456
         return String.join(":", PREFIX, ms.getName(), dimension);
     }

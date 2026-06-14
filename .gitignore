@@ -12,6 +12,8 @@
 *.iws
 .idea/
 
+
+
 # Maven
 target/
 
@@ -40,3 +42,9 @@ log/
 temp/
 **/deprecated.txt
 **/jdk-internals.txt
+
+# Environment variables files
+.env
+.env.local
+.env.*.local
+!.env.example

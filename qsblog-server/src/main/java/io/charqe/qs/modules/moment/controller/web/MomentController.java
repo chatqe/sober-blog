@@ -92,7 +92,7 @@ public class MomentController {
         Moment moment = new Moment();
         moment.setUserId(userId);
         moment.setContent(momentVO.getContent());
-        moment.setIsPublic(Boolean.TRUE);
+        moment.setIsPublic(VisibilityEnum.PUBLIC.code());
         moment.setSource(momentVO.getSource());
         moment.setCreateTime(momentVO.getCreateTime());
         moment.setType(CommonConst.MOMENT_TYPE_NEWS);
@@ -105,12 +105,12 @@ public class MomentController {
      */
     @PostMapping("/listNews")
     public R<BaseReqVO> listNews(@RequestBody BaseReqVO baseReqVO) {
-        if (baseReqVO.getSource() == null) {
+        if (baseReqVO.getBizId() == null) {
             return R.fail("来源不能为空！");
         }
         LambdaQueryChainWrapper<Moment> lambdaQuery = momentService.lambdaQuery();
         lambdaQuery.eq(Moment::getType, CommonConst.MOMENT_TYPE_NEWS);
-        lambdaQuery.eq(Moment::getSource, baseReqVO.getSource());
+        lambdaQuery.eq(Moment::getSource, baseReqVO.getBizId());
         lambdaQuery.eq(Moment::getIsPublic, VisibilityEnum.PUBLIC.code());
 
         lambdaQuery.orderByDesc(Moment::getCreateTime).page(baseReqVO);

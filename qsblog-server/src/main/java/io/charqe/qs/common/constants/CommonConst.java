@@ -148,9 +148,9 @@ public class CommonConst {
     public static final String ADMIRE = "admire";
 
     /**
-     * 密钥
+     * AES加密密钥（由CryptoConfig从配置文件注入，不再硬编码）
      */
-    public static final String CRYPOTJS_KEY = "huo!!!jiuzhegeya";
+    public static String CRYPOTJS_KEY = "";
 
     /**
      * 根据用户ID获取用户信息

@@ -5,8 +5,7 @@ import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.enums.CodeMsg;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
-import io.charqe.qs.modules.behavior.enums.BehActionType;
-import io.charqe.qs.modules.behavior.service.BehaviorStateService;
+import io.charqe.qs.modules.behavior.service.subscribe.SubscribeService;
 import io.charqe.qs.modules.file.enums.BizTypeEnum;
 import io.charqe.qs.modules.tag.domain.dao.TagMapper;
 import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
@@ -60,7 +59,7 @@ public class CategoryTagController {
     private QingSiCache qingSiCache;
 
     @Resource
-    private BehaviorStateService behaviorStateService;
+    private SubscribeService subscribeService;
 
     /**
      * 获取分类标签信息
@@ -100,14 +99,16 @@ public class CategoryTagController {
         if (Objects.isNull(userInfo)||Objects.isNull(userInfo.getId())) {
             return R.fail(CodeMsg.NOT_LOGIN);
         }
-        // return userService.subscribe(labelId, flag);
-        BehDTO behDTO = new BehDTO();
-        behDTO.setUserId(userInfo.getId());
-        behDTO.setBizId(labelId.longValue());
-        behDTO.setBizType(BizTypeEnum.CATEGORY.code());
-        behDTO.setAction(Boolean.TRUE.equals(flag) ? BehActionType.SUBSCRIBE.code() : BehActionType.UN_SUBSCRIBE.code());
-        behaviorStateService.handleBeh(behDTO,flag);
-        return null;
+        // 使用统一行为服务处理订阅
+        BehDTO dto = new BehDTO();
+        dto.setBizId(labelId.longValue());
+        dto.setBizType(BizTypeEnum.CATEGORY.code());
+        if (Boolean.TRUE.equals(flag)) {
+            subscribeService.subscribe(dto, userInfo.getId());
+        } else {
+            subscribeService.unsubscribe(dto, userInfo.getId());
+        }
+        return R.success();
     }
 
 
@@ -117,7 +118,7 @@ public class CategoryTagController {
     @PostMapping("/save")
     @LoginCheck(0)
     public R saveCategory(@RequestBody Category category) {
-        if (!StringUtils.hasText(category.getCategoryName()) || !StringUtils.hasText(category.getDescription())) {
+        if (!StringUtils.hasText(category.getName()) || !StringUtils.hasText(category.getDesc())) {
             return R.fail("分类名称和分类描述不能为空！");
         }
 

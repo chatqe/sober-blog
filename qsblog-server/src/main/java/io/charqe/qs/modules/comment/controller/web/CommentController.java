@@ -66,16 +66,15 @@ public class CommentController {
     @LoginCheck
     @SaveCheck
     public R saveComment(
-        @Parameter(name = "commentVO", description = "评论信息对象", required = true, example = "{\"commentContent\":\"测试评论\",\"source\":1,\"type\":\"article\"}")
+        @Parameter(name = "commentVO", description = "评论信息对象", required = true, example = "{\"content\":\"测试评论\",\"bizId\":1,\"bizType\":1}")
         @Validated @RequestBody CommentVO commentVO) {
-        String content = StrUtil.removeHtml(commentVO.getCommentContent());
+        String content = StrUtil.removeHtml(commentVO.getContent());
         if (!StringUtils.hasText(content)) {
             return R.fail("评论内容不合法！");
         }
-        commentVO.setCommentContent(content);
+        commentVO.setContent(content);
 
-        // PoetryCache.remove(CommonConst.COMMENT_COUNT_CACHE + commentVO.getSource().toString() + "_" + commentVO.getType());
-        qingSiCache.del(CommonConst.COMMENT_COUNT_CACHE + commentVO.getSource().toString() + "_" + commentVO.getType());
+        qingSiCache.del(CommonConst.COMMENT_COUNT_CACHE + commentVO.getBizId().toString() + "_" + commentVO.getBizType());
         return commentService.saveComment(commentVO);
     }
 
@@ -122,11 +121,11 @@ public class CommentController {
     })
     @GetMapping("/getCount")
     public R<Integer> getCommentCount(
-        @Parameter(name = "source", description = "来源ID，如文章ID、树洞ID等", required = true, example = "1") 
-        @RequestParam("source") Long source,
-        @Parameter(name = "type", description = "来源类型，如article、treehole等", required = true, example = "article") 
+        @Parameter(name = "bizId", description = "来源ID，如文章ID、树洞ID等", required = true, example = "1")
+        @RequestParam("bizId") Long bizId,
+        @Parameter(name = "type", description = "来源类型，如article、treehole等", required = true, example = "article")
         @RequestParam("type") String type) {
-        return R.success(commonQuery.getCommentCount(source, type));
+        return R.success(commonQuery.getCommentCount(bizId, type));
     }
 
 

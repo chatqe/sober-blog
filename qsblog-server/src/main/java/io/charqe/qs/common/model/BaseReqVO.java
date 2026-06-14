@@ -10,11 +10,11 @@ public class BaseReqVO extends Page {
 
     private boolean desc = true;
 
-    private Integer source;
+    private Long bizId;
 
     private String commentType;
 
-    private Integer floorCommentId;
+    private Long rootId;
 
     private String searchKey;
 
