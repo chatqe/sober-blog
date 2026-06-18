@@ -127,7 +127,6 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         article.setUserId(BlogUtil.getUserId());
         save(article);
 
-        // PoetryCache.remove(CommonConst.SORT_INFO);
         qingSiCache.del(CommonConst.SORT_INFO);
 
         try {
@@ -142,7 +141,6 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                     LambdaQueryChainWrapper<Tag> wrapper = new LambdaQueryChainWrapper<>(tagMapper);
                     Tag tag = wrapper.select(Tag::getName).eq(Tag::getId, articleVO.getLabelId()).one();
                     String text = getSubscribeMail(tag.getName(), articleVO.getArticleTitle());
-                    // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
                     WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
                     mailUtil.sendMailMessage(emails, "您有一封来自" + (webInfo == null ? "青肆" : webInfo.getWebName()) + "的回执！", text);
                 }
@@ -154,7 +152,6 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
     }
 
     private String getSubscribeMail(String labelName, String articleTitle) {
-        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
         String webName = (webInfo == null ? "POETIZE" : webInfo.getWebName());
         return String.format(mailUtil.getMailText(),
@@ -172,7 +169,6 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         lambdaUpdate().eq(Article::getId, id)
                 .eq(Article::getUserId, userId)
                 .remove();
-        // PoetryCache.remove(CommonConst.SORT_INFO);
         qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
@@ -212,7 +208,6 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             updateChainWrapper.set(Article::getViewStatus, articleVO.getViewStatus());
         }
         updateChainWrapper.update();
-        // PoetryCache.remove(CommonConst.SORT_INFO);
         qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
@@ -353,7 +348,6 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
      */
     @Override
     public R<Map<Long, List<ArticleVO>>> listSortArticle() {
-        // Map<Integer, List<ArticleVO>> result = (Map<Integer, List<ArticleVO>>) PoetryCache.get(CommonConst.SORT_ARTICLE_LIST);
         Map<Long, List<ArticleVO>> result = JSON.parseObject(qingSiCache.get(CommonConst.SORT_ARTICLE_LIST), new TypeReference<Map<Long, List<ArticleVO>>>() {
         });
         if (result != null) {
@@ -419,7 +413,6 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 //     map.put(sort.getId(), articleVOList);
                 // }
 
-                // PoetryCache.put(CommonConst.SORT_ARTICLE_LIST, map, CommonConst.TOKEN_INTERVAL);
                 qingSiCache.put(CommonConst.SORT_ARTICLE_LIST, map, CommonConst.TOKEN_INTERVAL);
                 return R.success(map);
             } else {

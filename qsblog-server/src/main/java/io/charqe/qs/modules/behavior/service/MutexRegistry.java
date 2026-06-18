@@ -1,14 +1,10 @@
 package io.charqe.qs.modules.behavior.service;
 
-import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
 import io.charqe.qs.modules.behavior.enums.BehActionType;
-import io.charqe.qs.modules.behavior.service.dislike.DislikeServiceImpl;
-import io.charqe.qs.modules.behavior.service.like.LikeServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,12 +18,6 @@ import java.util.Map;
 @Slf4j
 @Component
 public class MutexRegistry {
-
-    @Resource
-    private LikeServiceImpl likeService;
-
-    @Resource
-    private DislikeServiceImpl dislikeService;
 
     /**
      * 行为类型 → 互斥行为类型

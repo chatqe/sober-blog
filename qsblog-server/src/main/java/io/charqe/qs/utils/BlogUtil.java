@@ -21,7 +21,6 @@ public class BlogUtil {
             SpringContextHolder.getBean(QingSiCache.class);
 
     public static void checkEmail() {
-        // User user = (User) PoetryCache.get(BlogUtil.getToken());
         String token = BlogUtil.getToken();
         if (!StringUtils.hasText(token)) {
             throw new LoginException(CodeMsg.NOT_LOGIN.getMsg());

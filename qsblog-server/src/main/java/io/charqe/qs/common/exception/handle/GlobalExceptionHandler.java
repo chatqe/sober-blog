@@ -1,6 +1,6 @@
 package io.charqe.qs.common.exception.handle;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.common.exception.LoginException;
 import io.charqe.qs.common.exception.ServiceException;

@@ -126,7 +126,6 @@ public class AdminUserController {
                 .eq(User::getId, userId)
                 .set(User::getAdmire, admire)
                 .update();
-        // PoetryCache.remove(CommonConst.ADMINRE);
         qingSiCache.del(CommonConst.ADMIN);
         return R.success();
     }
@@ -166,22 +165,12 @@ public class AdminUserController {
     }
 
     private void logout(Integer userId) {
-        // if (PoetryCache.get(CommonConst.ADMIN_TOKEN + userId) != null) {
-        //     String token = (String) PoetryCache.get(CommonConst.ADMIN_TOKEN + userId);
-        //     PoetryCache.remove(CommonConst.ADMIN_TOKEN + userId);
-        //     PoetryCache.remove(token);
-        // }
         if (qingSiCache.get(CommonConst.ADMIN_TOKEN + userId) != null) {
             String token = qingSiCache.get(CommonConst.ADMIN_TOKEN + userId);
             qingSiCache.del(CommonConst.ADMIN_TOKEN + userId);
             qingSiCache.del(token);
         }
 
-        // if (PoetryCache.get(CommonConst.USER_TOKEN + userId) != null) {
-        //     String token = (String) PoetryCache.get(CommonConst.USER_TOKEN + userId);
-        //     PoetryCache.remove(CommonConst.USER_TOKEN + userId);
-        //     PoetryCache.remove(token);
-        // }
         if (qingSiCache.get(CommonConst.USER_TOKEN + userId) != null) {
             String token = qingSiCache.get(CommonConst.USER_TOKEN + userId);
             qingSiCache.del(CommonConst.USER_TOKEN + userId);

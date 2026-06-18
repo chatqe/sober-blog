@@ -8,17 +8,15 @@ import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.access.service.AccessLogService;
-import io.charqe.qs.modules.historyInfo.domain.pojo.HistoryInfo;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.modules.webInfo.service.WebInfoService;
 import io.charqe.qs.utils.CommonQuery;
-import io.charqe.qs.utils.cache.PoetryCache;
 import io.charqe.qs.utils.cache.QingSiCache;
+import io.swagger.v3.annotations.Parameter;
+import io.swagger.v3.annotations.responses.ApiResponse;
+import io.swagger.v3.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -86,7 +84,6 @@ public class WebInfoController {
         List<WebInfo> list = wrapper.list();
         if (!CollectionUtils.isEmpty(list)) {
             list.get(0).setDefaultStoreType(defaultType);
-            PoetryCache.put(CommonConst.WEB_INFO, list.get(0));
             qingSiCache.put(CommonConst.WEB_INFO, list.get(0));
         }
         return R.success();
@@ -160,7 +157,7 @@ public class WebInfoController {
 
         log.info("进入看板娘消息管理");
 
-        WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
+        WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
 
         if (webInfo != null && StringUtils.hasText(webInfo.getWaifuJson())) {
             return webInfo.getWaifuJson();
@@ -193,8 +190,7 @@ public class WebInfoController {
         Object historyDayData = ipStatisticsMap.get(CommonConst.IP_HISTORY_HOUR);
         String dayHistoryStr = Objects.isNull(historyDayData)
                 ? "168"
-                : String.valueOf(JSON.parseObject(historyDayData.toString(), new TypeReference<List<HistoryInfo>>() {
-        }).size());
+                : String.valueOf(((List<Map<String, Object>>) historyDayData).size());
 
         webInfo.setHistoryDayCount(dayHistoryStr);
     }
@@ -207,6 +203,3 @@ public class WebInfoController {
         qingSiCache.put(CommonConst.WEB_INFO, webInfoService.list().get(0));
     }
 }
-
-
-

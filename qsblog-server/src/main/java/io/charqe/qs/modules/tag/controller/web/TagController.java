@@ -43,7 +43,6 @@ public class TagController {
             return R.fail("标签名称和标签描述和分类Id不能为空！");
         }
         tagService.save(tag);
-        // PoetryCache.remove(CommonConst.SORT_INFO);
         qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
@@ -56,7 +55,6 @@ public class TagController {
     @LoginCheck(0)
     public R deleteTag(@RequestParam("id") Long id) {
         tagService.removeById(id);
-        // PoetryCache.remove(CommonConst.SORT_INFO);
         qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
@@ -69,7 +67,6 @@ public class TagController {
     @LoginCheck(0)
     public R updateTag(@RequestBody Tag tag) {
         tagService.updateById(tag);
-        // PoetryCache.remove(CommonConst.SORT_INFO);
         qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }

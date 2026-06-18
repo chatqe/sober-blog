@@ -53,6 +53,6 @@ public class BehaviorCnt extends BaseDO {
      * 乐观锁 版本号
      */
     @TableField("version")
-    private String version;
+    private Integer version;
 
 }

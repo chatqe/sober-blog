@@ -36,7 +36,6 @@ public class LoginCheckAspect {
             throw new LoginException(CodeMsg.NOT_LOGIN.getMsg());
         }
 
-        // User user = (User) PoetryCache.get(token);
         User user = JSON.parseObject(qingSiCache.get(token), User.class);
 
         if (user == null) {
@@ -64,10 +63,8 @@ public class LoginCheckAspect {
         String userId = user.getId().toString();
         boolean flag1 = false;
         if (token.contains(CommonConst.USER_ACCESS_TOKEN)) {
-            // flag1 = PoetryCache.get(CommonConst.USER_TOKEN_INTERVAL + userId) == null;
             flag1 = qingSiCache.get(CommonConst.USER_TOKEN_INTERVAL + userId) == null;
         } else if (token.contains(CommonConst.ADMIN_ACCESS_TOKEN)) {
-            // flag1 = PoetryCache.get(CommonConst.ADMIN_TOKEN_INTERVAL + userId) == null;
             flag1 = qingSiCache.get(CommonConst.ADMIN_TOKEN_INTERVAL + userId) == null;
         }
 
@@ -75,24 +72,17 @@ public class LoginCheckAspect {
             synchronized (userId.intern()) {
                 boolean flag2 = false;
                 if (token.contains(CommonConst.USER_ACCESS_TOKEN)) {
-                    // flag2 = PoetryCache.get(CommonConst.USER_TOKEN_INTERVAL + userId) == null;
                     flag2 = qingSiCache.get(CommonConst.USER_TOKEN_INTERVAL + userId) == null;
                 } else if (token.contains(CommonConst.ADMIN_ACCESS_TOKEN)) {
-                    // flag2 = PoetryCache.get(CommonConst.ADMIN_TOKEN_INTERVAL + userId) == null;
                     flag2 = qingSiCache.get(CommonConst.ADMIN_TOKEN_INTERVAL + userId) == null;
                 }
 
                 if (flag2) {
-                    // PoetryCache.put(token, user, CommonConst.TOKEN_EXPIRE);
                     qingSiCache.put(token, user, CommonConst.TOKEN_EXPIRE);
                     if (token.contains(CommonConst.USER_ACCESS_TOKEN)) {
-                        // PoetryCache.put(CommonConst.USER_TOKEN + userId, token, CommonConst.TOKEN_EXPIRE);
-                        // PoetryCache.put(CommonConst.USER_TOKEN_INTERVAL + userId, token, CommonConst.TOKEN_INTERVAL);
                         qingSiCache.put(CommonConst.USER_TOKEN + userId, token, CommonConst.TOKEN_EXPIRE);
                         qingSiCache.put(CommonConst.USER_TOKEN_INTERVAL + userId, token, CommonConst.TOKEN_INTERVAL);
                     } else if (token.contains(CommonConst.ADMIN_ACCESS_TOKEN)) {
-                        // PoetryCache.put(CommonConst.ADMIN_TOKEN + userId, token, CommonConst.TOKEN_EXPIRE);
-                        // PoetryCache.put(CommonConst.ADMIN_TOKEN_INTERVAL + userId, token, CommonConst.TOKEN_INTERVAL);
                         qingSiCache.put(CommonConst.ADMIN_TOKEN + userId, token, CommonConst.TOKEN_EXPIRE);
                         qingSiCache.put(CommonConst.ADMIN_TOKEN_INTERVAL + userId, token, CommonConst.TOKEN_INTERVAL);
                     }

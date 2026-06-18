@@ -127,7 +127,6 @@ public class CategoryTagController {
         }
 
         categoryMapper.insert(category);
-        // PoetryCache.remove(CommonConst.SORT_INFO);
         qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
@@ -140,7 +139,6 @@ public class CategoryTagController {
     @LoginCheck(0)
     public R deleteCategory(@RequestParam("id") Integer id) {
         categoryMapper.deleteById(id);
-        // PoetryCache.remove(CommonConst.SORT_INFO);
         qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }
@@ -153,7 +151,6 @@ public class CategoryTagController {
     @LoginCheck(0)
     public R updateCategory(@RequestBody Category category) {
         categoryMapper.updateById(category);
-        // PoetryCache.remove(CommonConst.SORT_INFO);
         qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
     }

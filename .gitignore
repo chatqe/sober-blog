@@ -48,3 +48,13 @@ temp/
 .env.local
 .env.*.local
 !.env.example
+
+# Node.js
+node_modules/
+package-lock.json
+
+# Windows
+*.stackdump
+*.swp
+*.swo
+*~

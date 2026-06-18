@@ -12,7 +12,6 @@ import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.modules.comment.service.CommentService;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.CommonQuery;
-import io.charqe.qs.utils.cache.PoetryCache;
 import io.charqe.qs.utils.cache.QingSiCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -72,14 +71,12 @@ public class MailSendUtil {
                     toName,
                     commentVO.getParentId(), commentService);
 
-            // AtomicInteger count = (AtomicInteger) PoetryCache.get(CommonConst.COMMENT_IM_MAIL + mail.get(0));
             AtomicInteger count = JSON.parseObject(qingSiCache.get(CommonConst.COMMENT_IM_MAIL + mail.get(0)), AtomicInteger.class);
             if (count == null || count.get() < CommonConst.COMMENT_IM_MAIL_COUNT) {
-                // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
                 WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
                 mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? "youngwanton" : webInfo.getWebName()) + "的回执！", commentMail);
                 if (count == null) {
-                    PoetryCache.put(CommonConst.COMMENT_IM_MAIL + mail.get(0), new AtomicInteger(1), CommonConst.CODE_EXPIRE);
+                    qingSiCache.put(CommonConst.COMMENT_IM_MAIL + mail.get(0), new AtomicInteger(1), CommonConst.CODE_EXPIRE);
                 } else {
                     count.incrementAndGet();
                 }
@@ -93,7 +90,6 @@ public class MailSendUtil {
      * toName：被评论人
      */
     private String getCommentMail(Integer commentType, String source, String fromName, String fromContent, String toName, Long toCommentId, CommentService commentService) {
-        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
         String webName = (webInfo == null ? "youngwanton" : webInfo.getWebName());
 
@@ -140,14 +136,11 @@ public class MailSendUtil {
             if (!CollectionUtils.isEmpty(mail)) {
                 String commentMail = getImMail(username, message.getContent());
 
-                // AtomicInteger count = (AtomicInteger) PoetryCache.get(CommonConst.COMMENT_IM_MAIL + mail.get(0));
                 AtomicInteger count = JSON.parseObject(qingSiCache.get(CommonConst.COMMENT_IM_MAIL + mail.get(0)), AtomicInteger.class);
                 if (count == null || count.get() < CommonConst.COMMENT_IM_MAIL_COUNT) {
-                    // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
                     WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
                     mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? "youngwanton" : webInfo.getWebName()) + "的回执！", commentMail);
                     if (count == null) {
-                        // PoetryCache.put(CommonConst.COMMENT_IM_MAIL + mail.get(0), new AtomicInteger(1), CommonConst.CODE_EXPIRE);
                         qingSiCache.put(CommonConst.COMMENT_IM_MAIL + mail.get(0), new AtomicInteger(1), CommonConst.CODE_EXPIRE);
                     } else {
                         count.incrementAndGet();
@@ -158,7 +151,6 @@ public class MailSendUtil {
     }
 
     private String getImMail(String fromName, String fromContent) {
-        // WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
         String webName = (webInfo == null ? "youngwanton" : webInfo.getWebName());
 

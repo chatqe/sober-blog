@@ -76,13 +76,20 @@ public class SysDictData  {
     /**
      * 创建时间
      */
-    // @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
     /**
      * 更新时间
      */
-    // @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT_UPDATE)
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
+
+    /**
+     * 逻辑删除标识
+     */
+    @TableLogic
+    @TableField("is_del")
+    private Integer isDel;
 
 }

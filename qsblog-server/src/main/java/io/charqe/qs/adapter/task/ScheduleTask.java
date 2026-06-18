@@ -27,25 +27,18 @@ public class ScheduleTask {
 
     // @Scheduled(cron = "0 0 0 * * ?")
     public void cleanIpHistory() {
-        // CopyOnWriteArraySet<String> ipHistory = (CopyOnWriteArraySet<String>) PoetryCache.get(CommonConst.IP_HISTORY);
         CopyOnWriteArraySet<String> ipHistory =
                 qingSiCache.get(CommonConst.IP_HISTORY) == null ? new CopyOnWriteArraySet<>()
                         : JSON.parseObject(qingSiCache.get(CommonConst.IP_HISTORY), new TypeReference<CopyOnWriteArraySet<String>>() {
                 });
         if (ipHistory == null) {
             ipHistory = new CopyOnWriteArraySet<>();
-            // PoetryCache.put(CommonConst.IP_HISTORY, ipHistory);
             qingSiCache.put(CommonConst.IP_HISTORY, ipHistory);
         }
         ipHistory.clear();
 
-        // PoetryCache.remove(CommonConst.IP_HISTORY_STATISTICS);
         qingSiCache.del(CommonConst.IP_HISTORY_STATISTICS);
         Map<String, Object> ipStatisticsMap = new HashMap<>();
-        // history.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
-        // history.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
-        // history.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
-        // history.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount());
 
         accessLogService.addIPCache(ipStatisticsMap);
     }

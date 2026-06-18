@@ -1,6 +1,6 @@
 package io.charqe.qs.framework.filter;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.enums.CodeMsg;
 import io.charqe.qs.utils.BlogUtil;

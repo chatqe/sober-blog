@@ -79,19 +79,11 @@ public class TaskSchedule {
         }
 
         User admin = userService.lambdaQuery().eq(User::getUserType, UserTypeEnum.ADMIN.code()).one();
-        // PoetryCache.put(CommonConst.ADMIN, admin);
         qingSiCache.put(CommonConst.ADMIN, admin);
 
         Family family = familyService.lambdaQuery().eq(Family::getUserId, admin.getId()).one();
         //
         qingSiCache.put(CommonConst.ADMIN_FAMILY, family);
-
-        // 查询 HistoryInfo 表中所有在今天零点之后创建的记录。
-        // 只返回 ip 和 userId 字段。
-        // List<HistoryInfo> infoList = new LambdaQueryChainWrapper<>(historyInfoMapper)
-        //         .select(HistoryInfo::getIp, HistoryInfo::getUserId)
-        //         .ge(HistoryInfo::getCreateTime, LocalDateTime.now().with(LocalTime.MIN))
-        //         .list();
 
         List<AccessLog> infoList = accessLogService.list(
                 Lb.<AccessLog>q()
@@ -101,14 +93,9 @@ public class TaskSchedule {
         CopyOnWriteArraySet<String> strings = new CopyOnWriteArraySet<>(
                 infoList.stream().map(info -> info.getIp() + (info.getUserId() != null ? "_" + info.getUserId().toString() : "")).collect(Collectors.toList()));
 
-        // PoetryCache.put(CommonConst.IP_HISTORY, strings);
         qingSiCache.put(CommonConst.IP_HISTORY, strings);
 
         Map<String, Object> ipStatisticsMap = new HashMap<>();
-        // history.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
-        // history.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
-        // history.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
-        // history.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount() + 1168);
         log.info("当天更新缓存历史信息:{}", ipStatisticsMap);
         accessLogService.addIPCache( ipStatisticsMap);
 
@@ -134,16 +121,6 @@ public class TaskSchedule {
         }
 
         ipHistory.clear();
-
-        // PoetryCache.remove(CommonConst.IP_HISTORY_STATISTICS);
-        // qingSiCache.delete(CommonConst.IP_HISTORY_STATISTICS);
-        // Map<String, Object> history = new HashMap<>();
-        // history.put(CommonConst.IP_HISTORY_PROVINCE, historyInfoMapper.getHistoryByProvince());
-        // history.put(CommonConst.IP_HISTORY_IP, historyInfoMapper.getHistoryByIp());
-        // history.put(CommonConst.IP_HISTORY_HOUR, historyInfoMapper.getHistoryBy24Hour());
-        // history.put(CommonConst.IP_HISTORY_COUNT, historyInfoMapper.getHistoryCount());
-        // // PoetryCache.put(CommonConst.IP_HISTORY_STATISTICS, history);
-        // qingSiCache.put(CommonConst.IP_HISTORY_STATISTICS, history);
     }
 
 }

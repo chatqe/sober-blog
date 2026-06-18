@@ -8,7 +8,6 @@ import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
 import io.charqe.qs.modules.user.service.UserService;
 import io.charqe.qs.utils.BlogUtil;
-import io.charqe.qs.utils.cache.PoetryCache;
 import io.charqe.qs.utils.cache.QingSiCache;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -155,7 +154,6 @@ public class UserController {
     public R<UserVO> updateUserInfo(
         @Parameter(name = "user", description = "用户信息", required = true, example = "{\"nickname\":\"测试用户\",\"avatar\":\"https://example.com/avatar.jpg\"}") 
         @RequestBody UserVO user) {
-        // PoetryCache.remove(CommonConst.USER_CACHE + BlogUtil.getUserId().toString());
         qingSiCache.del(CommonConst.USER_CACHE + BlogUtil.getUserId().toString());
         return userService.updateUserInfo(user);
     }

@@ -32,22 +32,25 @@ public class User extends BaseDO {
     /**
      * 手机号
      */
-
+    @TableField("phone_number")
     private String phoneNumber;
 
     /**
      * 用户邮箱
      */
+    @TableField("email")
     private String email;
 
     /**
      * 是否启用[0:否，1:是]
      */
-    private Boolean userStatus;
+    @TableField("user_status")
+    private Integer userStatus;
 
     /**
      * 性别[1:男，2:女，0:保密]
      */
+    @TableField("gender")
     private Integer gender;
 
     /**

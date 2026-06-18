@@ -1,7 +1,7 @@
 package io.charqe.qs.modules.family.controller.admin;
 
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
@@ -13,7 +13,6 @@ import io.charqe.qs.modules.family.service.FamilyService;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.CommonQuery;
-import io.charqe.qs.utils.cache.PoetryCache;
 import io.charqe.qs.utils.cache.QingSiCache;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,10 +68,8 @@ public class FamilyController {
             familyService.save(family);
         }
         if (userId.equals(BlogUtil.getAdminUser().getId())) {
-            // PoetryCache.put(CommonConst.ADMIN_FAMILY, family);
             qingSiCache.put(CommonConst.ADMIN_FAMILY, family);
         }
-        // PoetryCache.remove(CommonConst.FAMILY_LIST);
         qingSiCache.del(CommonConst.FAMILY_LIST);
         return R.success();
     }
@@ -84,7 +81,6 @@ public class FamilyController {
     @LoginCheck(0)
     public R deleteFamily(@RequestParam("id") Long id) {
         familyService.removeById(id);
-        // PoetryCache.remove(CommonConst.FAMILY_LIST);
         qingSiCache.del(CommonConst.FAMILY_LIST);
         return R.success();
     }
@@ -111,8 +107,7 @@ public class FamilyController {
      */
     @GetMapping("/getAdminFamily")
     public R<FamilyVO> getAdminFamily() {
-        // Family family = (Family) PoetryCache.get(CommonConst.ADMIN_FAMILY);
-        Family family = JSON.parseObject(qingSiCache.get(CommonConst.ADMIN_FAMILY), Family.class) ;
+        Family family = JSON.parseObject(qingSiCache.get(CommonConst.ADMIN_FAMILY), Family.class);
         if (Objects.isNull(family)) {
             // 查数据库
             family= familyService.getOne(Wrappers.<Family>lambdaQuery().eq(Family::getUserId, BlogUtil.getAdminUser().getId()));
@@ -158,7 +153,7 @@ public class FamilyController {
     @LoginCheck(0)
     public R changeLoveStatus(@RequestParam("id") Integer id, @RequestParam("flag") Boolean flag) {
         familyService.lambdaUpdate().eq(Family::getId, id).set(Family::getStatus, flag).update();
-        PoetryCache.remove(CommonConst.FAMILY_LIST);
+        qingSiCache.del(CommonConst.FAMILY_LIST);
         return R.success();
     }
 }

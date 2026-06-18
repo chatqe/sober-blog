@@ -34,7 +34,7 @@ io.charqe.qs
 每个模块遵循：`controller/web` + `controller/admin` + `service` + `domain/dao+pojo+dto` + `enums`
 
 ## 开发规范
-- 所有实体继承 `BaseDO`（雪花 ID、逻辑删除、自动填充时间）
+- 所有实体(如果对应数据表结构包含完整BaseDO字段)继承 `BaseDO`（雪花 ID、逻辑删除、自动填充时间）
 - Mapper 继承 `CoreMapper`，Service 继承 `CoreService`
 - Controller 统一返回 `R<T>`，失败抛 `BizException`
 - 每个 Controller 方法必须有 `@Operation(summary="...")` 和 `@ApiResponses`

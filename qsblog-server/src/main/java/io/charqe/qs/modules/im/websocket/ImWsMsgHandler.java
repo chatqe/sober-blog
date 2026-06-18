@@ -1,6 +1,6 @@
 package io.charqe.qs.modules.im.websocket;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.im.http.entity.ImChatGroupUser;
@@ -63,7 +63,6 @@ public class ImWsMsgHandler implements IWsMsgHandler {
             return null;
         }
 
-        // User user = (User) PoetryCache.get(token);
         User user = JSON.parseObject(qingSiCache.get(token), User.class);
 
         if (user == null) {
@@ -81,7 +80,6 @@ public class ImWsMsgHandler implements IWsMsgHandler {
     @Override
     public void onAfterHandshaked(HttpRequest httpRequest, HttpResponse httpResponse, ChannelContext channelContext) {
         String token = httpRequest.getParam(CommonConst.TOKEN_HEADER);
-        // User user = (User) PoetryCache.get(token);
         User user = JSON.parseObject(qingSiCache.get(token), User.class);
         Tio.closeUser(channelContext.tioConfig, user.getId().toString(), null);
         Tio.bindUser(channelContext, user.getId().toString());

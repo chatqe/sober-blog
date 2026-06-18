@@ -52,7 +52,7 @@ public class AdminAccessLogController {
      */
     @LoginCheck(0)
     @GetMapping("/getData")
-    public R<Map<String, Object>> getHistoryInfo() {
+    public R<Map<String, Object>> getAccessLogData() {
 
         Map<String, Object> result = new HashMap<>();
         Map<String, Object> history = JSON.parseObject(

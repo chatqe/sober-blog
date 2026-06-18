@@ -63,9 +63,6 @@ public class ArticleController {
     public R saveArticle(
             @Parameter(name = "articleVO", description = "文章信息对象", required = true, example = "{\"articleTitle\":\"测试文章\",\"articleContent\":\"文章内容\"}")
             @Validated @RequestBody ArticleVO articleVO) {
-        // PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + BlogUtil.getUserId());
-        // PoetryCache.remove(CommonConst.ARTICLE_LIST);
-        // PoetryCache.remove(CommonConst.SORT_ARTICLE_LIST);
         qingSiCache.del(CommonConst.USER_ARTICLE_LIST + BlogUtil.getUserId());
         qingSiCache.del(CommonConst.ARTICLE_LIST);
         qingSiCache.del(CommonConst.SORT_ARTICLE_LIST);
@@ -93,11 +90,8 @@ public class ArticleController {
     public R deleteArticle(
             @Parameter(name = "id", description = "文章ID", required = true, example = "1")
             @RequestParam("id") Integer id) {
-        // PoetryCache.remove(CommonConst.USER_ARTICLE_LIST + BlogUtil.getUserId().toString());
         qingSiCache.del(CommonConst.USER_ARTICLE_LIST + BlogUtil.getUserId());
-        // PoetryCache.remove(CommonConst.ARTICLE_LIST);
         qingSiCache.del(CommonConst.ARTICLE_LIST);
-        // PoetryCache.remove(CommonConst.SORT_ARTICLE_LIST);
         qingSiCache.del(CommonConst.SORT_ARTICLE_LIST);
         return articleService.deleteArticle(id);
     }
@@ -123,8 +117,6 @@ public class ArticleController {
     public R updateArticle(
             @Parameter(name = "articleVO", description = "文章信息对象", required = true, example = "{\"id\":1,\"articleTitle\":\"更新后的文章标题\",\"articleContent\":\"更新后的文章内容\"}")
             @Validated @RequestBody ArticleVO articleVO) {
-        // PoetryCache.remove(CommonConst.ARTICLE_LIST);
-        // PoetryCache.remove(CommonConst.SORT_ARTICLE_LIST);
         qingSiCache.del(CommonConst.ARTICLE_LIST);
         qingSiCache.del(CommonConst.SORT_ARTICLE_LIST);
         return articleService.updateArticle(articleVO);
