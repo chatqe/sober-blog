@@ -3,7 +3,7 @@ package io.charqe.qs.framework.filter;
 import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.enums.CodeMsg;
 import io.charqe.qs.common.model.R;
-import org.junit.jupiter.api.Order;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 

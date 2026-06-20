@@ -6,7 +6,6 @@ import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.aop.SaveCheck;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.common.model.R;
-import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.enums.VisibilityEnum;
 import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
 import io.charqe.qs.modules.article.domain.pojo.Article;
@@ -40,7 +39,7 @@ public class MomentController {
     private ArticleMapper articleMapper;
 
     /**
-     * 保存
+     * 保存朋友圈动态
      */
     @PostMapping("/save")
     @LoginCheck
@@ -54,20 +53,22 @@ public class MomentController {
         if (!StringUtils.hasText(content)) {
             return R.fail("动态内容不合法！");
         }
-        momentVO.setContent(content);
 
         Moment moment = new Moment();
         moment.setUserId(BlogUtil.getUserId());
-        moment.setContent(momentVO.getContent());
-        moment.setIsPublic(momentVO.getIsPublic());
-        moment.setType(CommonConst.MOMENT_TYPE_FRIEND);
+        moment.setContent(content);
+        moment.setHasText(true);
+        moment.setVisibility(VisibilityEnum.PUBLIC.code());
+        moment.setSource(1); // 本站原创
+        moment.setStatus(1); // 正常
+        moment.setDelTime(null);
+        moment.setDelBy(BlogUtil.getUserId());
         momentService.save(moment);
         return R.success();
     }
 
-
     /**
-     * 保存
+     * 保存新闻来源动态
      */
     @PostMapping("/saveNews")
     @LoginCheck
@@ -76,32 +77,31 @@ public class MomentController {
             return R.fail("信息不全！");
         }
 
-        if (momentVO.getCreateTime() == null) {
-            momentVO.setCreateTime(LocalDateTime.now());
-        }
-
         Long userId = BlogUtil.getUserId();
 
         LambdaQueryChainWrapper<Article> wrapper = new LambdaQueryChainWrapper<>(articleMapper);
-        Integer count = Math.toIntExact(wrapper.eq(Article::getId, momentVO.getSource()).eq(Article::getUserId, userId).count());
+        Integer count = Math.toIntExact(wrapper.eq(Article::getId, momentVO.getSource())
+                .eq(Article::getUserId, userId).count());
 
-        if (count == null || count < 1) {
+        if (count < 1) {
             return R.fail("来源不存在！");
         }
 
         Moment moment = new Moment();
         moment.setUserId(userId);
         moment.setContent(momentVO.getContent());
-        moment.setIsPublic(VisibilityEnum.PUBLIC.code());
-        moment.setSource(momentVO.getSource());
-        moment.setCreateTime(momentVO.getCreateTime());
-        moment.setType(CommonConst.MOMENT_TYPE_NEWS);
+        moment.setHasText(true);
+        moment.setVisibility(VisibilityEnum.PUBLIC.code());
+        moment.setSource(1); // 本站原创
+        moment.setStatus(1); // 正常
+        moment.setDelTime(null);
+        moment.setDelBy(userId);
         momentService.save(moment);
         return R.success();
     }
 
     /**
-     * 查询List
+     * 查询新闻列表
      */
     @PostMapping("/listNews")
     public R<BaseReqVO> listNews(@RequestBody BaseReqVO baseReqVO) {
@@ -109,45 +109,50 @@ public class MomentController {
             return R.fail("来源不能为空！");
         }
         LambdaQueryChainWrapper<Moment> lambdaQuery = momentService.lambdaQuery();
-        lambdaQuery.eq(Moment::getType, CommonConst.MOMENT_TYPE_NEWS);
+        lambdaQuery.eq(Moment::getVisibility, VisibilityEnum.PUBLIC.code());
+        lambdaQuery.eq(Moment::getStatus, 1);
         lambdaQuery.eq(Moment::getSource, baseReqVO.getBizId());
-        lambdaQuery.eq(Moment::getIsPublic, VisibilityEnum.PUBLIC.code());
 
         lambdaQuery.orderByDesc(Moment::getCreateTime).page(baseReqVO);
         return R.success(baseReqVO);
     }
 
     /**
-     * 删除
+     * 删除动态
      */
     @GetMapping("/del")
     @LoginCheck
-    public R deleteMoment(@RequestParam("id") Integer id) {
+    public R deleteMoment(@RequestParam("id") Long id) {
         Long userId = BlogUtil.getUserId();
-        momentService.lambdaUpdate().eq(Moment::getId, id)
-                .eq(Moment::getUserId, userId)
-                .remove();
+        Moment moment = new Moment();
+        moment.setId(id);
+        moment.setDelBy(userId);
+        moment.setDelTime(LocalDateTime.now());
+        moment.setIsDel(1);
+        momentService.updateById(moment);
         return R.success();
     }
 
-
     /**
-     * 查询List
+     * 查询动态列表
      */
     @PostMapping("/list")
     public R<BaseReqVO> listMoment(@RequestBody BaseReqVO baseReqVO) {
         LambdaQueryChainWrapper<Moment> lambdaQuery = momentService.lambdaQuery();
-        lambdaQuery.eq(Moment::getType, CommonConst.MOMENT_TYPE_FRIEND);
+        lambdaQuery.eq(Moment::getStatus, 1);
+        lambdaQuery.eq(Moment::getSource, baseReqVO.getUserId());
+
         if (baseReqVO.getUserId() == null) {
             if (BlogUtil.getUserId() != null) {
                 lambdaQuery.eq(Moment::getUserId, BlogUtil.getUserId());
+                lambdaQuery.eq(Moment::getVisibility, VisibilityEnum.PUBLIC.code());
             } else {
-                lambdaQuery.eq(Moment::getIsPublic, VisibilityEnum.PUBLIC.code());
                 lambdaQuery.eq(Moment::getUserId, BlogUtil.getAdminUser().getId());
+                lambdaQuery.eq(Moment::getVisibility, VisibilityEnum.PUBLIC.code());
             }
         } else {
             if (!baseReqVO.getUserId().equals(BlogUtil.getUserId())) {
-                lambdaQuery.eq(Moment::getIsPublic, VisibilityEnum.PUBLIC.code());
+                lambdaQuery.eq(Moment::getVisibility, VisibilityEnum.PUBLIC.code());
             }
             lambdaQuery.eq(Moment::getUserId, baseReqVO.getUserId());
         }
@@ -156,5 +161,3 @@ public class MomentController {
         return R.success(baseReqVO);
     }
 }
-
-

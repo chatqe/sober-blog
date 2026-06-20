@@ -271,8 +271,12 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         Moment moment = new Moment();
         moment.setUserId(one.getId());
         moment.setContent("到此一游");
-        moment.setType(CommonConst.MOMENT_TYPE_FRIEND);
-        moment.setIsPublic(VisibilityEnum.PUBLIC.code());
+        moment.setHasText(true);
+        moment.setVisibility(VisibilityEnum.PUBLIC.code());
+        moment.setSource(1);
+        moment.setStatus(1);
+        moment.setDelTime(null);
+        moment.setDelBy(one.getId());
         momentService.save(moment);
 
         ImChatGroupUser imChatGroupUser = new ImChatGroupUser();

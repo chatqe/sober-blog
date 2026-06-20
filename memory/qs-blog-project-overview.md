@@ -38,6 +38,7 @@ io.charqe.qs
 - Mapper 继承 `CoreMapper`，Service 继承 `CoreService`
 - Controller 统一返回 `R<T>`，失败抛 `BizException`
 - 每个 Controller 方法必须有 `@Operation(summary="...")` 和 `@ApiResponses`
+- 注意 import 路径：Swagger 注解在 `io.swagger.v3.oas.annotations.*`，不是 `io.swagger.v3.annotations.*`（缺 oas 会编译失败）
 - 使用 `Lb` lambda 查询构造器，不用原始 Wrapper
 - UserContext 通过 WebInfoHandlerInterceptor 填充当前用户
 - 优先用 `QingSiCache`（Redis 缓存封装）

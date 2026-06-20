@@ -21,7 +21,7 @@ public class Tag extends BaseDO {
      * 分类ID
      */
     @TableField("category_id")
-    private Integer categoryId;
+    private Long categoryId;
 
     /**
      * 标签名称
