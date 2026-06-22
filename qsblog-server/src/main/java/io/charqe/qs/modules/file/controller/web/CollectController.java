@@ -1,4 +1,4 @@
-package io.charqe.qs.modules.weblinks.controller.web;
+package io.charqe.qs.modules.file.controller.web;
 
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import io.charqe.qs.common.model.R;

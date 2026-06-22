@@ -24,8 +24,8 @@ import javax.annotation.Resource;
  */
 @Slf4j
 @RestController
-@RequestMapping("/file")
-public class FileController {
+@RequestMapping("/file/admin")
+public class FileAdminController {
 
 
     @Resource

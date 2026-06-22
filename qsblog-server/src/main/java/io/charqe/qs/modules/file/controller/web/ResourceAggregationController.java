@@ -1,4 +1,4 @@
-package io.charqe.qs.modules.weblinks.controller.web;
+package io.charqe.qs.modules.file.controller.web;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;

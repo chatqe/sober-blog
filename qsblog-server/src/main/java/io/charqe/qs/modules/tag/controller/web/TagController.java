@@ -8,10 +8,7 @@ import io.charqe.qs.modules.tag.domain.pojo.Tag;
 import io.charqe.qs.modules.tag.service.TagServiceImpl;
 import io.charqe.qs.utils.cache.QingSiCache;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -23,7 +20,8 @@ import java.util.List;
  * @since 2026-01-17 10:47
  */
 
-
+@RestController
+@RequestMapping("/tag")
 public class TagController {
 
 
@@ -36,9 +34,9 @@ public class TagController {
     /**
      * 保存
      */
-    @PostMapping("/saveTag")
+    @PostMapping("/save")
     @LoginCheck(0)
-    public R saveTag(@RequestBody Tag tag) {
+    public R save(@RequestBody Tag tag) {
         if (!StringUtils.hasText(tag.getName()) || !StringUtils.hasText(tag.getDesc()) || tag.getCategoryId() == null) {
             return R.fail("标签名称和标签描述和分类Id不能为空！");
         }
@@ -51,9 +49,9 @@ public class TagController {
     /**
      * 删除
      */
-    @GetMapping("/deleteTag")
+    @DeleteMapping("/{id}")
     @LoginCheck(0)
-    public R deleteTag(@RequestParam("id") Long id) {
+    public R delete(@RequestParam("id") Long id) {
         tagService.removeById(id);
         qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
@@ -63,9 +61,9 @@ public class TagController {
     /**
      * 更新
      */
-    @PostMapping("/updateTag")
+    @PostMapping("/update")
     @LoginCheck(0)
-    public R updateTag(@RequestBody Tag tag) {
+    public R update(@RequestBody Tag tag) {
         tagService.updateById(tag);
         qingSiCache.del(CommonConst.SORT_INFO);
         return R.success();
@@ -75,8 +73,8 @@ public class TagController {
     /**
      * 查询List
      */
-    @GetMapping("/listTag")
-    public R<List<Tag>> listTag() {
+    @GetMapping("/list")
+    public R<List<Tag>> list() {
         return R.success(tagService.list());
     }
 }
