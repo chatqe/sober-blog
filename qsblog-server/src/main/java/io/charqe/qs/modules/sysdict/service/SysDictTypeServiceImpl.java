@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.sysdict.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.common.model.PageResult;
@@ -7,6 +9,7 @@ import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.common.model.mp.Lb;
 import io.charqe.qs.modules.sysdict.controller.admin.dto.SysDictTypeReq;
 import io.charqe.qs.modules.sysdict.domain.dao.SysDictTypeMapper;
+import io.charqe.qs.modules.sysdict.domain.pojo.SysDictData;
 import io.charqe.qs.modules.sysdict.domain.pojo.SysDictType;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.cache.QingSiCache;
@@ -38,12 +41,12 @@ public class SysDictTypeServiceImpl extends CoreServiceImpl<SysDictTypeMapper, S
 
     @Override
     public PageResult<SysDictType> page(String typeName, Integer status, int pageNum, int pageSize) {
-        var wrapper = Lb.<SysDictType>q()
+        LambdaQueryWrapper<SysDictType> wrapper = Lb.<SysDictType>q()
                 .like(StringUtils.hasText(typeName), SysDictType::getTypeName, typeName)
                 .eq(status != null, SysDictType::getStatus, status)
                 .orderByAsc(SysDictType::getSort);
 
-        var mpPage = page(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize), wrapper);
+        Page<SysDictType> mpPage = page(new Page<>(pageNum, pageSize), wrapper);
         return PageResult.fromMpPage(mpPage);
     }
 
@@ -111,8 +114,8 @@ public class SysDictTypeServiceImpl extends CoreServiceImpl<SysDictTypeMapper, S
         for (Long id : ids) {
             SysDictType type = getById(id);
             if (type != null) {
-                sysDictDataService.remove(Lb.<io.charqe.qs.modules.sysdict.domain.pojo.SysDictData>q()
-                        .eq(io.charqe.qs.modules.sysdict.domain.pojo.SysDictData::getTypeCode, type.getTypeCode()));
+                sysDictDataService.remove(Lb.<SysDictData>q()
+                        .eq(SysDictData::getTypeCode, type.getTypeCode()));
                 qingSiCache.del(DICT_CACHE_PREFIX + type.getTypeCode());
             }
         }

@@ -152,17 +152,7 @@ public class WeblinksServiceImpl extends CoreServiceImpl<WeblinksMapper, Weblink
                 new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize);
         page(mpPage, wrapper);
 
-        // 使用 Convert 批量转换
-        List<WeblinksVO> voList = weblinksConvert.toVOList(mpPage.getRecords());
-
-        // 构建 PageResult
-        PageResult<WeblinksVO> result = new PageResult<>();
-        result.setList(voList);
-        result.setTotal(mpPage.getTotal());
-        result.setPages((int) mpPage.getPages());
-        result.setPageNum((int) mpPage.getCurrent());
-        result.setPageSize((int) mpPage.getSize());
-
-        return result;
+        // 使用 PageResult.fromMpPage 的 mapper 重载，一步完成分页+VO转换
+        return PageResult.fromMpPage(mpPage, weblinksConvert::toVO);
     }
 }
