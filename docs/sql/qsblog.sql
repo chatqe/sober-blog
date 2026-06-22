@@ -431,4 +431,59 @@ VALUES (17, '备案号', 'beian', '', '2');
 INSERT INTO `poetize`.`sys_config` (`id`, `config_name`, `config_key`, `config_value`, `config_type`)
 VALUES (18, '前端静态资源路径前缀', 'webStaticResourcePrefix', '仿照：【https://poetize.cn/static/】', '2');
 
+-- ==================== 系统字典 ====================
+DROP TABLE IF EXISTS `poetize`.`sys_dict_type`;
+
+CREATE TABLE `poetize`.`sys_dict_type`
+(
+    `id`           BIGINT        NOT NULL COMMENT '主键ID（雪花算法）',
+    `type_code`    VARCHAR(64)   NOT NULL COMMENT '字典类型编码，全局唯一',
+    `type_name`    VARCHAR(128)  NOT NULL COMMENT '字典类型名称',
+    `status`       TINYINT       NOT NULL DEFAULT 1 COMMENT '状态：0-禁用, 1-启用',
+    `remark`       VARCHAR(512)           DEFAULT NULL COMMENT '备注说明',
+    `sort`         INT           NOT NULL DEFAULT 0 COMMENT '排序权重，值越小越靠前',
+    `create_by`    VARCHAR(64)            DEFAULT NULL COMMENT '创建人',
+    `update_by`    VARCHAR(64)            DEFAULT NULL COMMENT '更新人',
+    `create_time`  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time`  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `is_del`       TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_type_code` (`type_code`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='字典类型表';
+
+DROP TABLE IF EXISTS `poetize`.`sys_dict_data`;
+
+CREATE TABLE `poetize`.`sys_dict_data`
+(
+    `id`          BIGINT         NOT NULL COMMENT '主键ID（雪花算法）',
+    `type_code`   VARCHAR(64)    NOT NULL COMMENT '字典类型编码',
+    `item_code`   VARCHAR(64)    NOT NULL COMMENT '字典项编码',
+    `item_value`  VARCHAR(256)            DEFAULT NULL COMMENT '字典项实际存储值',
+    `item_label`  VARCHAR(128)   NOT NULL COMMENT '字典项显示标签',
+    `sort`        INT            NOT NULL DEFAULT 0 COMMENT '排序值',
+    `remark`      VARCHAR(512)            DEFAULT NULL COMMENT '备注',
+    `status`      TINYINT        NOT NULL DEFAULT 1 COMMENT '状态：0-禁用, 1-启用',
+    `is_default`  TINYINT(1)     NOT NULL DEFAULT 0 COMMENT '是否默认值：0-否, 1-是',
+    `create_time` DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `is_del`      TINYINT(1)     NOT NULL DEFAULT 0 COMMENT '逻辑删除标识',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_type_item` (`type_code`, `item_code`),
+    KEY `idx_type_code` (`type_code`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='字典数据表';
+
+-- 初始化字典数据
+INSERT INTO `poetize`.`sys_dict_type` (`id`, `type_code`, `type_name`, `status`, `remark`, `sort`)
+VALUES (1, 'gender', '用户性别', 1, '用户性别字典', 1);
+
+INSERT INTO `poetize`.`sys_dict_data` (`id`, `type_code`, `item_code`, `item_value`, `item_label`, `sort`, `status`, `is_default`)
+VALUES (1, 'gender', 'M', '0', '男', 1, 1, 1);
+
+INSERT INTO `poetize`.`sys_dict_data` (`id`, `type_code`, `item_code`, `item_value`, `item_label`, `sort`, `status`, `is_default`)
+VALUES (2, 'gender', 'F', '1', '女', 2, 1, 0);
+
+INSERT INTO `poetize`.`sys_dict_data` (`id`, `type_code`, `item_code`, `item_value`, `item_label`, `sort`, `status`, `is_default`)
+VALUES (3, 'gender', 'U', '2', '保密', 3, 1, 0);
 

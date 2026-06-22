@@ -1,11 +1,9 @@
 package io.charqe.qs.modules.sysdict.domain.pojo;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.time.LocalDateTime;
 
 /**
  * 字典数据表
@@ -16,12 +14,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("sys_dict_data")
-public class SysDictData  {
-    /**
-     * 主键ID
-     */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+public class SysDictData extends BaseDO {
 
     /**
      * 字典类型编码，关联 sys_dict_type.type_code
@@ -62,34 +55,4 @@ public class SysDictData  {
      * 是否默认值：0-否, 1-是
      */
     private Integer isDefault;
-
-    /**
-     * 创建人标识
-     */
-    private String createBy;
-
-    /**
-     * 更新人标识
-     */
-    private String updateBy;
-
-    /**
-     * 创建时间
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
-
-    /**
-     * 逻辑删除标识
-     */
-    @TableLogic
-    @TableField("is_del")
-    private Integer isDel;
-
 }
