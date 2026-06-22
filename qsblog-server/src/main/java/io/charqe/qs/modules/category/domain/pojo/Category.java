@@ -27,7 +27,7 @@ public class Category extends BaseDO {
     private Integer isShow;
 
     /**
-     * 分类类型 1:普通分类 2:导航栏分类
+     * 分类类型: 0-导航栏分类, 1-普通分类
      */
     private  Integer type;
 

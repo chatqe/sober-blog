@@ -14,12 +14,11 @@ import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
 import io.charqe.qs.modules.category.domain.pojo.Category;
 import io.charqe.qs.modules.comment.domain.dao.CommentMapper;
 import io.charqe.qs.modules.comment.domain.pojo.Comment;
-import io.charqe.qs.modules.family.controller.web.vo.FamilyVO;
-import io.charqe.qs.modules.family.domain.dao.FamilyMapper;
-import io.charqe.qs.modules.family.domain.pojo.Family;
+import io.charqe.qs.modules.family.controller.web.vo.FamilyWebVO;
+import io.charqe.qs.modules.family.service.FamilyService;
 import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
-import io.charqe.qs.modules.tag.domain.dao.TagMapper;
-import io.charqe.qs.modules.tag.domain.pojo.Tag;
+import io.charqe.qs.modules.tag.controller.web.vo.TagWebVO;
+import io.charqe.qs.modules.tag.service.TagService;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.service.UserService;
 import io.charqe.qs.utils.cache.QingSiCache;
@@ -54,13 +53,13 @@ public class CommonQuery {
     private ArticleMapper articleMapper;
 
     @Resource
-    private FamilyMapper familyMapper;
-
-    @Resource
     private CategoryMapper categoryMapper;
 
     @Resource
-    private TagMapper tagMapper;
+    private FamilyService familyService;
+
+    @Resource
+    private TagService tagService;
 
     @Resource
     private QingSiCache qingSiCache;
@@ -197,31 +196,20 @@ public class CommonQuery {
         }
     }
 
-    public List<FamilyVO> getFamilyList() {
-        List<FamilyVO> familyVOList = JSON.parseObject(qingSiCache.get(CommonConst.FAMILY_LIST), new TypeReference<List<FamilyVO>>() {
+    public List<FamilyWebVO> getFamilyList() {
+        List<FamilyWebVO> familyVOList = JSON.parseObject(qingSiCache.get(CommonConst.FAMILY_LIST), new TypeReference<List<FamilyWebVO>>() {
         });
         if (familyVOList != null) {
             return familyVOList;
         }
 
         synchronized (CommonConst.FAMILY_LIST.intern()) {
-            familyVOList = JSON.parseObject(qingSiCache.get(CommonConst.FAMILY_LIST), new TypeReference<List<FamilyVO>>() {
+            familyVOList = JSON.parseObject(qingSiCache.get(CommonConst.FAMILY_LIST), new TypeReference<List<FamilyWebVO>>() {
             });
             if (familyVOList != null) {
                 return familyVOList;
             } else {
-                LambdaQueryChainWrapper<Family> queryChainWrapper = new LambdaQueryChainWrapper<>(familyMapper);
-                List<Family> familyList = queryChainWrapper.eq(Family::getStatus, Boolean.TRUE).list();
-                if (!CollectionUtils.isEmpty(familyList)) {
-                    familyVOList = familyList.stream().map(family -> {
-                        FamilyVO familyVO = new FamilyVO();
-                        BeanUtils.copyProperties(family, familyVO);
-                        return familyVO;
-                    }).collect(Collectors.toList());
-                } else {
-                    familyVOList = new ArrayList<>();
-                }
-
+                familyVOList = familyService.listPublic();
                 qingSiCache.put(CommonConst.FAMILY_LIST, familyVOList);
                 return familyVOList;
             }
@@ -350,23 +338,15 @@ public class CommonQuery {
             categoryInfo = JSON.parseObject(qingSiCache.get(CommonConst.SORT_INFO), new TypeReference<List<Category>>() {
             });
             if (categoryInfo == null) {
-                List<Category> categories = new LambdaQueryChainWrapper<>(categoryMapper).list();
+                List<Category> categories = categoryMapper.selectList(Wrappers.<Category>lambdaQuery().orderByAsc(Category::getSort));
                 if (!CollectionUtils.isEmpty(categories)) {
                     categories.forEach(category -> {
                         LambdaQueryChainWrapper<Article> categoryWrapper = new LambdaQueryChainWrapper<>(articleMapper);
                         Integer countOfCategory = Math.toIntExact(categoryWrapper.eq(Article::getSortId, category.getId()).count());
                         // category.setCountOfCategory(countOfCategory);
 
-                        LambdaQueryChainWrapper<Tag> wrapper = new LambdaQueryChainWrapper<>(tagMapper);
-                        List<Tag> tags = wrapper.list();
-                        if (!CollectionUtils.isEmpty(tags)) {
-                            tags.forEach(tag -> {
-                                LambdaQueryChainWrapper<Article> tagWrapper = new LambdaQueryChainWrapper<>(articleMapper);
-                                Integer countOfTag = Math.toIntExact(tagWrapper.eq(Article::getLabelId, tag.getId()).count());
-                                // tag.setCountOfTag(countOfTag);
-                            });
-                            // category.setTags(tags);
-                        }
+                        List<TagWebVO> tags = tagService.listPublic(category.getId());
+                        // category.setTags(tags);
                     });
                 }
                 qingSiCache.put(CommonConst.SORT_INFO, categories);
