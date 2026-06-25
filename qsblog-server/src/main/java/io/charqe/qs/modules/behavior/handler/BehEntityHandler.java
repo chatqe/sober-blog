@@ -1,4 +1,4 @@
-package io.charqe.qs.modules.behavior.service.handler;
+package io.charqe.qs.modules.behavior.handler;
 
 /**
  * 行为-实体处理器接口

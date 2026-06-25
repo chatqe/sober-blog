@@ -1,4 +1,4 @@
-package io.charqe.qs.modules.behavior.service.forward;
+package io.charqe.qs.modules.behavior.service.share;
 
 import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
 import io.charqe.qs.modules.behavior.service.IActionService;
@@ -9,15 +9,15 @@ import io.charqe.qs.modules.behavior.service.IActionService;
  * @author Joy
  * @since 2026-06-12
  */
-public interface ForwardService extends IActionService {
+public interface ShareService extends IActionService {
 
     /**
      * 转发（委托给 IActionService.doAction）
      */
-    void forward(BehDTO dto, Long userId);
+    void share(BehDTO dto, Long userId);
 
     /**
      * 取消转发（委托给 IActionService.cancelAction）
      */
-    void unforward(BehDTO dto, Long userId);
+    void unShare(BehDTO dto, Long userId);
 }

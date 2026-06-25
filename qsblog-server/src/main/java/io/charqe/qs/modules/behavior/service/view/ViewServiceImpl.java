@@ -2,6 +2,7 @@ package io.charqe.qs.modules.behavior.service.view;
 
 import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
 import io.charqe.qs.modules.behavior.enums.BehActionType;
+import io.charqe.qs.modules.behavior.event.BehActionEvent;
 import io.charqe.qs.modules.behavior.service.AbstractBehService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -29,7 +30,7 @@ public class ViewServiceImpl extends AbstractBehService implements ViewService {
 
         // 发布事件（异步写日志）
         eventPublisher.publishEvent(
-                new io.charqe.qs.modules.behavior.service.event.BehActionEvent(
+                new BehActionEvent(
                         this, effectiveUserId, dto.getBizId(), dto.getBizType(), BehActionType.VIEW));
 
         log.debug("浏览记录完成: bizId={}, bizType={}", dto.getBizId(), dto.getBizType());

@@ -1,4 +1,4 @@
-package io.charqe.qs.modules.behavior.service.event;
+package io.charqe.qs.modules.behavior.event;
 
 import io.charqe.qs.modules.behavior.enums.BehActionType;
 import lombok.Getter;

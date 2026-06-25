@@ -5,7 +5,7 @@ import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
 import io.charqe.qs.modules.behavior.service.comment.CommentActionService;
 import io.charqe.qs.modules.behavior.service.dislike.DislikeService;
-import io.charqe.qs.modules.behavior.service.forward.ForwardService;
+import io.charqe.qs.modules.behavior.service.share.ShareService;
 import io.charqe.qs.modules.behavior.service.like.LikeService;
 import io.charqe.qs.modules.behavior.service.subscribe.SubscribeService;
 import io.charqe.qs.modules.behavior.service.view.ViewService;
@@ -43,7 +43,7 @@ public class BehaviorController {
     private SubscribeService subscribeService;
 
     @Resource
-    private ForwardService forwardService;
+    private ShareService shareService;
 
     @Resource
     private CommentActionService commentActionService;
@@ -153,7 +153,7 @@ public class BehaviorController {
     public R<Void> forward(
             @Parameter(description = "bizId=业务ID, bizType=业务类型", required = true)
             @RequestBody BehDTO dto) {
-        forwardService.forward(dto, BlogUtil.getUserId());
+        shareService.share(dto, BlogUtil.getUserId());
         return R.success();
     }
 
@@ -167,7 +167,7 @@ public class BehaviorController {
     public R<Void> unforward(
             @Parameter(description = "bizId=业务ID, bizType=业务类型", required = true)
             @RequestBody BehDTO dto) {
-        forwardService.unforward(dto, BlogUtil.getUserId());
+        shareService.unShare(dto, BlogUtil.getUserId());
         return R.success();
     }
 

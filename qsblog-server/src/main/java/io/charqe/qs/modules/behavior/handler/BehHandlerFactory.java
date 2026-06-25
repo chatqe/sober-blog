@@ -1,7 +1,5 @@
-package io.charqe.qs.modules.behavior.service.handler;
+package io.charqe.qs.modules.behavior.handler;
 
-import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
-import io.charqe.qs.modules.file.enums.BizTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

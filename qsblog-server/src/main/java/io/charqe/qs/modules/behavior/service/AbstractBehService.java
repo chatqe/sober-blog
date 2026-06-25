@@ -6,9 +6,9 @@ import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
 import io.charqe.qs.modules.behavior.domain.pojo.BehaviorCnt;
 import io.charqe.qs.modules.behavior.domain.pojo.BehaviorState;
 import io.charqe.qs.modules.behavior.enums.BehActionType;
-import io.charqe.qs.modules.behavior.service.event.BehActionEvent;
-import io.charqe.qs.modules.behavior.service.handler.BehEntityHandler;
-import io.charqe.qs.modules.behavior.service.handler.BehHandlerFactory;
+import io.charqe.qs.modules.behavior.event.BehActionEvent;
+import io.charqe.qs.modules.behavior.handler.BehEntityHandler;
+import io.charqe.qs.modules.behavior.handler.BehHandlerFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 

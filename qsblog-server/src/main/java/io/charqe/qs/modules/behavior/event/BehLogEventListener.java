@@ -1,8 +1,7 @@
-package io.charqe.qs.modules.behavior.service.event;
+package io.charqe.qs.modules.behavior.event;
 
 import io.charqe.qs.modules.behavior.convert.BehaviorConvert;
 import io.charqe.qs.modules.behavior.domain.pojo.BehaviorLog;
-import io.charqe.qs.modules.behavior.domain.pojo.BehaviorState;
 import io.charqe.qs.modules.behavior.service.BehaviorLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -10,7 +9,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 
 /**
  * 行为日志异步监听器

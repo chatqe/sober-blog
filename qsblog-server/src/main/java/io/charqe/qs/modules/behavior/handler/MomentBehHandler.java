@@ -1,4 +1,4 @@
-package io.charqe.qs.modules.behavior.service.handler;
+package io.charqe.qs.modules.behavior.handler;
 
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.modules.file.enums.BizTypeEnum;
