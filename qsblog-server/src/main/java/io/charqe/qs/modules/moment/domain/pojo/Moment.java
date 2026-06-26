@@ -104,12 +104,6 @@ public class Moment extends BaseDO {
     private String sourceUserId;
 
     /**
-     * 软删除: 0-未删除 1-已删除
-     */
-    @TableField("is_del")
-    private Integer isDel;
-
-    /**
      * 删除时间（NULL表示未删除）
      */
     @TableField("del_time")
@@ -132,18 +126,6 @@ public class Moment extends BaseDO {
      */
     @TableField("audited_at")
     private LocalDateTime auditedAt;
-
-    /**
-     * 创建时间
-     */
-    @TableField("create_time")
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    @TableField("update_time")
-    private LocalDateTime updateTime;
 
     /**
      * 非数据库字段：文件列表（查询时关联 moment_media + file_info 填充）
