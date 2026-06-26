@@ -38,16 +38,9 @@ public class BehaviorCnt extends BaseDO {
     private Integer action;
 
     /**
-     * 行为主体id
-     */
-    @TableField("user_id")
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    private Long userId;
-
-    /**
      * 行为数量
      */
-    @TableField
+    @TableField("count")
     private Integer count;
     /**
      * 乐观锁 版本号
