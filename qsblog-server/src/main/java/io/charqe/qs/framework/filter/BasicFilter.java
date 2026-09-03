@@ -28,58 +28,26 @@ public class BasicFilter extends OncePerRequestFilter {
                                     FilterChain chain)
             throws ServletException, IOException {
 
-        // 1. 处理OPTIONS预检请求
-        if (handlePreflightRequest(request, response)) {
-            return;
-        }
-
-        // 2. 设置通用响应头（CORS、编码等）
+        // 1. 设置通用响应头（编码等）
+        // 注意：CORS 由 CorsConfig 中的 Spring CorsFilter 统一处理，此处不再手动设置
         setCommonResponseHeaders(response);
 
-        // 3. 继续执行过滤器链
+        // 2. 继续执行过滤器链
         try {
             chain.doFilter(request, response);
         } catch (Exception e) {
-            // 4. 统一异常处理（捕获业务层未处理的异常）
+            // 3. 统一异常处理（捕获业务层未处理的异常）
             handleGlobalException(response, e);
         }
-    }
-
-    /**
-     * 处理OPTIONS预检请求
-     */
-    private boolean handlePreflightRequest(HttpServletRequest request,
-                                           HttpServletResponse response) {
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            setCorsHeaders(response);
-            response.setStatus(HttpServletResponse.SC_OK);
-            return true;
-        }
-        return false;
     }
 
     /**
      * 设置通用响应头
      */
     private void setCommonResponseHeaders(HttpServletResponse response) {
-        // CORS配置（可根据环境配置）
-        setCorsHeaders(response);
-
         // 字符编码
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json;charset=UTF-8");
-    }
-
-    /**
-     * 设置CORS头
-     */
-    private void setCorsHeaders(HttpServletResponse response) {
-        // 生产环境建议配置具体域名而非 "*"
-        response.setHeader("Access-Control-Allow-Origin", "*");
-        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With");
-        response.setHeader("Access-Control-Allow-Credentials", "true");
-        response.setHeader("Access-Control-Max-Age", "3600");
     }
 
     /**

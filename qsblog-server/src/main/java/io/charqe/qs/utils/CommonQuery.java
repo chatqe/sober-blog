@@ -28,6 +28,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -76,18 +77,36 @@ public class CommonQuery {
 
 
     /**
+     * 从缓存加载 IP 访问历史去重集合。
+     * <p>
+     * 缓存中该值以 JSON 数组形式存储（如 {@code ["ip_userId", ...]}），
+     * 必须使用 {@link JSON#parseArray(String, Class)} 解析；
+     * fastjson2 的 {@code JSON.parseObject(str, TypeReference)} 期望对象格式 '{'，
+     * 遇到数组首字符 '[' 会抛出 {@code JSONException: expect {, but [}。
+     *
+     * @return 去重集合；缓存无值或为空时返回空集合
+     */
+    private CopyOnWriteArraySet<String> loadIpHistory() {
+        String cached = qingSiCache.get(CommonConst.IP_HISTORY);
+        if (!StringUtils.hasText(cached)) {
+            return new CopyOnWriteArraySet<>();
+        }
+        List<String> list = JSON.parseArray(cached, String.class);
+        return list == null ? new CopyOnWriteArraySet<>() : new CopyOnWriteArraySet<>(list);
+    }
+
+    /**
      * 根据本地文件 查询ip对应省市区信息 保存到DB
      *
-     * @param ip
+     * @param ip     访问IP
+     * @param userId 用户ID。必须由调用方在请求线程中提前解析后传入；
+     *               本方法可能运行在异步线程，无法通过 BlogUtil.getUserId() 访问
+     *               RequestContextHolder（ThreadLocal），否则会抛 NullPointerException。
      */
-    public void saveHistory(String ip) {
-        Long userId = BlogUtil.getUserId();
+    public void saveHistory(String ip, Long userId) {
         String ipUser = ip + (userId != null ? "_" + userId : "");
 
-        CopyOnWriteArraySet<String> ipHistory =
-                qingSiCache.get(CommonConst.IP_HISTORY) == null ? new CopyOnWriteArraySet<>()
-                        : JSON.parseObject(qingSiCache.get(CommonConst.IP_HISTORY), new TypeReference<CopyOnWriteArraySet<String>>() {
-                });
+        CopyOnWriteArraySet<String> ipHistory = loadIpHistory();
         if (!ipHistory.contains(ipUser)) {
             synchronized (ipUser.intern()) {
                 if (!ipHistory.contains(ipUser)) {
@@ -127,10 +146,7 @@ public class CommonQuery {
         Long userId = BlogUtil.getUserId();
         String ipUser = ip + (userId != null ? "_" + userId : "");
 
-        CopyOnWriteArraySet<String> ipHistory =
-                qingSiCache.get(CommonConst.IP_HISTORY) == null ? new CopyOnWriteArraySet<>()
-                        : JSON.parseObject(qingSiCache.get(CommonConst.IP_HISTORY), new TypeReference<CopyOnWriteArraySet<String>>() {
-                });
+        CopyOnWriteArraySet<String> ipHistory = loadIpHistory();
         if (!ipHistory.contains(ipUser)) {
             synchronized (ipUser.intern()) {
                 if (!ipHistory.contains(ipUser)) {

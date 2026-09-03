@@ -1,7 +1,6 @@
 package io.charqe.qs.adapter.task;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.user.enums.UserTypeEnum;
@@ -22,6 +21,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -111,12 +111,13 @@ public class TaskSchedule {
 
     @Scheduled(cron = "0 1 0 * * ?")
     public void cleanIpHistory() {
-
-        CopyOnWriteArraySet<String> ipHistory = JSON.parseObject(qingSiCache.get(CommonConst.IP_HISTORY), new TypeReference<CopyOnWriteArraySet<String>>() {
-        });
-        if (ipHistory == null) {
-            ipHistory = new CopyOnWriteArraySet<>();
-
+        // 缓存中以 JSON 数组形式存储（["ip_userId", ...]），需用 parseArray 解析；
+        // fastjson2 的 parseObject 期望对象 '{'，遇到数组首字符 '[' 会抛 JSONException
+        String cachedIpHistory = qingSiCache.get(CommonConst.IP_HISTORY);
+        CopyOnWriteArraySet<String> ipHistory = StringUtils.hasText(cachedIpHistory)
+                ? new CopyOnWriteArraySet<>(JSON.parseArray(cachedIpHistory, String.class))
+                : new CopyOnWriteArraySet<>();
+        if (ipHistory.isEmpty()) {
             qingSiCache.put(CommonConst.IP_HISTORY, ipHistory);
         }
 

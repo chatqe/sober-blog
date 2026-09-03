@@ -1,11 +1,14 @@
 package io.charqe.qs.framework.filter;
 
+import com.alibaba.fastjson2.JSON;
+import io.charqe.qs.common.enums.CodeMsg;
+import io.charqe.qs.common.model.R;
 import io.charqe.qs.infra.storage.FileFilter;
 import io.charqe.qs.modules.access.service.AccessLogAsyncService;
+import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.IPUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Order;
-
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -44,22 +47,35 @@ public class BizFilter extends OncePerRequestFilter {
         // 1. 记录请求开始时间（用于计算响应耗时）
         long startTime = System.currentTimeMillis();
 
+        // 2. 在请求线程中提前解析用户ID。
+        //    访问日志通过 @Async 异步落库，而异步线程无法访问 RequestContextHolder
+        //    （ThreadLocal，请求结束即清理），若在异步方法内调用 BlogUtil.getUserId()
+        //    会抛 NullPointerException。因此必须在提交异步任务前取好并透传。
+        //    解析失败不影响主请求，降级为不关联用户（仅记录IP）。
+        Long userId;
         try {
-            // 2. 执行文件安全检查
+            userId = BlogUtil.getUserId();
+        } catch (Exception e) {
+            log.warn("解析用户ID失败，访问日志将不记录用户: {}", e.getMessage());
+            userId = null;
+        }
+
+        try {
+            // 3. 执行文件安全检查
             if (!checkFileSecurity(request, response)) {
                 // 安全检查失败，已返回响应，直接结束
                 return;
             }
 
-            // 3. 可扩展：其他业务检查
+            // 4. 可扩展：其他业务检查
             // checkBusinessRules(request, response);
 
-            // 4. 继续执行
+            // 5. 继续执行
             chain.doFilter(request, response);
         } finally {
-            // 5. 请求完成后收集日志（finally保证无论是否异常都会执行）
+            // 6. 请求完成后收集日志（finally保证无论是否异常都会执行）
             try {
-                recordAccessLog(request, response, startTime);
+                recordAccessLog(request, response, startTime, userId);
             } catch (Exception e) {
                 // 日志收集失败不影响主流程
                 log.error("收集访问日志失败", e);
@@ -69,8 +85,14 @@ public class BizFilter extends OncePerRequestFilter {
 
     /**
      * 记录访问日志
+     *
+     * @param request   当前请求
+     * @param response  当前响应
+     * @param startTime 请求开始时间戳
+     * @param userId    用户ID（在请求线程中提前解析，透传给异步方法）
      */
-    private void recordAccessLog(HttpServletRequest request, HttpServletResponse response, long startTime) {
+    private void recordAccessLog(HttpServletRequest request, HttpServletResponse response,
+                                 long startTime, Long userId) {
         try {
             String ip = IPUtil.getRealIp(request);
             String uri = request.getRequestURI();
@@ -78,8 +100,8 @@ public class BizFilter extends OncePerRequestFilter {
             int status = response.getStatus();
             long responseTime = System.currentTimeMillis() - startTime;
 
-            // 异步记录到数据库
-            accessLogAsyncService.saveAccessLogAsync(ip);
+            // 异步记录到数据库（userId 由请求线程提前解析，避免异步线程 NPE）
+            accessLogAsyncService.saveAccessLogAsync(ip, userId);
 
             // 同时记录到日志文件（可选）
             log.info("访问记录 - IP: {}, Method: {}, URI: {}, Status: {}, ResponseTime: {}ms", 
@@ -95,6 +117,11 @@ public class BizFilter extends OncePerRequestFilter {
 
     /**
      * 文件安全检查
+     * FileFilter.doFilterFile 返回值语义：
+     *   - true  表示需要拦截（限流触发、未登录、无缓存用户信息等）
+     *   - false 表示放行（管理员、非 /resource/upload 路径等）
+     *
+     * 注意：doFilterFile 自身不会向客户端写响应，因此拦截场景需由本方法主动写错误响应。
      */
     private boolean checkFileSecurity(HttpServletRequest request,
                                       HttpServletResponse response)
@@ -102,10 +129,12 @@ public class BizFilter extends OncePerRequestFilter {
 
         // 仅对文件相关请求进行检查
         if (isFileRelatedRequest(request)) {
-            boolean pass = fileFilter.doFilterFile(request, response);
-            if (!pass) {
-                // 安全检查失败，返回错误
-                // 注意：这里不设置CORS头，因为TechnicalFilter已经设置了
+            // 返回 true 表示需要拦截
+            if (fileFilter.doFilterFile(request, response)) {
+                // 安全检查未通过，主动写错误响应给客户端
+                // 注意：CORS 由 CorsConfig 中的 Spring CorsFilter 统一处理，此处不再手动设置
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write(JSON.toJSONString(R.fail(CodeMsg.PARAMETER_ERROR.getCode(), CodeMsg.PARAMETER_ERROR.getMsg())));
                 return false;
             }
         }

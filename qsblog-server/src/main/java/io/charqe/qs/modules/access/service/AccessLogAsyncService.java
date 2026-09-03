@@ -24,12 +24,15 @@ public class AccessLogAsyncService {
     /**
      * 异步保存访问日志
      *
-     * @param ip 访问IP
+     * @param ip     访问IP
+     * @param userId 用户ID。必须由调用方在请求线程中提前解析后传入；
+     *               异步线程无法访问 RequestContextHolder（ThreadLocal），
+     *               若在本方法内调用 BlogUtil.getUserId() 会抛 NullPointerException。
      */
     @Async("accessLogExecutor")
-    public void saveAccessLogAsync(String ip) {
+    public void saveAccessLogAsync(String ip, Long userId) {
         try {
-            commonQuery.saveHistory(ip);
+            commonQuery.saveHistory(ip, userId);
             log.debug("异步保存访问日志成功，IP: {}", ip);
         } catch (Exception e) {
             log.error("异步保存访问日志失败: {}", e.getMessage(), e);
