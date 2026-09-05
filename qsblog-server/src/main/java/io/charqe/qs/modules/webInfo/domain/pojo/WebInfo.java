@@ -19,7 +19,7 @@ import java.util.Date;
 @TableName("web_info")
 public class WebInfo  {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     private Long id;
     /**
      * 网站名称

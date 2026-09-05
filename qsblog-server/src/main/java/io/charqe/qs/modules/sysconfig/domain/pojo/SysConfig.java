@@ -23,7 +23,7 @@ public class SysConfig  {
      * 主键（自增）
      */
     @JsonFormat(shape = JsonFormat.Shape.STRING)
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     private Long id;
     /**
      * 名称

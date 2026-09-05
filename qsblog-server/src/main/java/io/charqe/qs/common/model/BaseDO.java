@@ -16,10 +16,10 @@ import java.time.LocalDateTime;
 @Data
 public abstract class BaseDO implements Serializable {
     /**
-     * 主键（自增）
+     * 主键（数据库自增）
      */
     @JsonFormat(shape = JsonFormat.Shape.STRING)
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
