@@ -39,7 +39,7 @@ public class Category extends BaseDO {
     /**
      * 分类描述
      */
-    private String desc;
+    private String cateDesc;
 
     /**
      * 排序

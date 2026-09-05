@@ -385,7 +385,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                         vo.setPassword(null);
                         vo.setVideoUrl(null);
                         return vo;
-                    }).collect(Collectors.toList());
+                    }).toList();
                     map.put(sortId, articleVOList);
                 });
 

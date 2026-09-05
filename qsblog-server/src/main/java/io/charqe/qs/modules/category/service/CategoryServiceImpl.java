@@ -151,7 +151,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
     private Category toEntity(CategorySaveReqDTO dto) {
         Category entity = new Category();
         entity.setName(dto.getName());
-        entity.setDesc(dto.getDesc());
+        entity.setCateDesc(dto.getDesc());
         entity.setType(dto.getType());
         entity.setIsShow(dto.getIsShow());
         entity.setSort(dto.getSort());
@@ -163,7 +163,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         CategoryListVO vo = new CategoryListVO();
         vo.setId(entity.getId());
         vo.setName(entity.getName());
-        vo.setDesc(entity.getDesc());
+        vo.setDesc(entity.getCateDesc());
         vo.setType(entity.getType());
         vo.setIsShow(entity.getIsShow());
         vo.setSort(entity.getSort());
@@ -176,7 +176,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         CategoryDetailVO vo = new CategoryDetailVO();
         vo.setId(entity.getId());
         vo.setName(entity.getName());
-        vo.setDesc(entity.getDesc());
+        vo.setDesc(entity.getCateDesc());
         vo.setType(entity.getType());
         vo.setIsShow(entity.getIsShow());
         vo.setSort(entity.getSort());
@@ -190,7 +190,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         CategoryWebVO vo = new CategoryWebVO();
         vo.setId(entity.getId());
         vo.setName(entity.getName());
-        vo.setDesc(entity.getDesc());
+        vo.setDesc(entity.getCateDesc());
         vo.setType(entity.getType());
         vo.setSort(entity.getSort());
         vo.setIcon(entity.getIcon());

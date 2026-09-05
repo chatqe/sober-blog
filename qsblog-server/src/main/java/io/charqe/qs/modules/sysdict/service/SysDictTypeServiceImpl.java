@@ -8,10 +8,9 @@ import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.common.model.mp.Lb;
 import io.charqe.qs.modules.sysdict.controller.admin.dto.SysDictTypeReq;
+import io.charqe.qs.modules.sysdict.domain.dao.SysDictDataMapper;
 import io.charqe.qs.modules.sysdict.domain.dao.SysDictTypeMapper;
-import io.charqe.qs.modules.sysdict.domain.pojo.SysDictData;
 import io.charqe.qs.modules.sysdict.domain.pojo.SysDictType;
-import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +18,6 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * 字典类型服务实现
@@ -32,7 +30,7 @@ import java.util.Objects;
 public class SysDictTypeServiceImpl extends CoreServiceImpl<SysDictTypeMapper, SysDictType> implements SysDictTypeService {
 
     @Resource
-    private SysDictDataService sysDictDataService;
+    private SysDictDataMapper sysDictDataMapper;
 
     @Resource
     private QingSiCache qingSiCache;
@@ -110,12 +108,10 @@ public class SysDictTypeServiceImpl extends CoreServiceImpl<SysDictTypeMapper, S
             throw new BizException("请选择要删除的字典类型");
         }
 
-        // 先删除关联的字典数据
-        for (Long id : ids) {
-            SysDictType type = getById(id);
+        List<SysDictType> types = listByIds(java.util.Arrays.asList(ids));
+        for (SysDictType type : types) {
             if (type != null) {
-                sysDictDataService.remove(Lb.<SysDictData>q()
-                        .eq(SysDictData::getTypeCode, type.getTypeCode()));
+                sysDictDataMapper.deleteByTypeCode(type.getTypeCode());
                 qingSiCache.del(DICT_CACHE_PREFIX + type.getTypeCode());
             }
         }

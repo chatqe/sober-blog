@@ -145,7 +145,7 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
     private Tag toEntity(TagSaveReqDTO dto) {
         Tag entity = new Tag();
         entity.setName(dto.getName());
-        entity.setDesc(dto.getDesc());
+        entity.setTagDesc(dto.getDesc());
         entity.setCategoryId(dto.getCategoryId());
         return entity;
     }
@@ -155,7 +155,7 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
         vo.setId(entity.getId());
         vo.setCategoryId(entity.getCategoryId());
         vo.setName(entity.getName());
-        vo.setDesc(entity.getDesc());
+        vo.setDesc(entity.getTagDesc());
         vo.setCreateTime(entity.getCreateTime() != null ? entity.getCreateTime().toString() : null);
         return vo;
     }
@@ -165,7 +165,7 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
         vo.setId(entity.getId());
         vo.setCategoryId(entity.getCategoryId());
         vo.setName(entity.getName());
-        vo.setDesc(entity.getDesc());
+        vo.setDesc(entity.getTagDesc());
         vo.setCreateTime(entity.getCreateTime() != null ? entity.getCreateTime().toString() : null);
         vo.setUpdateTime(entity.getUpdateTime() != null ? entity.getUpdateTime().toString() : null);
         return vo;
@@ -176,7 +176,7 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
         vo.setId(entity.getId());
         vo.setCategoryId(entity.getCategoryId());
         vo.setName(entity.getName());
-        vo.setDesc(entity.getDesc());
+        vo.setDesc(entity.getTagDesc());
         return vo;
     }
 

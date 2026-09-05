@@ -5,8 +5,8 @@ import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.modules.sysdict.controller.admin.dto.SysDictDataReq;
 import io.charqe.qs.modules.sysdict.controller.web.vo.SysDictDataVO;
 import io.charqe.qs.modules.sysdict.domain.dao.SysDictDataMapper;
+import io.charqe.qs.modules.sysdict.domain.dao.SysDictTypeMapper;
 import io.charqe.qs.modules.sysdict.domain.pojo.SysDictData;
-import io.charqe.qs.modules.sysdict.domain.pojo.SysDictType;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 public class SysDictDataServiceImpl extends CoreServiceImpl<SysDictDataMapper, SysDictData> implements SysDictDataService {
 
     @Resource
-    private SysDictTypeService sysDictTypeService;
+    private SysDictTypeMapper sysDictTypeMapper;
 
     @Resource
     private QingSiCache qingSiCache;
@@ -197,10 +197,8 @@ public class SysDictDataServiceImpl extends CoreServiceImpl<SysDictDataMapper, S
         if (!StringUtils.hasText(typeCode)) {
             throw new BizException("字典类型编码不能为空");
         }
-        // 验证字典类型是否存在
-        boolean exists = sysDictTypeService.lambdaQuery()
-                .eq(SysDictType::getTypeCode, typeCode)
-                .exists();
+        // 直接通过 mapper 查询，避免循环依赖
+        boolean exists = sysDictTypeMapper.existsByTypeCode(typeCode) > 0;
         if (!exists) {
             throw new BizException("字典类型不存在");
         }

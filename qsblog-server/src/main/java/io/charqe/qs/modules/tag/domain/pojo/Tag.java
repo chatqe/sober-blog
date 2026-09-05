@@ -32,8 +32,8 @@ public class Tag extends BaseDO {
     /**
      * 标签描述
      */
-    @TableField("desc")
-    private String desc;
+    @TableField("tag_desc")
+    private String tagDesc;
 
     /**
      * 创建人
