@@ -12,8 +12,7 @@ import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.article.service.ArticleService;
 import io.charqe.qs.modules.danmaku.domain.pojo.Danmaku;
 import io.charqe.qs.modules.danmaku.service.DanmakuService;
-import io.charqe.qs.modules.historyInfo.domain.pojo.HistoryInfo;
-import io.charqe.qs.modules.historyInfo.service.HistoryInfoService;
+
 import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.modules.webInfo.service.WebInfoService;
 import io.charqe.qs.utils.cache.QingSiCache;
@@ -55,8 +54,7 @@ public class DatabaseTests {
     @Resource
     private ArticleService articleService;
 
-    @Resource
-    private HistoryInfoService historyInfoService;
+
 
     @Resource
     private AccessLogService accessLogService;
@@ -313,61 +311,61 @@ public class DatabaseTests {
 
     }
 
-    @Test
-    void shiftHistoryInfo2AccessLog() {
-        List<HistoryInfo> historyList = historyInfoService.list();
-
-        // 2. 数据转换：a表 -> b表
-        List<AccessLog> accessLogList = new ArrayList<>();
-        for (HistoryInfo history : historyList) {
-            AccessLog accessLog = new AccessLog();
-
-            // 字段映射（核心：处理字段名不一致）
-            accessLog.setUserId(history.getUserId() != null ? history.getUserId().longValue() : null);
-            accessLog.setIp(history.getIp());
-            accessLog.setCountry(history.getNation()); // nation 转 country
-            accessLog.setProvince(history.getProvince());
-            accessLog.setCity(history.getCity());
-
-            // b表新增字段设置默认值（根据业务需求调整）
-            // accessLog.setTraceId(UUID.randomUUID().toString().replace("-", "")); // 生成唯一traceId
-            accessLog.setAccessTime(history.getCreateTime()); // 访问时间复用创建时间
-            // 拼接IP地理位置
-            accessLog.setIpLocation(buildIpLocation(history.getProvince(), history.getCity()));
-            accessLog.setDistrict(""); // 无数据则设为空
-            accessLog.setIsp("未知");
-            accessLog.setReferer("");
-            accessLog.setUa("");
-            accessLog.setBrowser("未知");
-            accessLog.setOs("未知");
-            accessLog.setDeviceType("未知");
-            accessLog.setReqUrl("/unknown"); // 默认URL
-            accessLog.setReqMethod("GET"); // 默认请求方式
-            accessLog.setRespStatus(200); // 默认响应状态码
-            accessLog.setRespTime(0); // 默认响应耗时
-            accessLog.setExtInfo("{}"); // 默认空JSON
-            accessLog.setIsDel(0); // 未删除
-            accessLog.setCreateTime(history.getCreateTime());
-            accessLog.setUpdateTime(LocalDateTime.now());
-
-            accessLogList.add(accessLog);
-        }
-
-        // 3. 批量插入（分批处理，避免单次插入数据量过大）
-        int batchSize = 500; // 每批插入500条，可根据数据库配置调整
-        for (int i = 0; i < accessLogList.size(); i += batchSize) {
-            int end = Math.min(i + batchSize, accessLogList.size());
-            List<AccessLog> batchList = accessLogList.subList(i, end);
-            try {
-                accessLogService.saveBatch(batchList);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            log.info("已插入第 " + (i / batchSize + 1) + " 批，共 " + batchList.size() + " 条数据");
-        }
-
-        log.info("数据迁移完成，总计迁移：" + accessLogList.size() + " 条");
-    }
+    // @Test
+    // void shiftHistoryInfo2AccessLog() {
+    //     List<HistoryInfo> historyList = historyInfoService.list();
+    //
+    //     // 2. 数据转换：a表 -> b表
+    //     List<AccessLog> accessLogList = new ArrayList<>();
+    //     for (HistoryInfo history : historyList) {
+    //         AccessLog accessLog = new AccessLog();
+    //
+    //         // 字段映射（核心：处理字段名不一致）
+    //         accessLog.setUserId(history.getUserId() != null ? history.getUserId().longValue() : null);
+    //         accessLog.setIp(history.getIp());
+    //         accessLog.setCountry(history.getNation()); // nation 转 country
+    //         accessLog.setProvince(history.getProvince());
+    //         accessLog.setCity(history.getCity());
+    //
+    //         // b表新增字段设置默认值（根据业务需求调整）
+    //         // accessLog.setTraceId(UUID.randomUUID().toString().replace("-", "")); // 生成唯一traceId
+    //         accessLog.setAccessTime(history.getCreateTime()); // 访问时间复用创建时间
+    //         // 拼接IP地理位置
+    //         accessLog.setIpLocation(buildIpLocation(history.getProvince(), history.getCity()));
+    //         accessLog.setDistrict(""); // 无数据则设为空
+    //         accessLog.setIsp("未知");
+    //         accessLog.setReferer("");
+    //         accessLog.setUa("");
+    //         accessLog.setBrowser("未知");
+    //         accessLog.setOs("未知");
+    //         accessLog.setDeviceType("未知");
+    //         accessLog.setReqUrl("/unknown"); // 默认URL
+    //         accessLog.setReqMethod("GET"); // 默认请求方式
+    //         accessLog.setRespStatus(200); // 默认响应状态码
+    //         accessLog.setRespTime(0); // 默认响应耗时
+    //         accessLog.setExtInfo("{}"); // 默认空JSON
+    //         accessLog.setIsDel(0); // 未删除
+    //         accessLog.setCreateTime(history.getCreateTime());
+    //         accessLog.setUpdateTime(LocalDateTime.now());
+    //
+    //         accessLogList.add(accessLog);
+    //     }
+    //
+    //     // 3. 批量插入（分批处理，避免单次插入数据量过大）
+    //     int batchSize = 500; // 每批插入500条，可根据数据库配置调整
+    //     for (int i = 0; i < accessLogList.size(); i += batchSize) {
+    //         int end = Math.min(i + batchSize, accessLogList.size());
+    //         List<AccessLog> batchList = accessLogList.subList(i, end);
+    //         try {
+    //             accessLogService.saveBatch(batchList);
+    //         } catch (Exception e) {
+    //             throw new RuntimeException(e);
+    //         }
+    //         log.info("已插入第 " + (i / batchSize + 1) + " 批，共 " + batchList.size() + " 条数据");
+    //     }
+    //
+    //     log.info("数据迁移完成，总计迁移：" + accessLogList.size() + " 条");
+    // }
 
     /**
      * 拿到文件名 无后缀

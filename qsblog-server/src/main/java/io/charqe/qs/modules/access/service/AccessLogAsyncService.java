@@ -33,7 +33,7 @@ public class AccessLogAsyncService {
     public void saveAccessLogAsync(String ip, Long userId) {
         try {
             commonQuery.saveHistory(ip, userId);
-            commonQuery.saveAccessLogByBaidu(ip);
+            // commonQuery.saveAccessLogByBaidu(ip);
             log.debug("异步保存访问日志成功，IP: {}", ip);
         } catch (Exception e) {
             log.error("异步保存访问日志失败: {}", e.getMessage(), e);
