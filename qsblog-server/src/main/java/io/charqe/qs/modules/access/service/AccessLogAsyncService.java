@@ -1,5 +1,6 @@
 package io.charqe.qs.modules.access.service;
 
+import io.charqe.qs.modules.access.domain.pojo.AccessLog;
 import io.charqe.qs.utils.CommonQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -22,19 +23,19 @@ public class AccessLogAsyncService {
     private CommonQuery commonQuery;
 
     /**
-     * 异步保存访问日志
+     * 异步保存访问日志。
+     * <p>
+     * 入参 {@link AccessLog} 必须由调用方在<b>请求线程</b>构造并填充好字段
+     * （ip/userId/ua/reqUrl/reqMethod/respStatus/respTime/accessTime）；
+     * 异步线程无法访问 RequestContextHolder（ThreadLocal），不能在本方法内读取请求信息。
      *
-     * @param ip     访问IP
-     * @param userId 用户ID。必须由调用方在请求线程中提前解析后传入；
-     *               异步线程无法访问 RequestContextHolder（ThreadLocal），
-     *               若在本方法内调用 BlogUtil.getUserId() 会抛 NullPointerException。
+     * @param accessLog 访问日志（字段已在请求线程收集完毕）
      */
     @Async("accessLogExecutor")
-    public void saveAccessLogAsync(String ip, Long userId) {
+    public void saveAccessLogAsync(AccessLog accessLog) {
         try {
-            commonQuery.saveHistory(ip, userId);
-            // commonQuery.saveAccessLogByBaidu(ip);
-            log.debug("异步保存访问日志成功，IP: {}", ip);
+            commonQuery.saveHistory(accessLog);
+            log.debug("异步保存访问日志成功，IP: {}", accessLog.getIp());
         } catch (Exception e) {
             log.error("异步保存访问日志失败: {}", e.getMessage(), e);
             // 可以加入监控指标

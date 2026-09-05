@@ -65,6 +65,9 @@ public class CommonQuery {
     @Resource
     private QingSiCache qingSiCache;
 
+    @Resource
+    private UaParseUtil uaParseUtil;
+
     private Searcher searcher;
 
     @PostConstruct
@@ -96,14 +99,17 @@ public class CommonQuery {
     }
 
     /**
-     * 根据本地文件 查询ip对应省市区信息 保存到DB
+     * 根据本地文件 查询ip对应省市区信息 保存到DB。
+     * <p>
+     * 调用方需在<b>请求线程</b>中构造好 {@link AccessLog} 并填充 ip/userId/ua/reqUrl/reqMethod/
+     * respStatus/respTime/accessTime，再透传到异步线程（异步线程无法访问 RequestContextHolder）。
+     * 本方法负责：去重（ip+userId）、UA 解析（browser/os/deviceType）、IP 归属地查询与字段长度截断。
      *
-     * @param ip     访问IP
-     * @param userId 用户ID。必须由调用方在请求线程中提前解析后传入；
-     *               本方法可能运行在异步线程，无法通过 BlogUtil.getUserId() 访问
-     *               RequestContextHolder（ThreadLocal），否则会抛 NullPointerException。
+     * @param accessLog 访问日志（字段由请求线程收集）
      */
-    public void saveHistory(String ip, Long userId) {
+    public void saveHistory(AccessLog accessLog) {
+        String ip = accessLog.getIp();
+        Long userId = accessLog.getUserId();
         String ipUser = ip + (userId != null ? "_" + userId : "");
 
         CopyOnWriteArraySet<String> ipHistory = loadIpHistory();
@@ -111,69 +117,70 @@ public class CommonQuery {
             synchronized (ipUser.intern()) {
                 if (!ipHistory.contains(ipUser)) {
                     ipHistory.add(ipUser);
-                    AccessLog accessLog = new AccessLog();
-                    accessLog.setIp(ip);
-                    accessLog.setUserId(userId);
-                    if (searcher != null) {
+
+                    // 1. UA 解析（浏览器/操作系统/设备类型），原始 UA 按列长 varchar(1024) 截断
+                    String ua = accessLog.getUa();
+                    if (StringUtils.hasText(ua)) {
+                        accessLog.setUa(truncate(ua, 1024));
+                        UaParseUtil.UaInfo uaInfo = uaParseUtil.parse(ua);
+                        accessLog.setBrowser(uaInfo.browser());
+                        accessLog.setOs(uaInfo.os());
+                        accessLog.setDeviceType(uaInfo.deviceType());
+                    }
+
+                    // 2. 请求URL按列长 varchar(512) 截断
+                    accessLog.setReqUrl(truncate(accessLog.getReqUrl(), 512));
+
+                    // 3. 本地 IP 库查询归属地（国家/省/市）
+                    if (searcher != null && StringUtils.hasText(ip)) {
                         try {
                             String search = searcher.search(ip);
                             String[] region = search.split("\\|");
-                            if (!"0".equals(region[0])) {
+                            if (region.length > 0 && !"0".equals(region[0])) {
                                 accessLog.setCountry(region[0]);
                             }
-                            if (!"0".equals(region[2])) {
+                            if (region.length > 2 && !"0".equals(region[2])) {
                                 accessLog.setProvince(region[2]);
                             }
-                            if (!"0".equals(region[3])) {
+                            if (region.length > 3 && !"0".equals(region[3])) {
                                 accessLog.setCity(region[3]);
                             }
                         } catch (Exception e) {
+                            // 归属地查询失败不影响日志落库
                         }
                     }
+
                     accessLogService.save(accessLog);
                 }
             }
         }
     }
 
+    /**
+     * 按最大长度截断字符串，避免超出数据库列长度导致插入失败
+     */
+    private static String truncate(String value, int maxLen) {
+        if (value == null) {
+            return null;
+        }
+        return value.length() > maxLen ? value.substring(0, maxLen) : value;
+    }
+
 
     /**
-     * baidu 查询ip对应省市区信息 保存到DB
+     * baidu 查询ip对应省市区信息 保存到DB。
      *
-     * @param ip
+     * @param ip 访问IP
+     * @deprecated 归属地查询已由本地 ip2region 在 {@link #saveHistory(AccessLog)} 中统一完成，
+     * 此方法当前无调用方；若未来启用，需由调用方补齐 reqUrl/reqMethod/respStatus/respTime/accessTime
+     * 等 NOT NULL 字段，否则落库会失败。
      */
+    @Deprecated
     public void saveAccessLogByBaidu(String ip) {
-        Long userId = BlogUtil.getUserId();
-        String ipUser = ip + (userId != null ? "_" + userId : "");
-
-        CopyOnWriteArraySet<String> ipHistory = loadIpHistory();
-        if (!ipHistory.contains(ipUser)) {
-            synchronized (ipUser.intern()) {
-                if (!ipHistory.contains(ipUser)) {
-                    ipHistory.add(ipUser);
-                    AccessLog accessLog = new AccessLog();
-                    accessLog.setIp(ip);
-                    accessLog.setUserId(userId);
-                    if (searcher != null) {
-                        try {
-                            String search = searcher.search(ip);
-                            String[] region = search.split("\\|");
-                            if (!"0".equals(region[0])) {
-                                accessLog.setCountry(region[0]);
-                            }
-                            if (!"0".equals(region[2])) {
-                                accessLog.setProvince(region[2]);
-                            }
-                            if (!"0".equals(region[3])) {
-                                accessLog.setCity(region[3]);
-                            }
-                        } catch (Exception e) {
-                        }
-                    }
-                    accessLogService.save(accessLog);
-                }
-            }
-        }
+        AccessLog accessLog = new AccessLog();
+        accessLog.setIp(ip);
+        accessLog.setUserId(BlogUtil.getUserId());
+        saveHistory(accessLog);
     }
 
 

@@ -31,9 +31,23 @@ public class BlogUtil {
         }
     }
 
+    /**
+     * 获取当前请求的 token。
+     * <p>
+     * 注意：本方法依赖 {@link IPUtil#getRequest()} 从 RequestContextHolder（ThreadLocal）
+     * 取请求对象。在异步线程（@Async 落库、定时任务等）中不存在请求上下文，
+     * 此时安全返回 null（表示"无登录态"），而不是抛出 NullPointerException。
+     *
+     * @return token；非 Web 线程或无 token 时返回 null
+     */
     public static String getToken() {
-        String token = IPUtil.getRequest().getHeader(CommonConst.TOKEN_HEADER);
-        return "null".equals(token) ? null : token;
+        try {
+            String token = IPUtil.getRequest().getHeader(CommonConst.TOKEN_HEADER);
+            return "null".equals(token) ? null : token;
+        } catch (Exception e) {
+            // 异步线程 / 定时任务等无 RequestContextHolder 的场景，降级为未登录
+            return null;
+        }
     }
 
     public static User getCurrentUser() {

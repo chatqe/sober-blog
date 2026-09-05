@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.enums.CodeMsg;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.infra.storage.FileFilter;
+import io.charqe.qs.modules.access.domain.pojo.AccessLog;
 import io.charqe.qs.modules.access.service.AccessLogAsyncService;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.IPUtil;
@@ -18,6 +19,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 /**
  * 业务层过滤器
@@ -43,6 +45,13 @@ public class BizFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain chain)
             throws ServletException, IOException {
+
+        // 0. CORS 预检请求（OPTIONS）直接放行：预检非业务访问，
+        //    不做文件安全检查、不记录访问日志（否则每个跨域请求会产生预检+实际两条记录）
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         // 1. 记录请求开始时间（用于计算响应耗时）
         long startTime = System.currentTimeMillis();
@@ -100,11 +109,24 @@ public class BizFilter extends OncePerRequestFilter {
             int status = response.getStatus();
             long responseTime = System.currentTimeMillis() - startTime;
 
-            // 异步记录到数据库（userId 由请求线程提前解析，避免异步线程 NPE）
-            accessLogAsyncService.saveAccessLogAsync(ip, userId);
+            // 在请求线程构造 AccessLog 并收集全部字段，再透传给异步线程落库。
+            // 原因：异步线程无法访问 RequestContextHolder（ThreadLocal），
+            // 故 UA、URL、userId 等请求相关信息必须在此处取好。
+            AccessLog accessLog = new AccessLog();
+            accessLog.setIp(ip);
+            accessLog.setUserId(userId);
+            accessLog.setUa(request.getHeader("User-Agent"));
+            accessLog.setReqUrl(uri);
+            accessLog.setReqMethod(method);
+            accessLog.setRespStatus(status);
+            accessLog.setRespTime((int) responseTime);
+            accessLog.setAccessTime(LocalDateTime.now());
+
+            // 异步落库（UA 解析、IP 归属地查询在异步线程完成，不阻塞主请求）
+            accessLogAsyncService.saveAccessLogAsync(accessLog);
 
             // 同时记录到日志文件（可选）
-            log.info("访问记录 - IP: {}, Method: {}, URI: {}, Status: {}, ResponseTime: {}ms", 
+            log.info("访问记录 - IP: {}, Method: {}, URI: {}, Status: {}, ResponseTime: {}ms",
                     ip, method, uri, status, responseTime);
 
         } catch (Exception e) {
