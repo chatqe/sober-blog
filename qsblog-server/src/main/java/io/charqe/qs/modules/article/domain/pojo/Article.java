@@ -26,14 +26,14 @@ public class Article extends BaseDO {
     /**
      * 分类ID
      */
-    @TableField("sort_id")
-    private Long sortId;
+    @TableField("category_id")
+    private Long categoryId;
 
     /**
      * 标签ID
      */
-    @TableField("label_id")
-    private Long labelId;
+    @TableField("tag_id")
+    private Long tagId;
 
     /**
      * 封面

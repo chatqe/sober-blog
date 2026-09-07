@@ -8,6 +8,8 @@ import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.access.service.AccessLogService;
+import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
+import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.modules.webInfo.service.WebInfoService;
@@ -61,6 +63,8 @@ public class WebInfoController {
     private QingSiCache qingSiCache;
 
 
+
+
     /**
      * 更新网站信息
      *
@@ -100,7 +104,7 @@ public class WebInfoController {
             @ApiResponse(responseCode = "200", description = "查询成功，返回网站信息"),
             @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @GetMapping("/get")
+    @GetMapping("/")
     public R<WebInfo> getWebInfo() {
         // 从缓存获取 WebInfo 对象
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);

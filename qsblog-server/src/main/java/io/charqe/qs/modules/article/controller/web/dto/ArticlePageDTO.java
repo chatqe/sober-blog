@@ -17,13 +17,13 @@ import lombok.NoArgsConstructor;
 public class ArticlePageDTO extends PageQuery {
     private Boolean desc = true;
     private String searchKey;
-    private String sortId;
+    private String categoryId;
 
     // 是否推荐[0:否，1:是]
     private Boolean recommendStatus;
 
 
-    private Integer labelId;
+    private Integer tagId;
     private String articleSearch;
 
 }

@@ -54,8 +54,8 @@ public class UserVO {
     @Schema(name = "updateBy", description = "更新人", example = "admin")
     private String updateBy;
 
-    @Schema(name = "isBoss", description = "是否为管理员", defaultValue = "false", example = "false")
-    private Boolean isBoss = false;
+    @Schema(name = "isAdmin", description = "是否为管理员", defaultValue = "false", example = "false")
+    private Boolean isAdmin = false;
 
     @Schema(name = "accessToken", description = "访问令牌", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String accessToken;

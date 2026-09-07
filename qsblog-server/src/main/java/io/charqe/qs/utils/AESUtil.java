@@ -33,17 +33,7 @@ public class AESUtil {
         return DigestUtils.md5DigestAsHex(pwd.getBytes());
     }
 
-    /**
-     * 加密（已废弃，请使用 {@link #md5Hex}）
-     *
-     * @param pwd 明文
-     * @return MD5 hex字符串
-     * @deprecated 方法名误导（实际执行MD5哈希而非AES加密），请使用 {@link #md5Hex(String)}
-     */
-    @Deprecated
-    public static String encrypt(String pwd) {
-        return md5Hex(pwd);
-    }
+
 
     /**
      * AES解密

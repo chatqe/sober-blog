@@ -23,9 +23,9 @@ public class BaseReqVO extends Page {
     // 是否推荐[0:否，1:是]
     private Boolean recommendStatus;
 
-    private Integer sortId;
+    private Integer categoryId;
 
-    private Integer labelId;
+    private Integer tagId;
 
     private Boolean userStatus;
 

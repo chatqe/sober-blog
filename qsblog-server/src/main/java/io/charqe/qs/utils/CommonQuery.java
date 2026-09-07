@@ -364,11 +364,11 @@ public class CommonQuery {
                 List<Category> categories = categoryMapper.selectList(Wrappers.<Category>lambdaQuery().orderByAsc(Category::getSort));
                 if (!CollectionUtils.isEmpty(categories)) {
                     categories.forEach(category -> {
-                        LambdaQueryChainWrapper<Article> categoryWrapper = new LambdaQueryChainWrapper<>(articleMapper);
-                        Integer countOfCategory = Math.toIntExact(categoryWrapper.eq(Article::getSortId, category.getId()).count());
+                        // LambdaQueryChainWrapper<Article> categoryWrapper = new LambdaQueryChainWrapper<>(articleMapper);
+                        // Integer countOfCategory = Math.toIntExact(categoryWrapper.eq(Article::getCategoryId, category.getId()).count());
                         // category.setCountOfCategory(countOfCategory);
 
-                        List<TagWebVO> tags = tagService.listPublic(category.getId());
+                        // List<TagWebVO> tags = tagService.listPublic(category.getId());
                         // category.setTags(tags);
                     });
                 }

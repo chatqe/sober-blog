@@ -6,6 +6,7 @@ import io.charqe.qs.modules.category.controller.admin.dto.CategorySaveReqDTO;
 import io.charqe.qs.modules.category.controller.admin.vo.CategoryDetailVO;
 import io.charqe.qs.modules.category.controller.admin.vo.CategoryListVO;
 import io.charqe.qs.modules.category.controller.web.vo.CategoryWebVO;
+import io.charqe.qs.modules.category.controller.web.vo.HomeStatsVO;
 import io.charqe.qs.modules.category.domain.pojo.Category;
 import io.charqe.qs.common.model.mp.CoreService;
 
@@ -53,4 +54,9 @@ public interface CategoryService extends CoreService<Category> {
      * 获取公开分类列表（Web）
      */
     List<CategoryWebVO> listPublic(Integer type);
+
+    /**
+     * 获取首页分类统计（含每类文章计数、文章总数）
+     */
+    HomeStatsVO getHomeStats();
 }

@@ -168,7 +168,8 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         BeanUtils.copyProperties(one, userVO);
         userVO.setPassword(null);
         if (isAdmin && one.getUserType() == UserTypeEnum.ADMIN.code()) {
-            userVO.setIsBoss(true);
+        // if (Objects.equals(one.getUserType(), UserTypeEnum.ADMIN.code())) {
+            userVO.setIsAdmin(true);
         }
 
         if (isAdmin) {
@@ -778,7 +779,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
             return R.fail("账号被冻结！");
         }
 
-        lambdaUpdate().eq(User::getEmail, email).set(User::getPassword, AESUtil.md5Hex(pwd)).update();
+        lambdaUpdate().eq(User::getEmail, email).set(User::getPassword, encodePassword(pwd)).update();
         qingSiCache.del(CommonConst.USER_CACHE + user.getId().toString());
 
         return R.success();

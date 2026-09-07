@@ -188,11 +188,18 @@ public class ArticleController {
     })
     @GetMapping("/getArticleById")
     public R<ArticleVO> getArticleById(
-            @Parameter(name = "id", description = "文章ID", required = true, example = "1")
-            @RequestParam("id") Long id,
+            @Parameter(name = "id", description = "文章ID", example = "1")
+            @RequestParam(value = "id", required = false) Long id,
+            @Parameter(name = "articleId", description = "文章ID（兼容 articleId 命名）", example = "1")
+            @RequestParam(value = "articleId", required = false) Long articleId,
             @Parameter(name = "password", description = "文章密码（加密文章时必填）", required = false, example = "123456")
             @RequestParam(value = "password", required = false) String password) {
-        return articleService.getArticleWithPwd(id, password);
+        // 兼容前端两种参数命名：id / articleId（与 checkHasLike、点赞接口的 articleId 对齐）
+        Long targetId = id != null ? id : articleId;
+        if (targetId == null) {
+            return R.fail("文章ID不能为空");
+        }
+        return articleService.getArticleWithPwd(targetId, password);
     }
 
     /**

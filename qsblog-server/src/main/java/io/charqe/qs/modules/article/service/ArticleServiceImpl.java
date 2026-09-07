@@ -122,8 +122,8 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         article.setRecommendStatus(articleVO.getRecommendStatus());
         article.setArticleTitle(articleVO.getArticleTitle());
         article.setArticleContent(articleVO.getArticleContent());
-        article.setSortId(articleVO.getSortId());
-        article.setLabelId(articleVO.getLabelId());
+        article.setCategoryId(articleVO.getCategoryId());
+        article.setTagId(articleVO.getTagId());
         article.setUserId(BlogUtil.getUserId());
         save(article);
 
@@ -134,12 +134,12 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 List<User> users = userService.lambdaQuery().select(User::getEmail, User::getSubscribe).eq(User::getUserStatus, StatusEnum.ENABLE.code()).list();
                 List<String> emails = users.stream().filter(u -> {
                     List<Integer> sub = JSON.parseArray(u.getSubscribe(), Integer.class);
-                    return !CollectionUtils.isEmpty(sub) && sub.contains(articleVO.getLabelId());
+                    return !CollectionUtils.isEmpty(sub) && sub.contains(articleVO.getTagId());
                 }).map(User::getEmail).collect(Collectors.toList());
 
                 if (!CollectionUtils.isEmpty(emails)) {
                     LambdaQueryChainWrapper<Tag> wrapper = new LambdaQueryChainWrapper<>(tagMapper);
-                    Tag tag = wrapper.select(Tag::getName).eq(Tag::getId, articleVO.getLabelId()).one();
+                    Tag tag = wrapper.select(Tag::getName).eq(Tag::getId, articleVO.getTagId()).one();
                     String text = getSubscribeMail(tag.getName(), articleVO.getArticleTitle());
                     WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);
                     mailUtil.sendMailMessage(emails, "您有一封来自" + (webInfo == null ? "青肆" : webInfo.getWebName()) + "的回执！", text);
@@ -183,8 +183,8 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         LambdaUpdateChainWrapper<Article> updateChainWrapper = lambdaUpdate()
                 .eq(Article::getId, articleVO.getId())
                 .eq(Article::getUserId, userId)
-                .set(Article::getLabelId, articleVO.getLabelId())
-                .set(Article::getSortId, articleVO.getSortId())
+                .set(Article::getTagId, articleVO.getTagId())
+                .set(Article::getCategoryId, articleVO.getCategoryId())
                 .set(Article::getArticleTitle, articleVO.getArticleTitle())
                 .set(Article::getUpdateBy, BlogUtil.getUsername())
                 .set(Article::getUpdateTime, LocalDateTime.now())
@@ -230,8 +230,8 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
     //             .in(!CollectionUtils.isEmpty(ids), Article::getId, ids)
     //             .like(StringUtils.hasText(baseReqVO.getSearchKey()), Article::getArticleTitle, baseReqVO.getArticleSearch())
     //             .eq(baseReqVO.getRecommendStatus() != null && baseReqVO.getRecommendStatus(), Article::getRecommendStatus, StatusEnum.ENABLE.code())
-    //             .eq(baseReqVO.getLabelId() != null, Article::getLabelId, baseReqVO.getLabelId())
-    //             .eq(baseReqVO.getSortId() != null, Article::getSortId, baseReqVO.getSortId())
+    //             .eq(baseReqVO.getTagId() != null, Article::getTagId, baseReqVO.getTagId())
+    //             .eq(baseReqVO.getCategoryId() != null, Article::getCategoryId, baseReqVO.getCategoryId())
     //             .orderByDesc(Article::getCreateTime));
     //
     //
@@ -309,12 +309,12 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             lambdaQuery.eq(Article::getRecommendStatus, StatusEnum.ENABLE.code());
         }
 
-        if (baseReqVO.getLabelId() != null) {
-            lambdaQuery.eq(Article::getLabelId, baseReqVO.getLabelId());
+        if (baseReqVO.getTagId() != null) {
+            lambdaQuery.eq(Article::getTagId, baseReqVO.getTagId());
         }
 
-        if (baseReqVO.getSortId() != null) {
-            lambdaQuery.eq(Article::getSortId, baseReqVO.getSortId());
+        if (baseReqVO.getCategoryId() != null) {
+            lambdaQuery.eq(Article::getCategoryId, baseReqVO.getCategoryId());
         }
 
         lambdaQuery.orderByDesc(Article::getCreateTime).page(baseReqVO);
@@ -369,8 +369,8 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                         .eq(Article::getIsDel, 0));
 
                 // stream 分组
-                Map<Long, List<Article>> sortArticleMap = articles.stream().collect(Collectors.groupingBy(Article::getSortId));
-                sortArticleMap.forEach((sortId, articleList) -> {
+                Map<Long, List<Article>> sortArticleMap = articles.stream().collect(Collectors.groupingBy(Article::getCategoryId));
+                sortArticleMap.forEach((categoryId, articleList) -> {
                     // 根据权重计算倒序排序
                     articleList.sort(Comparator.comparing(Article::getWeight).reversed());
                     // 获取前6条数据
@@ -386,12 +386,12 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                         vo.setVideoUrl(null);
                         return vo;
                     }).toList();
-                    map.put(sortId, articleVOList);
+                    map.put(categoryId, articleVOList);
                 });
 
                 // for (Sort sort : sorts) {
                 //     LambdaQueryChainWrapper<Article> lambdaQuery = lambdaQuery()
-                //             .eq(Article::getSortId, sort.getId())
+                //             .eq(Article::getCategoryId, sort.getId())
                 //             .orderByDesc(Article::getCreateTime)
                 //             .last("limit 6");
                 //     List<Article> articleList = lambdaQuery.list();
@@ -549,12 +549,12 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 .like(StringUtils.hasText(dto.getSearchKey()), Article::getArticleTitle, dto.getSearchKey())
                 .like(StringUtils.hasText(dto.getArticleSearch()), Article::getArticleTitle, dto.getArticleSearch())
                 .eq((Objects.nonNull(dto.getRecommendStatus()) && dto.getRecommendStatus()), Article::getRecommendStatus, StatusEnum.ENABLE.code())
-                .eq(Objects.nonNull(dto.getSortId()), Article::getSortId, dto.getSortId())
-                .eq(Objects.nonNull(dto.getLabelId()), Article::getLabelId, dto.getLabelId())
+                .eq(Objects.nonNull(dto.getCategoryId()), Article::getCategoryId, dto.getCategoryId())
+                .eq(Objects.nonNull(dto.getTagId()), Article::getTagId, dto.getTagId())
                 .orderByDesc(Article::getCreateTime));
 
         PageResult<Article> pageResult = PageResult.fromMpPage(articlePage);
-        ArticlePageVO articleListPage = ArticlePageVO.build(pageResult, dto.getDesc(), dto.getSearchKey(), dto.getSortId(), dto.getLabelId());
+        ArticlePageVO articleListPage = ArticlePageVO.build(pageResult, dto.getDesc(), dto.getSearchKey(), dto.getCategoryId(), dto.getTagId());
         List<Article> records = pageResult.getList();
         if (!CollectionUtils.isEmpty(records)) {
             List<ArticleVO> articles = new ArrayList<>();
@@ -617,10 +617,10 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         List<Category> categoryInfo = commonQuery.getCategoryInfo();
         if (!CollectionUtils.isEmpty(categoryInfo)) {
             for (Category c : categoryInfo) {
-                if (c.getId().intValue() == articleVO.getSortId().intValue()) {
+                if (c.getId().intValue() == articleVO.getCategoryId().intValue()) {
                     articleVO.setCategory(c);
                     // 获取标签信息
-                    Tag tag = tagMapper.selectById(articleVO.getLabelId());
+                    Tag tag = tagMapper.selectById(articleVO.getTagId());
                     if (tag != null) {
                         articleVO.setTag(tag);
                     }

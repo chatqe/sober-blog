@@ -101,24 +101,24 @@ public class ArticleVO {
     private String updateBy;
 
     @Schema(
-            name = "sortId",
+            name = "categoryId",
             description = "文章分类ID",
             required = true,
             example = "1"
     )
     @NotNull(message = "文章分类不能为空")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
-    private Long sortId;
+    private Long categoryId;
 
     @Schema(
-            name = "labelId",
+            name = "tagId",
             description = "文章标签ID",
             required = true,
             example = "1"
     )
     @NotNull(message = "文章标签不能为空")
     @JsonFormat(shape = JsonFormat.Shape.STRING)
-    private Long labelId;
+    private Long tagId;
 
     @Schema(name = "commentCount", description = "评论数量", example = "5")
     // 需要查询封装

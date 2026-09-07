@@ -21,15 +21,15 @@ public class ArticlePageVO extends PageResult {
     private List list;
     private boolean desc = true;
     private String searchKey;
-    private String sortId;
-    private Integer labelId;
+    private String categoryId;
+    private Integer tagId;
 
     public static  ArticlePageVO build(
             PageResult baseResult, // 父类 PageResult 实例
             boolean desc ,
             String searchKey,
-            String sortId,
-            Integer labelId
+            String categoryId,
+            Integer tagId
 
     ) {
         ArticlePageVO result = new ArticlePageVO();
@@ -40,8 +40,8 @@ public class ArticlePageVO extends PageResult {
         // 2. 单独 set 子类额外属性（工厂方法内统一赋值）
         result.setDesc(desc);
         result.setSearchKey(searchKey);
-        result.setSortId(sortId);
-        result.setLabelId(labelId);
+        result.setCategoryId(categoryId);
+        result.setTagId(tagId);
         return result;
     }
 }
