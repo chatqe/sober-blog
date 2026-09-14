@@ -5,10 +5,11 @@ import io.charqe.qs.common.enums.CodeMsg;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
 import io.charqe.qs.modules.behavior.service.subscribe.SubscribeService;
+import io.charqe.qs.modules.category.controller.web.vo.CategoryWebVO;
+import io.charqe.qs.modules.category.controller.web.vo.HomeStatsVO;
 import io.charqe.qs.modules.category.service.CategoryService;
 import io.charqe.qs.modules.file.enums.BizTypeEnum;
 import io.charqe.qs.modules.user.controller.web.dto.LoginUserInfo;
-import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,28 +19,46 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.Objects;
 
 /**
- * 分类订阅控制器（Web端）
+ * 分类控制器（Web端公开）
  *
  * @author Joy
  * @since 2026-06-22
  */
 @RestController
 @RequestMapping("/category")
-@Tag(name = "categorySubscribe", description = "分类订阅接口")
-public class CategorySubscribeController {
-
-    @Resource
-    private SubscribeService subscribeService;
+@Tag(name = "category", description = "分类管理")
+public class WebCategoryController {
 
     @Resource
     private CategoryService categoryService;
+    @Resource
+    private SubscribeService subscribeService;
+    @Operation(summary = "获取公开分类列表", description = "返回启用且展示的分类，支持按类型过滤")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功")
+    })
+    @GetMapping("/list")
+    public R<List<CategoryWebVO>> list(
+            @Parameter(name = "type", description = "分类类型过滤: 0-导航栏分类, 1-普通分类") @RequestParam(required = false) Integer type) {
+        return R.success(categoryService.listPublic(type));
+    }
+
+    @Operation(summary = "获取首页分类统计", description = "聚合返回分类列表（含每类文章数）和文章总数，供侧边栏展示")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功")
+    })
+    @GetMapping("/homeStats")
+    public R<HomeStatsVO> homeStats() {
+        return R.success(categoryService.getHomeStats());
+    }
+
 
     /**
-     * 订阅/取消订阅专栏（标签）
-     * <p>
+     * 订阅/取消订阅专栏（标签
      * flag = true：订阅
      * flag = false：取消订阅
      *

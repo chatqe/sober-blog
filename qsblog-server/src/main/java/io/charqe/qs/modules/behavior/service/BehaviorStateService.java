@@ -18,4 +18,9 @@ public interface BehaviorStateService extends CoreService<BehaviorState> {
      * @return true-存在活跃行为
      */
     boolean checkHasBeh(BehaviorState beh);
+
+    /**
+     * 检查用户是否对指定 bizId/bizType/action 存在活跃状态记录
+     */
+    boolean checkHasState(Long userId, Long bizId, Integer bizType, Integer action);
 }

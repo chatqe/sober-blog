@@ -53,6 +53,9 @@ public class LikeServiceImpl extends AbstractBehService implements LikeService, 
             mutexState.setStatus(BehaviorState.BEH_CANCELLED);
             mutexState.setUpdateTime(java.time.LocalDateTime.now());
             behaviorStateService.updateById(mutexState);
+            // 减少互斥行为的计数
+            decrementCount(dto, mutexType);
+            syncAfterMutexCancel(dto, userId, mutexType);
             log.debug("互斥操作: {} 时自动取消 {} (userId={}, bizId={})",
                     actionType.desc(), mutexType.desc(), userId, dto.getBizId());
         }

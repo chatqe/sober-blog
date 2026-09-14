@@ -34,4 +34,14 @@ public interface BehEntityHandler {
     default void afterAction(Long bizId, Long userId) {
         // 默认空实现
     }
+
+    /**
+     * 行为取消后的后置处理（如同步计数回退）
+     *
+     * @param bizId  业务主键ID
+     * @param userId 操作人ID
+     */
+    default void afterCancelAction(Long bizId, Long userId) {
+        // 默认空实现
+    }
 }

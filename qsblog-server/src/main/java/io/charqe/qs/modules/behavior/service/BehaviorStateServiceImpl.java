@@ -33,4 +33,14 @@ public class BehaviorStateServiceImpl extends CoreServiceImpl<BehaviorStateMappe
         BehaviorState dbBeh = getOne(wrapper);
         return dbBeh != null && beh.getAction().equals(dbBeh.getAction());
     }
+
+    @Override
+    public boolean checkHasState(Long userId, Long bizId, Integer bizType, Integer action) {
+        return count(Lb.<BehaviorState>q()
+                .eq(BehaviorState::getUserId, userId)
+                .eq(BehaviorState::getBizId, bizId)
+                .eq(BehaviorState::getBizType, bizType)
+                .eq(BehaviorState::getAction, action)
+                .eq(BehaviorState::getStatus, BehaviorState.BEH_ACTIVE)) > 0;
+    }
 }

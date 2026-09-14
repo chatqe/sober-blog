@@ -3,6 +3,8 @@ package io.charqe.qs.modules.behavior.controller.web;
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
+import io.charqe.qs.modules.behavior.enums.BehActionType;
+import io.charqe.qs.modules.behavior.service.BehaviorStateService;
 import io.charqe.qs.modules.behavior.service.comment.CommentActionService;
 import io.charqe.qs.modules.behavior.service.dislike.DislikeService;
 import io.charqe.qs.modules.behavior.service.share.ShareService;
@@ -50,6 +52,9 @@ public class BehaviorController {
 
     @Resource
     private ViewService viewService;
+
+    @Resource
+    private BehaviorStateService behaviorStateService;
 
     // ==================== 点赞 ====================
 
@@ -213,5 +218,28 @@ public class BehaviorController {
             @RequestBody BehDTO dto) {
         viewService.view(dto, BlogUtil.getUserId());
         return R.success();
+    }
+
+    // ==================== 状态查询 ====================
+
+    @Operation(summary = "查询用户行为状态（点赞/点踩/订阅/转发/评论）")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功"),
+            @ApiResponse(responseCode = "401", description = "未登录")
+    })
+    @GetMapping("/state")
+    public R<Boolean> getState(
+            @Parameter(description = "业务ID", required = true) @RequestParam Long bizId,
+            @Parameter(description = "业务类型(1=文章,2=评论,6=分类,7=标签)", required = true) @RequestParam Integer bizType,
+            @Parameter(description = "行为类型(1=点赞,2=点踩,3=订阅,4=转发,5=评论)", required = true) @RequestParam Integer action) {
+        if (!BehActionType.contains(action)) {
+            return R.fail("无效的行为类型: " + action);
+        }
+        Long userId = BlogUtil.getUserId();
+        if (userId == null) {
+            return R.fail("请先登录");
+        }
+        boolean hasState = behaviorStateService.checkHasState(userId, bizId, bizType, action);
+        return R.success(hasState);
     }
 }

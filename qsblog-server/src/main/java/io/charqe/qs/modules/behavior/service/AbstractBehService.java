@@ -59,7 +59,8 @@ public abstract class AbstractBehService {
                 log.debug("行为已存在，幂等跳过: userId={}, bizId={}, action={}", userId, dto.getBizId(), actionType.desc());
                 return;
             }
-            // 之前取消过，重新激活
+            // 之前取消过，先处理互斥再重新激活
+            handleMutex(dto, userId, actionType);
             existingState.setStatus(BehaviorState.BEH_ACTIVE);
             existingState.setUpdateTime(java.time.LocalDateTime.now());
             behaviorStateService.updateById(existingState);
@@ -119,7 +120,10 @@ public abstract class AbstractBehService {
         // 4. 减少计数
         decrementCount(dto, getPositiveAction(unActionType));
 
-        // 5. 发布取消事件
+        // 5. 实体后置处理（取消回退）
+        handler.afterCancelAction(dto.getBizId(), userId);
+
+        // 6. 发布取消事件
         eventPublisher.publishEvent(new BehActionEvent(this, userId, dto.getBizId(), dto.getBizType(), unActionType));
 
         log.debug("{} 操作完成: userId={}, bizId={}, bizType={}", unActionType.desc(), userId, dto.getBizId(), dto.getBizType());
@@ -133,6 +137,14 @@ public abstract class AbstractBehService {
      */
     protected void handleMutex(BehDTO dto, Long userId, BehActionType actionType) {
         // 默认无互斥逻辑
+    }
+
+    /**
+     * 取消互斥行为后的实体后置处理
+     */
+    protected void syncAfterMutexCancel(BehDTO dto, Long userId, BehActionType mutexType) {
+        BehEntityHandler handler = handlerFactory.getHandler(dto.getBizType());
+        handler.afterCancelAction(dto.getBizId(), userId);
     }
 
     // ==================== 辅助方法 ====================
