@@ -1,5 +1,6 @@
 package io.charqe.qs.modules.category.service;
 
+import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.common.model.PageResult;
@@ -11,6 +12,8 @@ import io.charqe.qs.modules.category.controller.admin.vo.CategoryDetailVO;
 import io.charqe.qs.modules.category.controller.admin.vo.CategoryListVO;
 import io.charqe.qs.modules.category.controller.web.vo.CategoryWebVO;
 import io.charqe.qs.modules.category.controller.web.vo.HomeStatsVO;
+import io.charqe.qs.modules.category.convert.CategoryConvert;
+import io.charqe.qs.modules.sysdict.controller.web.vo.DictVO;
 import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
 import io.charqe.qs.modules.category.domain.pojo.Category;
 import io.charqe.qs.utils.cache.QingSiCache;
@@ -39,6 +42,9 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
     @Resource
     private io.charqe.qs.modules.article.domain.dao.ArticleMapper articleMapper;
 
+    @Resource
+    private CategoryConvert categoryConvert;
+
     @Override
     public PageResult<CategoryListVO> pageList(String keyword, Integer type, Integer status, int pageNum, int pageSize) {
         var wrapper = Lb.<Category>q()
@@ -49,7 +55,8 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
 
         var mpPage = page(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize), wrapper);
         PageResult<CategoryListVO> result = new PageResult<>();
-        List<CategoryListVO> voList = mpPage.getRecords().stream().map(this::toListVO).collect(Collectors.toList());
+        List<CategoryListVO> voList = mpPage.getRecords()
+                .stream().map(categoryConvert::toListVO).collect(Collectors.toList());
         result.setList(voList);
         result.setTotal(mpPage.getTotal());
         result.setPages((int) mpPage.getPages());
@@ -64,7 +71,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         if (category == null) {
             throw new BizException("分类不存在");
         }
-        return toDetailVO(category);
+        return categoryConvert.toDetailVO(category);
     }
 
     @Override
@@ -73,7 +80,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
             throw new BizException("分类名称不能为空");
         }
 
-        Category entity = toEntity(dto);
+        Category entity = categoryConvert.toEntity(dto);
         save(entity);
         clearCache();
     }
@@ -92,7 +99,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
             throw new BizException("分类不存在");
         }
 
-        Category entity = toEntity(dto);
+        Category entity = categoryConvert.toEntity(dto);
         updateById(entity);
         clearCache();
     }
@@ -129,26 +136,19 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         String cacheKey = "category:public:type_" + type;
         String cached = qingSiCache.get(cacheKey);
         if (cached != null) {
-            return com.alibaba.fastjson2.JSON.parseArray(cached, CategoryWebVO.class);
+            return JSON.parseArray(cached, CategoryWebVO.class);
         }
 
-        var wrapper = Lb.<Category>q()
-                .eq(Category::getStatus, 1)
+        List<CategoryWebVO> list = list(Lb.<Category>q().eq(Category::getStatus, 1)
                 .eq(Category::getIsShow, 1)
                 .eq(type != null, Category::getType, type)
-                .orderByAsc(Category::getSort);
-
-        List<CategoryWebVO> list = lambdaQuery().eq(Category::getStatus, 1)
-                .eq(Category::getIsShow, 1)
-                .eq(type != null, Category::getType, type)
-                .orderByAsc(Category::getSort)
-                .list()
+                .orderByAsc(Category::getSort))
                 .stream()
-                .map(this::toWebVO)
-                .collect(Collectors.toList());
+                .map(categoryConvert::toWebVO)
+                .toList();
 
         if (!list.isEmpty()) {
-            qingSiCache.put(cacheKey, com.alibaba.fastjson2.JSON.toJSONString(list));
+            qingSiCache.put(cacheKey, JSON.toJSONString(list));
         }
         return list;
     }
@@ -192,56 +192,33 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         return result;
     }
 
-    private Category toEntity(CategorySaveReqDTO dto) {
-        Category entity = new Category();
-        entity.setName(dto.getName());
-        entity.setCateDesc(dto.getDesc());
-        entity.setType(dto.getType());
-        entity.setIsShow(dto.getIsShow());
-        entity.setSort(dto.getSort());
-        entity.setIcon(dto.getIcon());
-        return entity;
-    }
-
-    private CategoryListVO toListVO(Category entity) {
-        CategoryListVO vo = new CategoryListVO();
-        vo.setId(entity.getId());
-        vo.setName(entity.getName());
-        vo.setDesc(entity.getCateDesc());
-        vo.setType(entity.getType());
-        vo.setIsShow(entity.getIsShow());
-        vo.setSort(entity.getSort());
-        vo.setIcon(entity.getIcon());
-        vo.setCreateTime(entity.getCreateTime() != null ? entity.getCreateTime().toString() : null);
-        return vo;
-    }
-
-    private CategoryDetailVO toDetailVO(Category entity) {
-        CategoryDetailVO vo = new CategoryDetailVO();
-        vo.setId(entity.getId());
-        vo.setName(entity.getName());
-        vo.setDesc(entity.getCateDesc());
-        vo.setType(entity.getType());
-        vo.setIsShow(entity.getIsShow());
-        vo.setSort(entity.getSort());
-        vo.setIcon(entity.getIcon());
-        vo.setCreateTime(entity.getCreateTime() != null ? entity.getCreateTime().toString() : null);
-        vo.setUpdateTime(entity.getUpdateTime() != null ? entity.getUpdateTime().toString() : null);
-        return vo;
-    }
-
-    private CategoryWebVO toWebVO(Category entity) {
-        CategoryWebVO vo = new CategoryWebVO();
-        vo.setId(entity.getId());
-        vo.setName(entity.getName());
-        vo.setDesc(entity.getCateDesc());
-        vo.setType(entity.getType());
-        vo.setSort(entity.getSort());
-        vo.setIcon(entity.getIcon());
-        return vo;
-    }
-
     private void clearCache() {
-        qingSiCache.del(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.CATEGORY_INFO);
+        qingSiCache.del(CommonConst.CATEGORY_DICT);
+        qingSiCache.del("category:public:type_0");
+        qingSiCache.del("category:public:type_1");
+    }
+
+    @Override
+    public List<DictVO> getDictList() {
+        String cached = qingSiCache.get(CommonConst.CATEGORY_DICT);
+        if (cached != null) {
+            return JSON.parseArray(cached, DictVO.class);
+        }
+        List<Category> list = lambdaQuery()
+                .eq(Category::getStatus, 1)
+                .eq(Category::getIsShow, 1)
+                .orderByAsc(Category::getSort)
+                .list();
+        List<DictVO> dictList = list.stream().map(c -> {
+            DictVO vo = new DictVO();
+            vo.setValue(String.valueOf(c.getId()));
+            vo.setLabel(c.getName());
+            return vo;
+        }).collect(Collectors.toList());
+        if (!dictList.isEmpty()) {
+            qingSiCache.put(CommonConst.CATEGORY_DICT, JSON.toJSONString(dictList));
+        }
+        return dictList;
     }
 }
