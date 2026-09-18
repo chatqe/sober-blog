@@ -2,10 +2,12 @@ package io.charqe.qs.modules.category.service;
 
 import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.constants.CommonConst;
+import io.charqe.qs.common.enums.StatusEnum;
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.common.model.mp.Lb;
+import io.charqe.qs.modules.category.constant.CateConstant;
 import io.charqe.qs.modules.category.controller.admin.dto.CategoryBatchSortDTO;
 import io.charqe.qs.modules.category.controller.admin.dto.CategorySaveReqDTO;
 import io.charqe.qs.modules.category.controller.admin.vo.CategoryDetailVO;
@@ -13,6 +15,7 @@ import io.charqe.qs.modules.category.controller.admin.vo.CategoryListVO;
 import io.charqe.qs.modules.category.controller.web.vo.CategoryWebVO;
 import io.charqe.qs.modules.category.controller.web.vo.HomeStatsVO;
 import io.charqe.qs.modules.category.convert.CategoryConvert;
+import io.charqe.qs.modules.category.enums.CategoryTypeEnum;
 import io.charqe.qs.modules.sysdict.controller.web.vo.DictVO;
 import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
 import io.charqe.qs.modules.category.domain.pojo.Category;
@@ -132,23 +135,26 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
     }
 
     @Override
-    public List<CategoryWebVO> listPublic(Integer type) {
-        String cacheKey = "category:public:type_" + type;
-        String cached = qingSiCache.get(cacheKey);
+    public List<CategoryWebVO> listNavBar() {
+
+        String cached = qingSiCache.get(CateConstant.CATEGORY_NAVBAR);
         if (cached != null) {
             return JSON.parseArray(cached, CategoryWebVO.class);
         }
 
-        List<CategoryWebVO> list = list(Lb.<Category>q().eq(Category::getStatus, 1)
-                .eq(Category::getIsShow, 1)
-                .eq(type != null, Category::getType, type)
-                .orderByAsc(Category::getSort))
+        List<Category> rawList = list(Lb.<Category>q()
+                .eq(Category::getStatus, StatusEnum.ENABLE.code())
+                .eq(Category::getIsShow, StatusEnum.ENABLE.code())
+                .eq(Category::getType, CategoryTypeEnum.BAR.code())
+                .orderByAsc(Category::getSort));
+
+        List<CategoryWebVO> list = rawList
                 .stream()
                 .map(categoryConvert::toWebVO)
                 .toList();
 
         if (!list.isEmpty()) {
-            qingSiCache.put(cacheKey, JSON.toJSONString(list));
+            qingSiCache.put(CateConstant.CATEGORY_NAVBAR, JSON.toJSONString(list));
         }
         return list;
     }
@@ -195,6 +201,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
     private void clearCache() {
         qingSiCache.del(CommonConst.CATEGORY_INFO);
         qingSiCache.del(CommonConst.CATEGORY_DICT);
+        qingSiCache.del(CateConstant.CATEGORY_NAVBAR);
         qingSiCache.del("category:public:type_0");
         qingSiCache.del("category:public:type_1");
     }

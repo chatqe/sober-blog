@@ -22,8 +22,8 @@ public class CategoryWebVO {
     @Schema(description = "分类描述")
     private String desc;
 
-    @Schema(description = "分类类型: 0-导航栏分类, 1-普通分类")
-    private Integer type;
+    // @Schema(description = "分类类型: 0-导航栏分类, 1-普通分类")
+    // private Integer type;
 
     @Schema(description = "排序")
     private Integer sort;

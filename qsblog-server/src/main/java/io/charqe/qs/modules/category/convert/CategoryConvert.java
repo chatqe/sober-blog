@@ -6,11 +6,9 @@ import io.charqe.qs.modules.category.controller.admin.vo.CategoryListVO;
 import io.charqe.qs.modules.category.controller.web.vo.CategoryWebVO;
 import io.charqe.qs.modules.category.domain.pojo.Category;
 import org.mapstruct.Mapper;
-import org.mapstruct.Named;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -27,33 +25,29 @@ public interface CategoryConvert {
     /**
      * DTO → Entity：保存/更新时使用
      */
+    @Mapping(source = "desc", target = "cateDesc")
     Category toEntity(CategorySaveReqDTO dto);
 
     /**
      * Entity → ListVO
      */
+    @Mapping(source = "cateDesc", target = "desc")
     CategoryListVO toListVO(Category entity);
 
     /**
      * Entity → DetailVO
      */
+    @Mapping(source = "cateDesc", target = "desc")
     CategoryDetailVO toDetailVO(Category entity);
 
     /**
      * Entity → WebVO
      */
+    @Mapping(source = "cateDesc", target = "desc")
     CategoryWebVO toWebVO(Category entity);
 
     /**
      * Entity 批量转 ListVO
      */
     List<CategoryListVO> toListVOList(List<Category> entities);
-
-    /**
-     * LocalDateTime → 格式化字符串
-     */
-    @Named("localDateTimeToString")
-    default String localDateTimeToString(LocalDateTime time) {
-        return time != null ? time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null;
-    }
 }
