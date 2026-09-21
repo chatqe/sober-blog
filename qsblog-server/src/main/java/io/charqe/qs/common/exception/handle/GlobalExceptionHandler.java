@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
         if (ex instanceof MethodArgumentNotValidException) {
             MethodArgumentNotValidException e = (MethodArgumentNotValidException) ex;
             Map<String, String> collect = e.getFieldErrors().stream().collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
-            return R.fail(JSON.toJSONString(collect));
+            return R.fail(400, JSON.toJSONString(collect));
         }
 
         if (ex instanceof MissingServletRequestParameterException) {

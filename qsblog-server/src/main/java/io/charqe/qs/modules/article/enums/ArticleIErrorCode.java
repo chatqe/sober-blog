@@ -23,11 +23,11 @@ public enum ArticleIErrorCode implements IErrorCode {
 
     @Override
     public String code() {
-        return null;
+        return code;
     }
 
     @Override
     public String msg() {
-        return null;
+        return msg;
     }
 }

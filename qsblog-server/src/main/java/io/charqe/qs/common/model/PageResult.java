@@ -2,9 +2,7 @@ package io.charqe.qs.common.model;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -94,6 +92,20 @@ public class PageResult<T> implements Serializable {
         result.setPages(pages);
         result.setPageNum(pageNum);
         result.setPageSize(pageSize);
+        return result;
+    }
+
+    /**
+     * 手动构建分页结果（适配无ORM框架场景）
+     */
+    public static <T> PageResult<T> build(List<T> list, Page page) {
+        // int pages = total == 0 || pageSize == 0 ? 0 : (int) Math.ceil((double) total / pageSize);
+        PageResult<T> result = new PageResult<>();
+        result.setList(list);
+        result.setTotal(page.getTotal());
+        result.setPages((int) page.getPages());
+        result.setPageNum((int) page.getCurrent());
+        result.setPageSize((int) page.getSize());
         return result;
     }
 

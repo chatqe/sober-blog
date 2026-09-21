@@ -104,7 +104,7 @@ public class WebInfoController {
             @ApiResponse(responseCode = "200", description = "查询成功，返回网站信息"),
             @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @GetMapping("/")
+    @GetMapping("/get")
     public R<WebInfo> getWebInfo() {
         // 从缓存获取 WebInfo 对象
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);

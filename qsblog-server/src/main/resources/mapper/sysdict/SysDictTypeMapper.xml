@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.charqe.qs.modules.sysdict.domain.dao.SysDictTypeMapper">
+
+    <!-- 检查 type_code 是否存在（返回 1/0） -->
+    <select id="existsByTypeCode" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM sys_dict_type
+        WHERE type_code = #{typeCode}
+          AND is_del = 0
+    </select>
+
+</mapper>

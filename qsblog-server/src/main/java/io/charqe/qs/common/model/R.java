@@ -5,6 +5,7 @@ import io.charqe.qs.common.exception.IErrorCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -19,6 +20,7 @@ import java.io.Serializable;
 public class R<T> implements Serializable {
 
     // 显式声明序列化版本号（建议用 IDE 自动生成，如 Alt+Insert → SerialVersionUID）
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "状态码：200-成功，其他-失败", example = "200")
@@ -69,7 +71,7 @@ public class R<T> implements Serializable {
         return new R(codeMsg.getCode(), codeMsg.getMsg());
     }
     public static <T> R<T> fail(IErrorCode errorCode) {
-        return new R(errorCode.code(), errorCode.msg());
+        return new R(500, errorCode.msg());
     }
 
     public static <T> R<T> fail(Integer code, String message) {

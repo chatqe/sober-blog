@@ -8,9 +8,12 @@ import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
 import io.charqe.qs.modules.comment.domain.dao.CommentMapper;
 import io.charqe.qs.common.model.BaseReqVO;
+import io.charqe.qs.modules.comment.controller.web.dto.AuthorCommentQueryDTO;
+import io.charqe.qs.modules.comment.controller.web.vo.AuthorCommentListVO;
 import io.charqe.qs.modules.comment.controller.web.vo.CommentVO;
 import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.comment.domain.pojo.Comment;
+import io.charqe.qs.modules.user.domain.dao.UserMapper;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.common.enums.CodeMsg;
 import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
@@ -24,8 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +48,9 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
 
     @Autowired
     private MailSendUtil mailSendUtil;
+
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     public R saveComment(CommentVO commentVO) {
@@ -74,7 +79,15 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
         comment.setParentId(commentVO.getParentId());
         comment.setRootId(commentVO.getRootId());
         comment.setReplyToUserId(commentVO.getReplyToUserId());
-        comment.setAuthorId(BlogUtil.getUserId());
+        Long authorId = BlogUtil.getUserId();
+        comment.setAuthorId(authorId);
+        if (authorId != null) {
+            User author = commonQuery.getUser(authorId);
+            if (author != null) {
+                comment.setAuthorName(author.getUsername());
+                comment.setAuthorAvatar(author.getAvatar());
+            }
+        }
         save(comment);
 
         try {
@@ -176,6 +189,84 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
             }
         }
         return R.success(baseReqVO);
+    }
+
+    @Override
+    public AuthorCommentListVO listAuthorComments(AuthorCommentQueryDTO dto, Long currentUserId) {
+        List<Long> articleIds = commonQuery.getUserArticleIds(currentUserId);
+        if (articleIds.isEmpty()) {
+            return emptyResult();
+        }
+
+        LambdaQueryChainWrapper<Comment> wrapper = lambdaQuery()
+                .in(Comment::getBizId, articleIds)
+                .eq(Comment::getBizType, CommentTypeEnum.ARTICLE.code())
+                .orderByDesc(Comment::getCreateTime);
+
+        if (dto.getStatus() != null) {
+            wrapper.eq(Comment::getStatus, dto.getStatus());
+        }
+        if (StringUtils.hasText(dto.getSearchKey())) {
+            wrapper.like(Comment::getContent, dto.getSearchKey());
+        }
+
+        Page<Comment> page = wrapper.page(new Page<>(dto.getPageNum(), dto.getPageSize()));
+        if (page.getRecords().isEmpty()) {
+            return emptyResult();
+        }
+
+        Set<Long> authorIds = page.getRecords().stream()
+                .map(Comment::getAuthorId)
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+        Set<Long> replyIds = page.getRecords().stream()
+                .map(Comment::getReplyToUserId)
+                .filter(id -> id != null && id > 0)
+                .collect(Collectors.toSet());
+        Set<Long> allIds = new java.util.HashSet<>();
+        allIds.addAll(authorIds);
+        allIds.addAll(replyIds);
+
+        Map<Long, User> userMap = allIds.isEmpty() ? Collections.emptyMap()
+                : userMapper.selectBatchIds(allIds).stream().collect(Collectors.toMap(User::getId, u -> u));
+
+        List<AuthorCommentListVO.Item> records = page.getRecords().stream().map(c -> {
+            AuthorCommentListVO.Item item = new AuthorCommentListVO.Item();
+            item.setId(c.getId());
+            item.setBizId(c.getBizId());
+            item.setContent(c.getContent());
+            item.setStatus(c.getStatus());
+            item.setChildCnt(c.getChildCnt());
+            item.setCreateTime(c.getCreateTime());
+            if (c.getAuthorId() != null) {
+                User author = userMap.get(c.getAuthorId());
+                if (author != null) {
+                    item.setUsername(author.getUsername());
+                    item.setAvatar(author.getAvatar());
+                } else {
+                    item.setUsername(BlogUtil.getRandomName(c.getAuthorId().toString()));
+                }
+            }
+            return item;
+        }).collect(Collectors.toList());
+
+        AuthorCommentListVO result = new AuthorCommentListVO();
+        result.setTotal(page.getTotal());
+        result.setPages(page.getPages());
+        result.setPageNum((long) dto.getPageNum());
+        result.setPageSize((long) dto.getPageSize());
+        result.setRecords(records);
+        return result;
+    }
+
+    private AuthorCommentListVO emptyResult() {
+        AuthorCommentListVO result = new AuthorCommentListVO();
+        result.setTotal(0L);
+        result.setPages(0L);
+        result.setPageNum(1L);
+        result.setPageSize(0L);
+        result.setRecords(Collections.emptyList());
+        return result;
     }
 
     /**

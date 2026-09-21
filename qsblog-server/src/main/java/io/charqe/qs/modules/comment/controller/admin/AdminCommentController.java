@@ -26,7 +26,7 @@ import javax.annotation.Resource;
  * @since 2026-01-17 10:47
  */
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/admin/comment")
 @Tag(name = "adminComment", description = "管理后台-评论管理")
 public class AdminCommentController {
 
@@ -49,7 +49,7 @@ public class AdminCommentController {
         @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @GetMapping("/comment/user/deleteComment")
+    @GetMapping("/user/deleteComment")
     @LoginCheck(1)
     public R userDeleteComment(
         @Parameter(name = "id", description = "评论ID", required = true, example = "1")
@@ -82,34 +82,16 @@ public class AdminCommentController {
         @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @GetMapping("/comment/boss/deleteComment")
+    @GetMapping("/delComment")
     @LoginCheck(0)
-    public R bossDeleteComment(
+    public R adminDelComment(
         @Parameter(name = "id", description = "评论ID", required = true, example = "1")
         @RequestParam("id") Integer id) {
         commentService.removeById(id);
         return R.success();
     }
 
-    /**
-     * 作者查询评论
-     *
-     * @param baseReqVO 查询参数
-     * @return 评论分页列表
-     */
-    @Operation(summary = "作者查询评论", description = "用于文章作者查询自己文章下的评论列表")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功，返回评论分页列表"),
-        @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
-    @PostMapping("/comment/user/list")
-    @LoginCheck(1)
-    public R<Page> listUserComment(
-        @Parameter(name = "baseReqVO", description = "查询参数", required = true, example = "{\"page\":1,\"pageSize\":10}")
-        @RequestBody BaseReqVO baseReqVO) {
-        return commentService.listAdminComment(baseReqVO, false);
-    }
+
 
     /**
      * 管理员查询评论
@@ -123,7 +105,7 @@ public class AdminCommentController {
         @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @PostMapping("/comment/boss/list")
+    @PostMapping("/list")
     @LoginCheck(0)
     public R<Page> listBossComment(
         @Parameter(name = "baseReqVO", description = "查询参数", required = true, example = "{\"page\":1,\"pageSize\":10}")

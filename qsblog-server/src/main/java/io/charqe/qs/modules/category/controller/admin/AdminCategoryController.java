@@ -24,7 +24,7 @@ import javax.annotation.Resource;
  * @since 2026-06-22
  */
 @RestController
-@RequestMapping("/admin/categories")
+@RequestMapping("/admin/category")
 @Tag(name = "adminCategory", description = "管理后台-分类管理")
 public class AdminCategoryController {
 

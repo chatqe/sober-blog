@@ -23,7 +23,7 @@ import javax.annotation.Resource;
  * @since 2026-06-22
  */
 @RestController
-@RequestMapping("/admin/tags")
+@RequestMapping("/admin/tag")
 @Tag(name = "adminTag", description = "管理后台-标签管理")
 public class AdminTagController {
 

@@ -108,9 +108,13 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
 
     @Override
     public R<UserVO> login(String account, String password, Boolean isAdmin) {
-        password = new String(
-                // 解密网页密码
-                SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt(password));
+        try {
+            password = new String(
+                    // 解密网页密码
+                    SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt(password));
+        } catch (Exception e) {
+            return R.fail("密码格式错误，请重新输入！");
+        }
 
         User one = lambdaQuery().and(wrapper -> wrapper
                         .eq(User::getUsername, account)
@@ -132,13 +136,12 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         }
 
 
+        boolean isBoss = one.getUserType() == UserTypeEnum.ADMIN.code();
+
         String adminToken = "";
         String userToken = "";
 
-        if (isAdmin) {
-            if (one.getUserType() != UserTypeEnum.ADMIN.code() && one.getUserType() != UserTypeEnum.DEV.code()) {
-                return R.fail("请输入管理员账号！");
-            }
+        if (isBoss) {
             if (qingSiCache.get(CommonConst.ADMIN_TOKEN + one.getId()) != null) {
                 adminToken = qingSiCache.get(CommonConst.ADMIN_TOKEN + one.getId());
             }
@@ -149,13 +152,13 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         }
 
         UUID.randomUUID().toString().replaceAll("-", "");
-        if (isAdmin && !StringUtils.hasText(adminToken)) {
+        if (isBoss && !StringUtils.hasText(adminToken)) {
             String uuid = UUID.randomUUID().toString().replaceAll("-", "");
             adminToken = CommonConst.ADMIN_ACCESS_TOKEN + uuid;
 
             qingSiCache.put(adminToken, one, CommonConst.TOKEN_EXPIRE);
             qingSiCache.put(CommonConst.ADMIN_TOKEN + one.getId(), adminToken, CommonConst.TOKEN_EXPIRE);
-        } else if (!isAdmin && !StringUtils.hasText(userToken)) {
+        } else if (!isBoss && !StringUtils.hasText(userToken)) {
             String uuid = UUID.randomUUID().toString().replace("-", "");
             userToken = CommonConst.USER_ACCESS_TOKEN + uuid;
 
@@ -167,16 +170,8 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
         userVO.setPassword(null);
-        if (isAdmin && one.getUserType() == UserTypeEnum.ADMIN.code()) {
-        // if (Objects.equals(one.getUserType(), UserTypeEnum.ADMIN.code())) {
-            userVO.setIsAdmin(true);
-        }
-
-        if (isAdmin) {
-            userVO.setAccessToken(adminToken);
-        } else {
-            userVO.setAccessToken(userToken);
-        }
+        userVO.setIsAdmin(isBoss);
+        userVO.setAccessToken(isBoss ? adminToken : userToken);
         return R.success(userVO);
     }
 

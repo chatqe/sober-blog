@@ -23,7 +23,7 @@ public class WebInfoConfigurer implements WebMvcConfigurer {
                         "/swagger-ui/**",
                         "/user/login",
                         "/admin/**",
-                        "/webInfo",
+                        "/webInfo/get",
                         "/webInfo/updateWebInfo");
     }
 }

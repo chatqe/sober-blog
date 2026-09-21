@@ -1,8 +1,10 @@
 package io.charqe.qs.modules.article.service;
 
+import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
@@ -19,6 +21,9 @@ import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.common.model.mp.Lb;
 import io.charqe.qs.infra.thirdparty.mail.MailUtil;
+import io.charqe.qs.modules.article.controller.admin.dto.AdminArticlePageReqDTO;
+import io.charqe.qs.modules.article.controller.admin.vo.AdminArticlePageRespVO;
+import io.charqe.qs.modules.article.controller.admin.vo.AdminArticleVO;
 import io.charqe.qs.modules.article.controller.web.dto.ArticleDTO;
 import io.charqe.qs.modules.article.controller.web.dto.ArticlePageDTO;
 import io.charqe.qs.modules.article.controller.web.vo.ArticlePageVO;
@@ -27,15 +32,19 @@ import io.charqe.qs.modules.article.convert.ArticleConvert;
 import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
 import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.article.enums.ArticleIErrorCode;
-import io.charqe.qs.modules.behavior.service.BehaviorStateService;
 import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
+import io.charqe.qs.modules.behavior.service.BehaviorStateService;
 import io.charqe.qs.modules.behavior.service.like.LikeService;
+import io.charqe.qs.modules.category.controller.web.dto.ArticleCategoryNameDTO;
 import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
 import io.charqe.qs.modules.category.domain.pojo.Category;
 import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
 import io.charqe.qs.modules.file.enums.BizTypeEnum;
+import io.charqe.qs.modules.tag.controller.web.dto.ArticleTagNameDTO;
 import io.charqe.qs.modules.tag.domain.dao.TagMapper;
 import io.charqe.qs.modules.tag.domain.pojo.Tag;
+import io.charqe.qs.modules.user.controller.web.dto.ArticleUserNameDTO;
+import io.charqe.qs.modules.user.domain.dao.UserMapper;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.service.UserService;
 import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
@@ -85,6 +94,9 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
     private TagMapper tagMapper;
 
     @Resource
+    private UserMapper userMapper;
+
+    @Resource
     private QingSiCache qingSiCache;
 
 
@@ -127,7 +139,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         article.setUserId(BlogUtil.getUserId());
         save(article);
 
-        qingSiCache.del(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.CATEGORY_INFO);
 
         try {
             if (articleVO.getViewStatus()) {
@@ -164,12 +176,12 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
     }
 
     @Override
-    public R deleteArticle(Integer id) {
+    public R deleteArticle(Long id) {
         Long userId = BlogUtil.getUserId();
         lambdaUpdate().eq(Article::getId, id)
                 .eq(Article::getUserId, userId)
                 .remove();
-        qingSiCache.del(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.CATEGORY_INFO);
         return R.success();
     }
 
@@ -208,7 +220,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             updateChainWrapper.set(Article::getViewStatus, articleVO.getViewStatus());
         }
         updateChainWrapper.update();
-        qingSiCache.del(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.CATEGORY_INFO);
         return R.success();
     }
 
@@ -277,7 +289,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
         Article article = lambdaQuery.one();
         if (article == null) {
-            return R.success();
+            return R.fail(ArticleIErrorCode.NOT_FOUND);
         }
         if (!article.getViewStatus() && (!StringUtils.hasText(password) || !password.equals(article.getPassword()))) {
             return R.fail("密码错误" + (StringUtils.hasText(article.getTips()) ? article.getTips() : "请联系作者获取密码"));
@@ -347,23 +359,18 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
      * @return
      */
     @Override
-    public R<Map<Long, List<ArticleVO>>> listSortArticle() {
-        Map<Long, List<ArticleVO>> result = JSON.parseObject(qingSiCache.get(CommonConst.SORT_ARTICLE_LIST), new TypeReference<Map<Long, List<ArticleVO>>>() {
+    public R<Map<Long, List<ArticleVO>>> listCategoryArticle() {
+        Map<Long, List<ArticleVO>> result = JSON.parseObject(qingSiCache.get(CommonConst.CATEGORY_ARTICLE_LIST), new TypeReference<Map<Long, List<ArticleVO>>>() {
         });
         if (result != null) {
             return R.success(result);
         }
 
-        synchronized (CommonConst.SORT_ARTICLE_LIST.intern()) {
-            result = JSON.parseObject(qingSiCache.get(CommonConst.SORT_ARTICLE_LIST), new TypeReference<Map<Long, List<ArticleVO>>>() {
+        synchronized (CommonConst.CATEGORY_ARTICLE_LIST.intern()) {
+            result = JSON.parseObject(qingSiCache.get(CommonConst.CATEGORY_ARTICLE_LIST), new TypeReference<Map<Long, List<ArticleVO>>>() {
             });
             if (result == null) {
                 Map<Long, List<ArticleVO>> map = new HashMap<>();
-
-                // 获取所有展示分类
-                List<Category> categories = new LambdaQueryChainWrapper<>(categoryMapper)
-                        .eq(Category::getIsShow, 1)
-                        .select(Category::getId).list();
 
                 List<Article> articles = list(Wrappers.<Article>lambdaQuery()
                         .eq(Article::getIsDel, 0));
@@ -389,31 +396,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                     map.put(categoryId, articleVOList);
                 });
 
-                // for (Sort sort : sorts) {
-                //     LambdaQueryChainWrapper<Article> lambdaQuery = lambdaQuery()
-                //             .eq(Article::getCategoryId, sort.getId())
-                //             .orderByDesc(Article::getCreateTime)
-                //             .last("limit 6");
-                //     List<Article> articleList = lambdaQuery.list();
-                //     if (CollectionUtils.isEmpty(articleList)) {
-                //         continue;
-                //     }
-                //
-                //     List<ArticleVO> articleVOList = articleList.stream().map(article -> {
-                //         if (article.getArticleContent().length() > CommonConst.SUMMARY) {
-                //             article.setArticleContent(article.getArticleContent().substring(0, CommonConst.SUMMARY).replace("`", "").replace("#", "").replace(">", ""));
-                //         }
-                //
-                //         ArticleVO vo = buildArticleVO(article, false);
-                //         vo.setHasVideo(StringUtils.hasText(article.getVideoUrl()));
-                //         vo.setPassword(null);
-                //         vo.setVideoUrl(null);
-                //         return vo;
-                //     }).collect(Collectors.toList());
-                //     map.put(sort.getId(), articleVOList);
-                // }
-
-                qingSiCache.put(CommonConst.SORT_ARTICLE_LIST, map, CommonConst.TOKEN_INTERVAL);
+                qingSiCache.put(CommonConst.CATEGORY_ARTICLE_LIST, map, CommonConst.EXPIRE_H);
                 return R.success(map);
             } else {
                 return R.success(result);
@@ -455,7 +438,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
                 this.update(Wrappers.<Article>lambdaUpdate().
                         eq(Article::getId, dto.getArticleId())
-                        .set(Article::getLikeCount, byId.getLikeCount() - 1));
+                        .set(Article::getLikeCount, byId.getLikeCount() == null ? 0 : byId.getLikeCount() - 1));
                 return "取消点赞成功";
             }
 
@@ -464,7 +447,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         // 更新点赞数
         this.update(Wrappers.<Article>lambdaUpdate().
                 eq(Article::getId, dto.getArticleId())
-                .set(Article::getLikeCount, byId.getLikeCount() + 1)
+                .set(Article::getLikeCount, (byId.getLikeCount() == null ? 0 : byId.getLikeCount()) + 1)
         );
         return "点赞成功";
     }
@@ -479,7 +462,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
     public boolean checkHasLike(String articleId) {
         Article byId = getById(Long.valueOf(articleId));
         if (Objects.isNull(byId)) {
-            throw new ServiceException("文章不存在");
+            return false;
         }
         Long userId = BlogUtil.getUserId();
         if (userId == null) {
@@ -521,6 +504,70 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             }
             throw new BizException(ArticleIErrorCode.UPDATE_FAILED);
         }
+
+    }
+
+    /**
+     * 后台文章分页列表
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public AdminArticlePageRespVO pageList(AdminArticlePageReqDTO dto) {
+
+        LambdaQueryWrapper<Article> pageWrapper = Lb.<Article>q()
+                .like(CharSequenceUtil.isNotBlank(dto.getTitleKey()), Article::getArticleTitle, dto.getTitleKey())
+                .eq(Objects.nonNull(dto.getCateId()), Article::getCategoryId, dto.getCateId())
+                .eq(Objects.nonNull(dto.getTagId()), Article::getTagId, dto.getTagId())
+                .eq(Objects.nonNull(dto.getRecommend()), Article::getRecommendStatus, dto.getRecommend())
+                .orderByDesc(Article::getCreateTime);
+
+        Page<Article> articlePage = articleMapper.selectPage(dto.toMpPage(), pageWrapper);
+
+        List<Article> articleList = articlePage.getRecords();
+        List<Long> cateIds = articleList.stream().map(Article::getCategoryId).toList();
+        List<Long> tagIds = articleList.stream().map(Article::getTagId).toList();
+        List<Long> userIds = articleList.stream().map(Article::getUserId).toList();
+
+        // 分类id → 名称
+        Map<Long, String> cateNameMap = categoryMapper.selectBatchIdsWithNames(cateIds).stream()
+                .collect(Collectors.toMap(ArticleCategoryNameDTO::getId, ArticleCategoryNameDTO::getName, (a, b) -> a));
+        // 标签id → 名称
+        Map<Long, String> tagNameMap = tagMapper.selectBatchIdsWithNames(tagIds).stream()
+                .collect(Collectors.toMap(ArticleTagNameDTO::getId, ArticleTagNameDTO::getName, (a, b) -> a));
+        // 用户id → 用户名
+        Map<Long, String> userNameMap = userMapper.selectBatchIdsWithUsername(userIds).stream()
+                .collect(Collectors.toMap(ArticleUserNameDTO::getId, ArticleUserNameDTO::getUserName, (a, b) -> a));
+
+        List<AdminArticleVO> list = articleList.stream().map(article -> {
+            AdminArticleVO vo = articleConvert.toAdminVO(article);
+            if (article.getCategoryId() != null) {
+                vo.setCategoryName(cateNameMap.getOrDefault(article.getCategoryId(), ""));
+            }
+            if (article.getTagId() != null) {
+                vo.setTagName(tagNameMap.getOrDefault(article.getTagId(), ""));
+            }
+            if (article.getUserId() != null) {
+                vo.setAuthorName(userNameMap.getOrDefault(article.getUserId(), ""));
+            }
+
+            if (Boolean.TRUE.equals(article.getCommentStatus())) {
+                vo.setCommentCount(commonQuery.getCommentCount(article.getId(), CommentTypeEnum.ARTICLE.code()));
+            } else {
+                vo.setCommentCount(0);
+            }
+
+            return vo;
+        }).toList();
+
+        AdminArticlePageRespVO respVO = new AdminArticlePageRespVO();
+        respVO.setList(list);
+        respVO.setTotal(articlePage.getTotal());
+        respVO.setPages((int) articlePage.getPages());
+        respVO.setPageNum((int) articlePage.getCurrent());
+        respVO.setPageSize((int) articlePage.getSize());
+        return respVO;
 
     }
 

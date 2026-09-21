@@ -17,14 +17,12 @@ import io.charqe.qs.modules.comment.domain.pojo.Comment;
 import io.charqe.qs.modules.family.controller.web.vo.FamilyWebVO;
 import io.charqe.qs.modules.family.service.FamilyService;
 import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
-import io.charqe.qs.modules.tag.controller.web.vo.TagWebVO;
 import io.charqe.qs.modules.tag.service.TagService;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.service.UserService;
 import io.charqe.qs.utils.cache.QingSiCache;
 import org.apache.commons.io.IOUtils;
 import org.lionsoul.ip2region.xdb.Searcher;
-import org.springframework.beans.BeanUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -351,14 +349,14 @@ public class CommonQuery {
      * 获取分类标签信息
      */
     public List<Category> getCategoryInfo() {
-        List<Category> categoryInfo = JSON.parseObject(qingSiCache.get(CommonConst.SORT_INFO), new TypeReference<List<Category>>() {
+        List<Category> categoryInfo = JSON.parseObject(qingSiCache.get(CommonConst.CATEGORY_INFO), new TypeReference<List<Category>>() {
         });
         if (categoryInfo != null) {
             return categoryInfo;
         }
 
-        synchronized (CommonConst.SORT_INFO.intern()) {
-            categoryInfo = JSON.parseObject(qingSiCache.get(CommonConst.SORT_INFO), new TypeReference<List<Category>>() {
+        synchronized (CommonConst.CATEGORY_INFO.intern()) {
+            categoryInfo = JSON.parseObject(qingSiCache.get(CommonConst.CATEGORY_INFO), new TypeReference<List<Category>>() {
             });
             if (categoryInfo == null) {
                 List<Category> categories = categoryMapper.selectList(Wrappers.<Category>lambdaQuery().orderByAsc(Category::getSort));
@@ -368,11 +366,11 @@ public class CommonQuery {
                         // Integer countOfCategory = Math.toIntExact(categoryWrapper.eq(Article::getCategoryId, category.getId()).count());
                         // category.setCountOfCategory(countOfCategory);
 
-                        // List<TagWebVO> tags = tagService.listPublic(category.getId());
+                        // List<TagWebVO> tags = tagService.listNavBar(category.getId());
                         // category.setTags(tags);
                     });
                 }
-                qingSiCache.put(CommonConst.SORT_INFO, categories);
+                qingSiCache.put(CommonConst.CATEGORY_INFO, categories);
                 return categories;
             } else {
                 return categoryInfo;

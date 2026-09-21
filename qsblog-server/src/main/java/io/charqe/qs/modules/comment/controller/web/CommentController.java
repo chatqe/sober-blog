@@ -1,13 +1,17 @@
 package io.charqe.qs.modules.comment.controller.web;
 
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.aop.SaveCheck;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
+import io.charqe.qs.modules.comment.controller.web.dto.AuthorCommentQueryDTO;
+import io.charqe.qs.modules.comment.controller.web.vo.AuthorCommentListVO;
 import io.charqe.qs.modules.comment.controller.web.vo.CommentVO;
 import io.charqe.qs.modules.comment.service.CommentService;
+import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.CommonQuery;
 import io.charqe.qs.utils.StrUtil;
 import io.charqe.qs.utils.cache.QingSiCache;
@@ -95,9 +99,9 @@ public class CommentController {
         @ApiResponse(responseCode = "403", description = "无权限删除该评论"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @GetMapping("/delete")
+    @GetMapping("/del")
     @LoginCheck
-    public R deleteComment(
+    public R delComment(
         @Parameter(name = "id", description = "评论ID", required = true, example = "1")
         @RequestParam("id") Long id) {
         return commentService.deleteComment(id);
@@ -148,6 +152,28 @@ public class CommentController {
         @Parameter(name = "baseReqVO", description = "分页查询参数", required = true, example = "{\"pageNum\":1,\"pageSize\":10}") 
         @RequestBody BaseReqVO baseReqVO) {
         return commentService.listComment(baseReqVO);
+    }
+
+
+
+
+    /**
+     * 作者查询自己文章下的评论（新版）
+     *
+     * 支持按评论状态过滤和内容关键词搜索，返回结构化的分页结果
+     */
+    @Operation(summary = "作者查询自己文章下的评论", description = "当前登录用户查看自己发布文章收到的评论列表，支持分页、状态过滤和关键词搜索")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功，返回评论分页列表"),
+        @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作"),
+        @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    @PostMapping("/author/list")
+    @LoginCheck(1)
+    public R<AuthorCommentListVO> listAuthorComments(
+        @Parameter(name = "dto", description = "查询参数", required = true, example = "{\"pageNum\":1,\"pageSize\":10,\"status\":1,\"searchKey\":\"很棒\"}")
+        @RequestBody AuthorCommentQueryDTO dto) {
+        return R.success(commentService.listAuthorComments(dto, BlogUtil.getUserId()));
     }
 }
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.charqe.qs.modules.sysdict.domain.dao.SysDictDataMapper">
+
+    <!-- 根据 type_code 删除所有关联字典数据 -->
+    <delete id="deleteByTypeCode">
+        DELETE FROM sys_dict_data
+        WHERE type_code = #{typeCode}
+          AND is_del = 0
+    </delete>
+
+</mapper>

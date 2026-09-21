@@ -79,7 +79,7 @@ public class User extends BaseDO {
     private String introduction;
 
     /**
-     * 用户类型[0:admin，1:管理员，2:普通用户]
+     * 用户类型[0:超级管理员，1:管理员，2:普通用户]
      */
     private Integer userType;
 

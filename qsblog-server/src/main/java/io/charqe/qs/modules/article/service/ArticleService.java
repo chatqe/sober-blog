@@ -2,6 +2,8 @@ package io.charqe.qs.modules.article.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.common.model.R;
+import io.charqe.qs.modules.article.controller.admin.dto.AdminArticlePageReqDTO;
+import io.charqe.qs.modules.article.controller.admin.vo.AdminArticlePageRespVO;
 import io.charqe.qs.modules.article.controller.web.dto.ArticlePageDTO;
 import io.charqe.qs.modules.article.controller.web.vo.ArticlePageVO;
 import io.charqe.qs.modules.article.controller.web.vo.ArticleVO;
@@ -23,7 +25,7 @@ public interface ArticleService extends CoreService<Article> {
 
     R saveArticle(ArticleVO articleVO);
 
-    R deleteArticle(Integer id);
+    R deleteArticle(Long id);
 
     R updateArticle(ArticleVO articleVO);
 
@@ -42,7 +44,7 @@ public interface ArticleService extends CoreService<Article> {
 
     R<ArticleVO> getArticleById(Long id);
 
-    R<Map<Long, List<ArticleVO>>> listSortArticle();
+    R<Map<Long, List<ArticleVO>>> listCategoryArticle();
 
     String addArticleLikeCount(ArticleDTO dto);
 
@@ -57,4 +59,6 @@ public interface ArticleService extends CoreService<Article> {
      * @param recommendStatus
      */
     void setArticleStatus(Long articleId, Boolean viewStatus, Boolean commentStatus, Boolean recommendStatus);
+
+    AdminArticlePageRespVO pageList(AdminArticlePageReqDTO dto);
 }

@@ -65,7 +65,7 @@ public class ArticleController {
             @Validated @RequestBody ArticleVO articleVO) {
         qingSiCache.del(CommonConst.USER_ARTICLE_LIST + BlogUtil.getUserId());
         qingSiCache.del(CommonConst.ARTICLE_LIST);
-        qingSiCache.del(CommonConst.SORT_ARTICLE_LIST);
+        qingSiCache.del(CommonConst.CATEGORY_ARTICLE_LIST);
         return articleService.saveArticle(articleVO);
     }
 
@@ -89,10 +89,10 @@ public class ArticleController {
     @LoginCheck(1)
     public R deleteArticle(
             @Parameter(name = "id", description = "文章ID", required = true, example = "1")
-            @RequestParam("id") Integer id) {
+            @RequestParam("id") Long id) {
         qingSiCache.del(CommonConst.USER_ARTICLE_LIST + BlogUtil.getUserId());
         qingSiCache.del(CommonConst.ARTICLE_LIST);
-        qingSiCache.del(CommonConst.SORT_ARTICLE_LIST);
+        qingSiCache.del(CommonConst.CATEGORY_ARTICLE_LIST);
         return articleService.deleteArticle(id);
     }
 
@@ -118,7 +118,7 @@ public class ArticleController {
             @Parameter(name = "articleVO", description = "文章信息对象", required = true, example = "{\"id\":1,\"articleTitle\":\"更新后的文章标题\",\"articleContent\":\"更新后的文章内容\"}")
             @Validated @RequestBody ArticleVO articleVO) {
         qingSiCache.del(CommonConst.ARTICLE_LIST);
-        qingSiCache.del(CommonConst.SORT_ARTICLE_LIST);
+        qingSiCache.del(CommonConst.CATEGORY_ARTICLE_LIST);
         return articleService.updateArticle(articleVO);
     }
 
@@ -164,9 +164,9 @@ public class ArticleController {
             @ApiResponse(responseCode = "200", description = "查询成功，返回按分类分组的文章列表"),
             @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @GetMapping("/listSortArticle")
-    public R<Map<Long, List<ArticleVO>>> listSortArticle() {
-        return articleService.listSortArticle();
+    @GetMapping("/articleCategoryList")
+    public R<Map<Long, List<ArticleVO>>> listCategoryArticle() {
+        return articleService.listCategoryArticle();
     }
 
     /**

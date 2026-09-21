@@ -16,6 +16,7 @@ import io.charqe.qs.modules.category.controller.web.vo.CategoryWebVO;
 import io.charqe.qs.modules.category.controller.web.vo.HomeStatsVO;
 import io.charqe.qs.modules.category.convert.CategoryConvert;
 import io.charqe.qs.modules.category.enums.CategoryTypeEnum;
+import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
 import io.charqe.qs.modules.sysdict.controller.web.vo.DictVO;
 import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
 import io.charqe.qs.modules.category.domain.pojo.Category;
@@ -59,7 +60,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         var mpPage = page(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize), wrapper);
         PageResult<CategoryListVO> result = new PageResult<>();
         List<CategoryListVO> voList = mpPage.getRecords()
-                .stream().map(categoryConvert::toListVO).collect(Collectors.toList());
+                .stream().map(categoryConvert::toListVO).toList();
         result.setList(voList);
         result.setTotal(mpPage.getTotal());
         result.setPages((int) mpPage.getPages());
@@ -219,10 +220,11 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
                 .list();
         List<DictVO> dictList = list.stream().map(c -> {
             DictVO vo = new DictVO();
-            vo.setValue(String.valueOf(c.getId()));
+            vo.setValue(c.getCateDesc());
             vo.setLabel(c.getName());
+            vo.setSort(c.getSort());
             return vo;
-        }).collect(Collectors.toList());
+        }).toList();
         if (!dictList.isEmpty()) {
             qingSiCache.put(CommonConst.CATEGORY_DICT, JSON.toJSONString(dictList));
         }

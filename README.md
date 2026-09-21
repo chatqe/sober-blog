@@ -1,207 +1,378 @@
-﻿## QingSi - Blog
-QingSi：青肆, 青春肆意。
+# Qs-Blog · 青肆博客
 
-![首页](poetize_picture/首页.png)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Java 17](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.org/)
+[![Spring Boot 2.7](https://img.shields.io/badge/Spring%20Boot-2.7.18-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Maven](https://img.shields.io/badge/Build-Maven-brightgreen.svg)](https://maven.apache.org/)
+[![MySQL 8](https://img.shields.io/badge/MySQL-8.x-blue.svg)](https://www.mysql.com/)
+[![Redis](https://img.shields.io/badge/Redis-6%2B-red.svg)](https://redis.io/)
 
-## Star
-ps: 虽然我知道，大部分人都是来了直接下载源代码后就潇洒的离开。
+> 青肆，青春肆意。一个基于 Spring Boot + Vue3 的前后端分离个人博客系统，支持文章管理、评论互动、弹幕、IM 聊天室、资源收藏、访问统计等完整功能。
 
-虽然我知道现实就是如此的残酷，但我还是要以我萤虫之力对各位到来的同仁发出一声诚挚的嘶吼：`Star`，`Star`，`Star`。
+---
 
-相信各位同仁看到下面的项目介绍一定会心动的，心想`怎么没有早点遇到这么漂亮的博客项目`。在搭建这个美丽的网站同时，何不`Star`，为这个项目点赞呢！
+## 目录
+
+- [技术栈](#技术栈)
+- [项目结构](#项目结构)
+- [快速开始](#快速开始)
+  - [环境要求](#环境要求)
+  - [数据库初始化](#数据库初始化)
+  - [后端启动](#后端启动)
+  - [前端启动](#前端启动)
+- [核心功能](#核心功能)
+- [模块说明](#模块说明)
+- [API 文档](#api-文档)
+- [部署说明](#部署说明)
+- [环境变量配置](#环境变量配置)
+- [架构设计](#架构设计)
+- [变更记录](#变更记录)
+
+---
 
 ## 技术栈
-这是一个 SpringBoot  + Vue3 的产物，支持移动端自适应，配有完备的前台和后台管理功能。
 
-前端技术：Vue3（博客系统），Vue3（IM 聊天室系统），Element Plus（Vue3），Element-Plus UI（Vue3），Naive UI（Vue3）
+### 后端
 
-后端技术：Java，SpringBoot，MySQL，Mybatis-Plus，t-io，qiniu-java-sdk，spring-boot-starter-mail
+| 组件 | 版本 | 用途 |
+|------|------|------|
+| Java | 17 | 运行时 |
+| Spring Boot | 2.7.18 | 应用框架 |
+| MyBatis-Plus | 3.5.5 | ORM / 数据访问层 |
+| MySQL | 8.x | 关系型数据库 |
+| Redis | 6+ | 缓存 / 分布式锁 / 会话存储 |
+| Druid | 1.2.18 | 数据库连接池 |
+| Lettuce | — | Redis 客户端 |
+| Redisson | 3.16.3 | 分布式锁 |
+| Knife4j | 4.5.0 | API 文档（OpenAPI 3.0） |
+| Spring Security Crypto | — | BCrypt 密码加密 |
+| JJWT | 0.11.5 | JWT Token 签发与校验 |
+| t-io | 3.7.5.v20211028-RELEASE | WebSocket 即时通信 |
+| Hutool | 5.8.32 | 通用工具库 |
+| FastJSON2 | 2.0.43 | JSON 序列化 |
+| Protostuff | 1.1.5 | Redis 高性能序列化 |
+| MapStruct | 1.5.5.Final | DTO/VO 编译期映射 |
+| Lombok | 1.18.30 | 代码简化 |
+| Hibernate Validator | 6.1.7.Final | 参数校验 |
+| Freemarker | 2.3.31 | MyBatis-Plus 代码生成模板 |
+| Qiniu Java SDK | 7.13.0 | 七牛云对象存储 |
+| ip2region | 2.7.0 | 离线 IP 地理定位 |
+| yauaa | 7.31.0 | User-Agent 解析 |
 
-网站分两个模块：
-- 博客系统：具有文章，表白墙，图片墙，收藏夹，乐曲，视频播放，留言，友链，时间线，后台管理等功能。
-- 聊天室系统：具有朋友圈（时间线），好友，群等功能。
+### 前端（开源版）
 
-本网站采用前后端分离进行实现，两个前端项目通过Nginx代理，后端使用Java。
+| 项目 | 技术 | 仓库 |
+|------|------|------|
+| 博客前端 | Vue3 + Element Plus | [gitee.com/littledokey/poetize-vue2](https://gitee.com/littledokey/poetize-vue2) |
+| IM 聊天室 | Vue3 + Naive UI | [gitee.com/littledokey/poetize-im-vue3](https://gitee.com/littledokey/poetize-im-vue3) |
 
-部署网站需要安装Nginx、Java、MySQL，然后打包前后端项目并部署。
+---
 
-文件服务可以使用七牛云，也可以使用服务器。默认使用服务器。
+## 项目结构
 
-Vue3（IM 聊天室系统）是非必须的。如果部署，则需要依赖博客，然后从博客的“联系我”进入，因为登录模块在博客。
+```
+qs-blog/
+├── pom.xml                          # 父 POM（依赖版本管理）
+├── qsblog-server/                   # 后端主模块
+│   ├── pom.xml                      # 服务端依赖配置
+│   └── src/main/
+│       ├── java/io/charqe/qs/
+│       │   ├── QsBlogApplication.java        # 启动类 (@EnableScheduling @EnableAsync)
+│       │   ├── aop/                          # AOP 切面
+│       │   │   ├── LoginCheckAspect.java     # 登录鉴权拦截
+│       │   │   ├── IdempotentAspect.java     # 幂等性保护
+│       │   │   ├── SaveCheckAspect.java      # 防刷保存限流
+│       │   │   └── ResourceCheckAspect.java  # 资源权限校验
+│       │   ├── common/                       # 公共基础设施
+│       │   │   ├── config/                   # 配置类（CORS、MyBatis、OpenAPI 等）
+│       │   │   ├── enums/                    # 枚举定义（StatusEnum、VisibilityEnum 等）
+│       │   │   ├── exception/                # 全局异常处理（BizException、GlobalExceptionHandler）
+│       │   │   └── model/                    # 基础模型（BaseDO、R<T>、PageQuery、PageResult）
+│       │   ├── framework/                    # 框架层（拦截器、过滤器、异步线程池）
+│       │   ├── infra/                        # 第三方服务集成（七牛、百度地图、邮件）
+│       │   ├── modules/                      # 业务模块（15+ 子模块）
+│       │   └── utils/                        # 工具类（JWT、AES、Redis、IP、验证码等）
+│       └── resources/
+│           ├── mapper/                       # MyBatis XML Mapper 文件
+│           └── application*.yml              # 多环境配置（dev / prod）
+├── docker/                                   # 构建产物输出目录
+├── docs/                                     # 项目文档
+├── CLAUDE.md                                 # Claude Agent 工作规范
+└── README.md
+```
 
-## 项目地址
-- 博客前端（开源版）：https://gitee.com/littledokey/poetize-vue2.git
-- 聊天室前端（开源版）：https://gitee.com/littledokey/poetize-im-vue3.git
-- 后端（开源版）：https://gitee.com/littledokey/poetize-server.git
-- 博客前端、聊天室前端、后端汇总版（上述三个仓库放在一个仓库里，代码无差别）（开源版）：https://gitee.com/littledokey/poetize
-- 七牛云登录/注册地址（文件服务/CDN）：https://s.qiniu.com/Mz6Z32
+### 业务模块目录规范
 
-## 本地启动
-Vue2：
-1. npm install
-2. npm run serve
+每个业务模块遵循统一结构：
 
-Vue3：
-1. npm install
-2. npm run serve
+```
+modules/<name>/
+├── controller/web/    # 前台公开接口
+├── controller/admin/  # 后台管理接口
+├── service/           # 服务接口与实现
+├── domain/
+│   ├── dao/           # Mapper 接口（继承 CoreMapper<T>）
+│   ├── pojo/          # 实体类（继承 BaseDO）
+│   └── dto/           # 数据传输对象 / VO / 查询参数
+└── enums/             # 模块专属枚举
+```
 
-SpringBoot：
-1. 导入SQL文件到数据库（qsblog.sql）
-2. 配置数据库连接（application.yml里面的datasource信息）
-3. 启动（QsBlogApplication）
+---
 
-## 项目介绍
-大家好，我是Joy。qs-blog已经1年了。
+## 快速开始
 
-从2021年6月16日开始搭建项目，到2022年8月21日第一个版本发布。期间曾因为换工作而暂停几个月，也因老头环而鸽了几个月。
+### 环境要求
 
-项目经历了大大小小的更新，每次更新都是在美观度上的精雕细琢，也修复了很多问题，添加了很多功能。
+| 环境 | 最低版本 | 推荐版本 |
+|------|----------|----------|
+| JDK | 17 | 17 LTS |
+| Maven | 3.6+ | 3.8+ |
+| MySQL | 8.0 | 8.0+ |
+| Redis | 6.0 | 7.0+ |
 
-项目提供部分源码供大家参考学习，只需要在Gitee拉取项目，按照Readme启动说明就能直接启动，但需要一定的编程能力。完整版就需要您赞助本项目了。
+### 数据库初始化
 
-感谢对POETIZE的支持。
+1. 创建数据库（默认 `qingsi`，端口 `3309`）：
 
-## 完整版
-[官网完整版：https://poetize.cn](https://poetize.cn)
+```sql
+CREATE DATABASE IF NOT EXISTS qingsi DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-[购买请移步：https://poetize.cn/article/20](https://poetize.cn/article/20)
+2. 执行 SQL 初始化脚本（导入 `qsblog.sql`）。
 
-[完整版测试网站：http://zuimei.live](http://zuimei.live)，用户名Abby，密码：5201314（请勿搞破坏）。
+3. 数据库连接地址（dev profile）：
 
-[POETIZE - 文档导航与网站美化](https://poetize.cn/article/100)
+| 配置项 | 值 |
+|--------|----|
+| Host | `192.168.30.100:3309` |
+| Database | `qingsi` |
+| Redis Host | `192.168.30.100:6379` |
+| Redis DB | `8` |
 
-部署专栏：[POETIZE - 部署专栏](https://poetize.cn/label/30)
+### 后端启动
 
-使用指南专栏：[POETIZE - 使用指南专栏](https://poetize.cn/label/31)
+```bash
+# 编译打包
+mvn clean package -f pom.xml
 
-### 完整版特色
-在开源版的基础上持续更新与优化，极致美学设计，实用与美观并存，丰富且强大的文章系统，致力于成为最美博客与最美内容平台。
+# 运行测试
+mvn test -f qsblog-server/pom.xml
 
-#### 多首页
+# 启动服务（默认 dev profile，端口 18081）
+mvn spring-boot:run -f qsblog-server/pom.xml
+```
 
-##### 经典超美博客首页
-![首页1](poetize_picture/首页1.jpg)
+打包后的 Fat JAR 输出至 `docker/qsblog-server.jar`：
 
-##### 文章首页
-![首页2](poetize_picture/首页2.jpg)
+```bash
+java -jar docker/qsblog-server.jar --spring.profiles.active=dev
+```
 
-##### 专栏首页
-![首页3](poetize_picture/首页3.jpg)
+### 前端启动
 
-##### 极简起始页
-![首页4](poetize_picture/首页4.jpg)
+```bash
+# 安装依赖
+pnpm install
 
-#### 专栏文章
-![专栏](poetize_picture/专栏.jpg)
+# 开发模式启动
+pnpm dev
+```
 
-## 开源版
+---
 
-### 博客
+## 核心功能
 
-#### 文章速览、文章分类
-![首页文章速览](poetize_picture/首页文章速览.png)
+### 前台功能
 
-![分类页面](poetize_picture/分类页面.png)
+- **文章系统**：文章发布/编辑/分类/标签/加密/订阅，支持视频嵌入、文章目录
+- **评论互动**：多级评论、点赞/点踩（防刷限流）、评论审核
+- **弹幕系统**：文章弹幕发送与展示
+- **资源收藏**：收藏夹管理、音乐盒、图片墙
+- **访问统计**：浏览量计数、访客 IP 地域分布（ip2region 离线库）
+- **友链管理**：友情链接列表
+- **表白墙**：匿名告白墙功能
+- **时间线**：朋友圈动态展示
 
-#### 文章详情页：文章、视频功能与留言
-![文章详情页](poetize_picture/文章详情页.png)
+### 后台管理
 
-![文章视频功能](poetize_picture/文章视频功能.png)
+- 文章 CRUD、批量操作、分类/标签管理
+- 评论审核、用户管理、访问日志分析
+- 系统配置（通过 MySQL 动态配置，无需重新打包）
+- 文件资源管理（本地 / 七牛云切换）
+- 字典管理、权限控制
 
-![文章留言区域](poetize_picture/文章留言区域.png)
+### 即时通信（可选）
 
-#### 恋爱笔记与旅拍
-![恋爱笔记页面](poetize_picture/恋爱笔记页面.png)
+基于 t-io 的 WebSocket 聊天室，支持好友、群组。默认关闭（`im.enable: false`），前端需从博客登录态接入。
 
-![旅拍页面](poetize_picture/旅拍页面.png)
+---
 
-#### 百宝箱、弹幕墙与友人帐
-![百宝箱](poetize_picture/百宝箱.png)
+## 模块说明
 
-![弹幕墙](poetize_picture/弹幕墙.png)
+| 模块 | 说明 |
+|------|------|
+| `article` | 文章管理（公开 + 后台 CRUD、分类/标签关联、订阅） |
+| `behavior` | 用户行为（点赞/点踩/关注，含幂等保护） |
+| `comment` | 评论管理（多级评论、审核、后台配置） |
+| `danmaku` | 弹幕管理（发送、过滤、展示） |
+| `category` | 文章分类（父子目录、排序、缓存管理） |
+| `tag` | 文章标签管理 |
+| `file` | 文件资源（上传、存储、七牛云集成、收藏夹） |
+| `moment` | 朋友圈动态（时间线） |
+| `family` | 表白墙 |
+| `access` | 访问日志（IP 地域统计、UA 解析） |
+| `sysconfig` | 系统配置（动态化，无需重启） |
+| `sysdict` | 数据字典管理（Redis 缓存） |
+| `user` | 用户管理（注册、登录、JWT、密码加密） |
+| `webInfo` | 网站信息（元数据、SEO 配置） |
+| `weblinks` | 友链管理 |
+| `im` | IM 聊天室（WebSocket，默认关闭） |
+| `system` | 系统基础（权限、角色） |
 
-![友人帐](poetize_picture/友人帐.png)
+---
 
-#### 聊天室与朋友圈
-![聊天室](poetize_picture/聊天室.png)
+## API 文档
 
-![朋友圈](poetize_picture/朋友圈.png)
+服务启动后，API 文档自动可用：
 
-### 后台管理系统
+| 地址 | 说明 |
+|------|------|
+| http://localhost:18081/doc.html | Knife4j 增强 UI |
+| http://localhost:18081/v3/api-docs | OpenAPI 3.0 JSON |
+| http://localhost:18081/swagger-ui.html | Swagger UI |
 
-#### 访问统计、基础设置与文件管理
-![后台管理访问统计](poetize_picture/后台管理访问统计.png)
+所有 Controller 方法均标注 `@Operation(summary = "...")` 和 `@Schema`，包扫描路径为 `io.charqe.qs.modules`。
 
-![后台管理网站基础设置](poetize_picture/后台管理网站基础设置.png)
+---
 
-![后台管理文件资源管理](poetize_picture/后台管理文件资源管理.png)
+### 测试账号
+zhangsan09
+123456
 
-#### 文章管理与新增文章
-![后台管理文章管理](poetize_picture/后台管理文章管理.png)
+---
 
-![后台管理新增文章](poetize_picture/后台管理新增文章.png)
+## 部署说明
 
-## 开源版更新进度
+### 环境变量（必需）
 
-### 2023年1月1日更新
-- 新增：音乐盒功能
-- 新增：表白墙功能
-- 优化：文件管理
-- 优化：登录支持多端登录
-- 优化：登录权限过期时间重置
-- 优化：前端美化
-- 优化：留言分类与资源整合
+| 变量 | 说明 |
+|------|------|
+| `QS_JWT_SECRET` | JWT 签名密钥（Base64 编码的 256 位密钥） |
+| `QS_AES_KEY` | AES 加密密钥 |
+| `QS_BAIDU_AK` | 百度地图 API Key（IP 地理定位使用） |
 
-### 2023年4月1日更新
-- 新增：百宝箱（收藏夹）
-- 优化：首页
-- 优化：前端美化
-- 优化：资源整合
+### 生产环境配置
 
-### 2023年7月20日更新
-- 新增：旅拍模块
-- 新增：看板娘
-- 优化：聊天室脚本过滤
-- 优化：每个IP和账号限制每天接口保存次数
-- 优化：Bug修复
+```bash
+# 切换至 prod profile
+java -jar qsblog-server.jar --spring.profiles.active=prod
 
-### 2023年8月20日更新
-- 新增：访客统计（博客首页展示总访问量，后台管理系统首页展示IP/地区/用户维度的访问统计）
-- 新增：搜索（标题与内容匹配。标题匹配放在上面，内容匹配放在下面。匹配多个标题或者多个内容时间倒叙排列）
-- 新增：音乐按照列表顺序播放，列表中最后一首歌播放完后停止
-- 新增：聊天室搜索功能（搜索框下的内容筛选）
-- 新增：后台管理系统【欢迎光临】
-- 优化：前端美化
-- 优化：个别Bug修复
+# 或通过 JVM 参数传入密钥
+java -jar qsblog-server.jar \
+  --spring.profiles.active=prod \
+  -DQS_JWT_SECRET=<your-secret> \
+  -DQS_AES_KEY=<your-key> \
+  -DQS_BAIDU_AK=<your-baidu-ak>
+```
 
-### 2023年9月1日更新
-- 优化：所有保存接口、邮件发送接口、文件上传接口都限制次数，防止恶意调用
-- 优化：修复vuex中用户信息丢失错乱的Bug
-- 优化：文件上传模块改造，每次上传之前获取上传密钥，每个密钥只能上传一个文件
-- 优化：个别Bug修复
+生产配置（`application-prod.yml`）指向远程 MySQL / Redis 服务（`115.190.22.240`）。
 
-### 2023年10月1日更新
-- 新增：文章加密
-- 新增：文章订阅
-- 新增：文件上传模块改造，支持多平台（目前对接本地）
-- 优化：友人帐及其他模块样式调整
+### Nginx 反向代理（推荐）
 
-### 2024年1月10日更新
-- 新增：首页分类预览
-- 新增：文章视频
-- 新增：文章目录
-- 新增：留言与朋友圈图片放大
-- 新增：上传进度条与原始文件名记录
-- 优化：百宝箱及其他模块样式调整
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
 
-### 2024年4月1日更新
-- 部署优化，提取配置文件到MySQL，无需编译打包环节
-- 前端编译压缩，提升访问速度
-- 部分样式美化
+    # 前端静态资源
+    location / {
+        root /path/to/frontend/dist;
+        try_files $uri $uri/ /index.html;
+    }
 
-### 2024年4月10日更新
-- 部署优化
-- 后端增加系统配置模块
-- 部分样式美化
+    # 后端 API
+    location /api/ {
+        proxy_pass http://127.0.0.1:18081/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
 
+    # WebSocket（IM 聊天室）
+    location /ws/ {
+        proxy_pass http://127.0.0.1:18081/ws/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
 
+---
+
+## 架构设计
+
+### 认证与授权
+
+```
+请求 → WebInfoHandlerInterceptor（提取 Token）
+     → UserContext（ThreadLocal 存当前用户）
+     → @LoginCheck 切面（鉴权拦截）
+     → @ResourceCheck 切面（资源权限校验）
+     → Controller → Service → Mapper → DB
+```
+
+### 防刷与幂等
+
+| 注解 | 作用 | 实现 |
+|------|------|------|
+| `@LoginCheck` | 强制登录校验 | JWT 验证 + AOP 切面 |
+| `@Idempotent` | 接口幂等性 | Redis SET NX + TTL |
+| `@SaveCheck` | 保存操作限流 | IP + 用户维度计数 |
+| `@ResourceCheck` | 资源访问控制 | 归属校验 |
+
+### 数据访问层
+
+```
+BaseDO（id / isDel / createTime / updateTime 逻辑删除自动填充）
+  → CoreMapper<T>（扩展批量操作、Optional 查询）
+    → CoreService<T>（分页、批量优化、存在即跳过）
+      → 业务 ServiceImpl
+```
+
+### 缓存策略
+
+- **Redis（Lettuce）**：热点数据、会话 Token、限流计数
+- **Redisson**：分布式锁（评论审核、点赞互斥等场景）
+- **QingSiCache**：统一缓存封装，支持 TTL 和缓存失效
+
+---
+
+## 变更记录
+
+### 近期重构（2026）
+
+- 主键策略统一为数据库自增（`IdType.AUTO`）
+- 行为模块重构：点赞/点踩互斥逻辑修复，Like/Unlike 拆分
+- 访问日志：接入 UA 解析（yauaa），完善异步落库链路
+- 分类模块：缓存失效优化（批量排序后主动清除）
+- 字典模块：完善 CRUD + Redis 缓存
+- Moment 模块：三表架构重构，补齐 Admin Controller
+
+### 历史版本
+
+详见 Git 提交历史。主要里程碑：
+
+- **2022-08**：首个版本发布
+- **2023-01**：新增音乐盒、表白墙
+- **2023-07**：新增旅拍、看板娘
+- **2023-08**：新增访客统计、搜索功能
+- **2023-10**：文章加密、订阅、文件上传多平台支持
+- **2024-01**：首页分类预览、文章视频、目录生成
+- **2024-04**：配置动态化（MySQL 存储），前端编译优化
+
+---
+
+## License
+
+MIT License

@@ -68,9 +68,9 @@ public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> 
     public List<Danmaku> racdomList() {
         List<Danmaku> danmakus;
         int count = Math.toIntExact(this.count());
-        if (count > CommonConst.TREE_HOLE_COUNT) {
-            int i = new Random().nextInt(count + 1 - CommonConst.TREE_HOLE_COUNT);
-            int treeHoleCount = CommonConst.TREE_HOLE_COUNT;
+        if (count > CommonConst.DANMAKU_COUNT) {
+            int i = new Random().nextInt(count + 1 - CommonConst.DANMAKU_COUNT);
+            int treeHoleCount = CommonConst.DANMAKU_COUNT;
             PageQuery pageQuery = new PageQuery();
             pageQuery.setPageNum(i);
             pageQuery.setPageSize(treeHoleCount);

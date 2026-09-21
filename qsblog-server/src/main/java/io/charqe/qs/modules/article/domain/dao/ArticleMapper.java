@@ -21,6 +21,9 @@ public interface ArticleMapper extends CoreMapper<Article> {
     @Update("update article set view_count=view_count+1 where id=#{id}")
     int updateViewCount(@Param("id") Long id);
 
+    @Update("update article set like_count=#{likeCount} where id=#{id}")
+    int updateLikeCount(@Param("id") Long id, @Param("likeCount") Integer likeCount);
+
     /**
      * 按分类ID分组统计文章数量（已过滤已删除文章）
      *

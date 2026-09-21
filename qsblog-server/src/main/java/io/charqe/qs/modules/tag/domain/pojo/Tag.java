@@ -36,6 +36,11 @@ public class Tag extends BaseDO {
     private String tagDesc;
 
     /**
+     * 排序
+     */
+    private Integer sort;
+
+    /**
      * 创建人
      */
     @TableField("create_by")

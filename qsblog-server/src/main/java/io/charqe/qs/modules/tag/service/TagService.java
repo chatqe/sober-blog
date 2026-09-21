@@ -4,7 +4,9 @@ import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.modules.tag.controller.admin.dto.TagSaveReqDTO;
 import io.charqe.qs.modules.tag.controller.admin.vo.TagDetailVO;
 import io.charqe.qs.modules.tag.controller.admin.vo.TagListVO;
+import io.charqe.qs.modules.tag.controller.web.vo.TagDictVO;
 import io.charqe.qs.modules.tag.controller.web.vo.TagWebVO;
+import io.charqe.qs.modules.sysdict.controller.web.vo.DictVO;
 import io.charqe.qs.modules.tag.domain.pojo.Tag;
 import io.charqe.qs.common.model.mp.CoreService;
 
@@ -47,4 +49,9 @@ public interface TagService extends CoreService<Tag> {
      * 获取公开标签列表（Web）
      */
     List<TagWebVO> listPublic(Long categoryId);
+
+    /**
+     * 获取标签下拉字典列表
+     */
+    List<TagDictVO> getDictList();
 }

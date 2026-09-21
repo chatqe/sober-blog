@@ -140,7 +140,17 @@ public class CommonConst {
     /**
      * 分类信息
      */
-    public static final String SORT_INFO = "sortInfo";
+    public static final String CATEGORY_INFO = "categoryInfo";
+
+    /**
+     * 分类下拉字典缓存
+     */
+    public static final String CATEGORY_DICT = "category:dict";
+
+    /**
+     * 标签下拉字典缓存
+     */
+    public static final String TAG_DICT = "tag:dict";
 
     /**
      * 赞赏
@@ -175,7 +185,7 @@ public class CommonConst {
     /**
      * 文章缓存，用于首页
      */
-    public static final String SORT_ARTICLE_LIST = "sort_article_list";
+    public static final String CATEGORY_ARTICLE_LIST = "category_article_list";
 
     /**
      * 用户点赞缓存
@@ -186,11 +196,15 @@ public class CommonConst {
      * 默认缓存过期时间
      */
     public static final long EXPIRE = 1800;
+    /**
+     * 默认缓存过期时间 一个小时
+     */
+    public static final long EXPIRE_H = 3600;
 
     /**
      * 树洞一次最多查询条数
      */
-    public static final int TREE_HOLE_COUNT = 100;
+    public static final int DANMAKU_COUNT = 100;
 
     /**
      * 顶层评论ID

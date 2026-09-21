@@ -64,7 +64,7 @@ public class YouthApplicationRunner implements ApplicationRunner {
             qingSiCache.put(CommonConst.WEB_INFO, list.get(0));
         }
 
-        User admin = userService.lambdaQuery().eq(User::getUserType, UserTypeEnum.ADMIN.code()).one();
+        User admin = userService.lambdaQuery().eq(User::getUserType, UserTypeEnum.ADMIN.code()).last("limit 1").one();
         qingSiCache.put(CommonConst.ADMIN, admin);
 
         Family family = familyService.lambdaQuery().eq(Family::getUserId, admin.getId()).one();

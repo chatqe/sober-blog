@@ -48,7 +48,7 @@ public class LoginCheckAspect {
             }
         } else if (token.contains(CommonConst.ADMIN_ACCESS_TOKEN)) {
             log.debug("管理员请求IP：{}", IPUtil.getRealIp(IPUtil.getRequest()));
-            if (loginCheck.value() == UserTypeEnum.ADMIN.code() && user.getId().intValue() != CommonConst.ADMIN_USER_ID) {
+            if (loginCheck.value() == UserTypeEnum.ADMIN.code() && user.getUserType() > UserTypeEnum.DEV.code()) {
                 throw new LoginException("请输入管理员账号！");
             }
         } else {

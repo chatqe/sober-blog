@@ -6,6 +6,8 @@ import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.modules.comment.domain.pojo.Comment;
 import io.charqe.qs.common.model.mp.CoreService;
+import io.charqe.qs.modules.comment.controller.web.dto.AuthorCommentQueryDTO;
+import io.charqe.qs.modules.comment.controller.web.vo.AuthorCommentListVO;
 import io.charqe.qs.modules.comment.controller.web.vo.CommentVO;
 
 
@@ -24,6 +26,8 @@ public interface CommentService extends CoreService<Comment> {
     R<BaseReqVO> listComment(BaseReqVO baseReqVO);
 
     R<Page> listAdminComment(BaseReqVO baseReqVO, Boolean isBoss);
+
+    AuthorCommentListVO listAuthorComments(AuthorCommentQueryDTO dto, Long currentUserId);
 }
 
 

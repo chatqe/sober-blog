@@ -129,6 +129,6 @@ public class SysDictTypeServiceImpl extends CoreServiceImpl<SysDictTypeMapper, S
     }
 
     private void clearDictCache() {
-        qingSiCache.del(CommonConst.SORT_INFO);
+        qingSiCache.del(CommonConst.CATEGORY_INFO);
     }
 }

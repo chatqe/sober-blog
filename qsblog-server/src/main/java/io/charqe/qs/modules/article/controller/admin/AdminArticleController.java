@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.common.model.R;
+import io.charqe.qs.modules.article.controller.admin.dto.AdminArticlePageReqDTO;
+import io.charqe.qs.modules.article.controller.admin.vo.AdminArticlePageRespVO;
 import io.charqe.qs.modules.article.controller.web.vo.ArticleVO;
 import io.charqe.qs.modules.article.service.ArticleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +31,27 @@ public class AdminArticleController {
 
     @Resource
     private ArticleService articleService;
+
+
+    /**
+     *
+     * 后台管理文章分页查询列表
+     *
+     *
+     *
+     * @return 文章分页列表
+     */
+    @Operation(summary = "后台管理文章分页查询列表", description = "管理后台查询文章列表，支持分页和排序")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功，返回文章分页列表"),
+            @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作"),
+            @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    })
+    @PostMapping("/pageList")
+    @LoginCheck(1)
+    public R<AdminArticlePageRespVO> pageList(@RequestBody AdminArticlePageReqDTO dto) {
+        return R.success(articleService.pageList(dto));
+    }
 
     /**
      * 用户查询文章列表
