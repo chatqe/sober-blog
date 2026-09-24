@@ -94,9 +94,9 @@ public class AdminUserController {
 
         LambdaUpdateChainWrapper<User> updateChainWrapper = userService.lambdaUpdate().eq(User::getId, userId);
         if (flag) {
-            updateChainWrapper.eq(User::getUserStatus, StatusEnum.DISABLE.code()).set(User::getUserStatus, StatusEnum.ENABLE.code()).update();
+            updateChainWrapper.eq(User::getUserStatus, StatusEnum.DISABLE.getCode()).set(User::getUserStatus, StatusEnum.ENABLE.getCode()).update();
         } else {
-            updateChainWrapper.eq(User::getUserStatus, StatusEnum.ENABLE.code()).set(User::getUserStatus, StatusEnum.DISABLE.code()).update();
+            updateChainWrapper.eq(User::getUserStatus, StatusEnum.ENABLE.getCode()).set(User::getUserStatus, StatusEnum.DISABLE.getCode()).update();
         }
         logout(userId);
         return R.success();

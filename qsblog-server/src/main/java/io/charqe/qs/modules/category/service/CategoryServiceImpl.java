@@ -16,7 +16,6 @@ import io.charqe.qs.modules.category.controller.web.vo.CategoryWebVO;
 import io.charqe.qs.modules.category.controller.web.vo.HomeStatsVO;
 import io.charqe.qs.modules.category.convert.CategoryConvert;
 import io.charqe.qs.modules.category.enums.CategoryTypeEnum;
-import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
 import io.charqe.qs.modules.sysdict.controller.web.vo.DictVO;
 import io.charqe.qs.modules.category.domain.dao.CategoryMapper;
 import io.charqe.qs.modules.category.domain.pojo.Category;
@@ -144,9 +143,9 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         }
 
         List<Category> rawList = list(Lb.<Category>q()
-                .eq(Category::getStatus, StatusEnum.ENABLE.code())
-                .eq(Category::getIsShow, StatusEnum.ENABLE.code())
-                .eq(Category::getType, CategoryTypeEnum.BAR.code())
+                .eq(Category::getStatus, StatusEnum.ENABLE.getCode())
+                .eq(Category::getIsShow, StatusEnum.ENABLE.getCode())
+                .eq(Category::getType, CategoryTypeEnum.BAR.getCode())
                 .orderByAsc(Category::getSort));
 
         List<CategoryWebVO> list = rawList

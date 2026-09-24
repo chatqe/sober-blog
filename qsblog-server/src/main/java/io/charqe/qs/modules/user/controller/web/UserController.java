@@ -265,7 +265,7 @@ public class UserController {
         @RequestParam("place") String place, 
         @Parameter(name = "flag", description = "更新类型，1-手机号，2-邮箱，3-密码", required = true, example = "3") 
         @RequestParam("flag") Integer flag, 
-        @Parameter(name = "code", description = "验证码（更新手机号或邮箱时必填）", required = false, example = "123456") 
+        @Parameter(name = "code", description = "验证码（更新手机号或邮箱时必填）", required = false, example = "123456")
         @RequestParam(value = "code", required = false) String code, 
         @Parameter(name = "password", description = "新手机号、新邮箱或新密码", required = true, example = "newpassword456") 
         @RequestParam("password") String password) {
@@ -298,7 +298,7 @@ public class UserController {
         @RequestParam("place") String place, 
         @Parameter(name = "flag", description = "验证类型，1-手机号，2-邮箱", required = true, example = "2") 
         @RequestParam("flag") Integer flag, 
-        @Parameter(name = "code", description = "验证码", required = true, example = "123456") 
+        @Parameter(name = "code", description = "验证码", required = true, example = "123456")
         @RequestParam("code") String code, 
         @Parameter(name = "password", description = "新密码", required = true, example = "newpassword456") 
         @RequestParam("password") String password) {
@@ -376,7 +376,7 @@ public class UserController {
     public R<Boolean> checkCaptcha(
         @Parameter(name = "uuid", description = "验证码ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000") 
         @RequestParam String uuid, 
-        @Parameter(name = "code", description = "验证码内容", required = true, example = "abcd1234") 
+        @Parameter(name = "code", description = "验证码内容", required = true, example = "abcd1234")
         @RequestParam String code) {
         return R.success(userService.checkCaptcha(uuid, code));
     }
@@ -428,7 +428,7 @@ public class UserController {
         @NotNull @RequestParam("email") String email, 
         @Parameter(name = "bizType", description = "业务类型", required = true, example = "reset_password") 
         @RequestParam("bizType") String bizType, 
-        @Parameter(name = "code", description = "验证码", required = true, example = "123456") 
+        @Parameter(name = "code", description = "验证码", required = true, example = "123456")
         @RequestParam("code") String code, 
         @Parameter(name = "password", description = "新密码", required = true, example = "newpassword456") 
         @RequestParam("password") String password) {

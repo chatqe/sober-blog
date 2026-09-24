@@ -25,25 +25,25 @@ public interface CategoryConvert {
     /**
      * DTO → Entity：保存/更新时使用
      */
-    @Mapping(source = "desc", target = "cateDesc")
+    @Mapping(source = "getDesc", target = "cateDesc")
     Category toEntity(CategorySaveReqDTO dto);
 
     /**
      * Entity → ListVO
      */
-    @Mapping(source = "cateDesc", target = "desc")
+    @Mapping(source = "cateDesc", target = "getDesc")
     CategoryListVO toListVO(Category entity);
 
     /**
      * Entity → DetailVO
      */
-    @Mapping(source = "cateDesc", target = "desc")
+    @Mapping(source = "cateDesc", target = "getDesc")
     CategoryDetailVO toDetailVO(Category entity);
 
     /**
      * Entity → WebVO
      */
-    @Mapping(source = "cateDesc", target = "desc")
+    @Mapping(source = "cateDesc", target = "getDesc")
     CategoryWebVO toWebVO(Category entity);
 
     /**

@@ -75,7 +75,7 @@ public class WeblinksServiceImpl extends CoreServiceImpl<WeblinksMapper, Weblink
             return new HashMap<>();
         }
 
-        // 使用 Convert 转换（自动处理 desc -> introduction 映射）
+        // 使用 Convert 转换（自动处理 getDesc -> introduction 映射）
         return weblinksConvert.toVOList(list).stream()
                 .collect(java.util.stream.Collectors.groupingBy(WeblinksVO::getClassify));
     }

@@ -28,10 +28,10 @@ public class CommentBehHandler implements BehEntityHandler {
 
     // 注意：BizTypeEnum.COMMENT(2) 和 CommentTypeEnum.MESSAGE(2) 值相同，用 HashSet 避免 Set.of() 去重报错
     private static final Set<Integer> SUPPORTED_TYPES = new HashSet<>(Arrays.asList(
-            BizTypeEnum.COMMENT.code(),
-            CommentTypeEnum.ARTICLE.code(),
-            CommentTypeEnum.MESSAGE.code(),
-            CommentTypeEnum.LOVE.code()
+            BizTypeEnum.COMMENT.getCode(),
+            CommentTypeEnum.ARTICLE.getCode(),
+            CommentTypeEnum.MESSAGE.getCode(),
+            CommentTypeEnum.LOVE.getCode()
     ));
 
     @Override

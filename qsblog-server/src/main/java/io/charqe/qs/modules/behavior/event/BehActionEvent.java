@@ -23,7 +23,7 @@ public class BehActionEvent extends ApplicationEvent {
         this.userId = userId;
         this.bizId = bizId;
         this.bizType = bizType;
-        this.actionCode = actionType.code();
+        this.actionCode = actionType.getCode();
     }
 
     @Override

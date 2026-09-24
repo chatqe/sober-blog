@@ -27,8 +27,8 @@ public class CategoryBehHandler implements BehEntityHandler {
     private TagMapper tagMapper;
 
     private static final Set<Integer> SUPPORTED_TYPES = Set.of(
-            BizTypeEnum.CATEGORY.code(),
-            BizTypeEnum.TAG.code()
+            BizTypeEnum.CATEGORY.getCode(),
+            BizTypeEnum.TAG.getCode()
     );
 
     @Override

@@ -49,7 +49,7 @@ public class DislikeServiceImpl extends AbstractBehService implements DislikeSer
         }
         // 查询该 bizId 下已存在的活跃行为（不区分 actionType）
         BehaviorState mutexState = getActiveState(userId, dto.getBizId(), dto.getBizType());
-        if (mutexState != null && mutexState.getAction().equals(mutexType.code())) {
+        if (mutexState != null && mutexState.getAction().equals(mutexType.getCode())) {
             mutexState.setStatus(BehaviorState.BEH_CANCELLED);
             mutexState.setUpdateTime(java.time.LocalDateTime.now());
             behaviorStateService.updateById(mutexState);
@@ -57,7 +57,7 @@ public class DislikeServiceImpl extends AbstractBehService implements DislikeSer
             decrementCount(dto, mutexType);
             syncAfterMutexCancel(dto, userId, mutexType);
             log.debug("互斥操作: {} 时自动取消 {} (userId={}, bizId={})",
-                    actionType.desc(), mutexType.desc(), userId, dto.getBizId());
+                    actionType.getDesc(), mutexType.getDesc(), userId, dto.getBizId());
         }
     }
 }

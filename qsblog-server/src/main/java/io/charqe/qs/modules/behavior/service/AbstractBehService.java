@@ -56,7 +56,7 @@ public abstract class AbstractBehService {
         if (existingState != null) {
             // 已存在相同行为，幂等返回
             if (BehaviorState.BEH_ACTIVE == stateStatus(existingState)) {
-                log.debug("行为已存在，幂等跳过: userId={}, bizId={}, action={}", userId, dto.getBizId(), actionType.desc());
+                log.debug("行为已存在，幂等跳过: userId={}, bizId={}, action={}", userId, dto.getBizId(), actionType.getDesc());
                 return;
             }
             // 之前取消过，先处理互斥再重新激活
@@ -73,7 +73,7 @@ public abstract class AbstractBehService {
             state.setUserId(userId);
             state.setBizId(dto.getBizId());
             state.setBizType(dto.getBizType());
-            state.setAction(actionType.code());
+            state.setAction(actionType.getCode());
             state.setStatus(BehaviorState.BEH_ACTIVE);
             state.setCreateTime(java.time.LocalDateTime.now());
             behaviorStateService.save(state);
@@ -88,7 +88,7 @@ public abstract class AbstractBehService {
         // 7. 发布事件（异步写日志）
         eventPublisher.publishEvent(new BehActionEvent(this, userId, dto.getBizId(), dto.getBizType(), actionType));
 
-        log.debug("{} 操作完成: userId={}, bizId={}, bizType={}", actionType.desc(), userId, dto.getBizId(), dto.getBizType());
+        log.debug("{} 操作完成: userId={}, bizId={}, bizType={}", actionType.getDesc(), userId, dto.getBizId(), dto.getBizType());
     }
 
     /**
@@ -126,7 +126,7 @@ public abstract class AbstractBehService {
         // 6. 发布取消事件
         eventPublisher.publishEvent(new BehActionEvent(this, userId, dto.getBizId(), dto.getBizType(), unActionType));
 
-        log.debug("{} 操作完成: userId={}, bizId={}, bizType={}", unActionType.desc(), userId, dto.getBizId(), dto.getBizType());
+        log.debug("{} 操作完成: userId={}, bizId={}, bizType={}", unActionType.getDesc(), userId, dto.getBizId(), dto.getBizType());
     }
 
     // ==================== 子类可覆写的方法 ====================
@@ -157,7 +157,7 @@ public abstract class AbstractBehService {
                 .eq(BehaviorState::getUserId, userId)
                 .eq(BehaviorState::getBizId, bizId)
                 .eq(BehaviorState::getBizType, bizType)
-                .eq(BehaviorState::getAction, actionType.code());
+                .eq(BehaviorState::getAction, actionType.getCode());
         return behaviorStateService.getOne(wrapper);
     }
 
@@ -186,12 +186,12 @@ public abstract class AbstractBehService {
         BehaviorCnt existingCnt = behCntService.getOne(Lb.<BehaviorCnt>q()
                 .eq(BehaviorCnt::getBizId, dto.getBizId())
                 .eq(BehaviorCnt::getBizType, dto.getBizType())
-                .eq(BehaviorCnt::getAction, actionType.code()));
+                .eq(BehaviorCnt::getAction, actionType.getCode()));
         if (existingCnt == null) {
             BehaviorCnt cnt = new BehaviorCnt();
             cnt.setBizId(dto.getBizId());
             cnt.setBizType(dto.getBizType());
-            cnt.setAction(actionType.code());
+            cnt.setAction(actionType.getCode());
             cnt.setCount(1);
             behCntService.save(cnt);
         } else {
@@ -207,7 +207,7 @@ public abstract class AbstractBehService {
         BehaviorCnt existingCnt = behCntService.getOne(Lb.<BehaviorCnt>q()
                 .eq(BehaviorCnt::getBizId, dto.getBizId())
                 .eq(BehaviorCnt::getBizType, dto.getBizType())
-                .eq(BehaviorCnt::getAction, actionType.code()));
+                .eq(BehaviorCnt::getAction, actionType.getCode()));
         if (existingCnt != null && existingCnt.getCount() > 0) {
             existingCnt.setCount(existingCnt.getCount() - 1);
             behCntService.updateById(existingCnt);

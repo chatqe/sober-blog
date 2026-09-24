@@ -28,7 +28,6 @@ import io.charqe.qs.modules.im.websocket.TioUtil;
 import io.charqe.qs.modules.im.websocket.TioWebsocketStarter;
 import io.charqe.qs.modules.moment.domain.pojo.Moment;
 import io.charqe.qs.modules.moment.service.MomentService;
-import io.charqe.qs.modules.user.controller.web.dto.LoginUserInfo;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
 import io.charqe.qs.modules.user.convert.UserConvert;
 import io.charqe.qs.modules.user.domain.dao.UserMapper;
@@ -136,7 +135,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         }
 
 
-        boolean isBoss = one.getUserType() == UserTypeEnum.ADMIN.code();
+        boolean isBoss = one.getUserType() == UserTypeEnum.ADMIN.getCode();
 
         String adminToken = "";
         String userToken = "";
@@ -268,7 +267,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         moment.setUserId(one.getId());
         moment.setContent("到此一游");
         moment.setHasText(true);
-        moment.setVisibility(VisibilityEnum.PUBLIC.code());
+        moment.setVisibility(VisibilityEnum.PUBLIC.getCode());
         moment.setSource(1);
         moment.setStatus(1);
         moment.setDelTime(null);
@@ -634,9 +633,9 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
                 // 记录订阅行为
                 BehaviorState behaviorState = new BehaviorState();
                 behaviorState.setUserId(BlogUtil.getUserId());
-                behaviorState.setBizType(BizTypeEnum.TAG.code()); // 2表示标签类型
+                behaviorState.setBizType(BizTypeEnum.TAG.getCode()); // 2表示标签类型
                 behaviorState.setBizId(labelId.longValue());
-                behaviorState.setAction(BehActionType.SUBSCRIBE.code());
+                behaviorState.setAction(BehActionType.SUBSCRIBE.getCode());
                 behaviorState.setCreateTime(LocalDateTime.now());
                 // behaviorLogService.save(behaviorState);
 
@@ -657,9 +656,9 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
                 // 记录取消订阅行为
                 BehaviorState behaviorState = new BehaviorState();
                 behaviorState.setUserId(BlogUtil.getUserId());
-                behaviorState.setBizType(BizTypeEnum.TAG.code()); // 2表示标签类型
+                behaviorState.setBizType(BizTypeEnum.TAG.getCode()); // 2表示标签类型
                 behaviorState.setBizId(labelId.longValue());
-                behaviorState.setAction(BehActionType.UN_SUBSCRIBE.code());
+                behaviorState.setAction(BehActionType.UN_SUBSCRIBE.getCode());
                 behaviorState.setCreateTime(LocalDateTime.now());
                 // behaviorLogService.save(behaviorState);
 
@@ -684,7 +683,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
     public Map<String, String> getCaptcha(Boolean flag, String email) {
         // String captcha = captchaUtils.getPngCaptcha(4);
         Map<String, String> captcha = svgCaptchaUtils.getSvgBase64();
-        String code = captcha.get("code");
+        String code = captcha.get("getCode");
 
         // 缓存
         String key = UUID.randomUUID().toString();
@@ -737,7 +736,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
             return R.fail("验证码发送次数过多，请明天再试！");
         }
 
-        // TODO 暂未找到获取的地方 qingSiCache.put(CommonConst.CODE_MAIL + place + "_" + flag, code, 300);
+        // TODO 暂未找到获取的地方 qingSiCache.put(CommonConst.CODE_MAIL + place + "_" + flag, getCode, 300);
         qingSiCache.put(CommonConst.CODE_MAIL + receiver + "_" + EmailBizType.keyToPfx(bizType), code, 300);
 
         return R.success();
@@ -821,11 +820,11 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
     private String getCodeMail(String code, String bizType) {
         String info = "";
 
-        if (EmailBizType.REGISTER.code().equals(bizType)) {
+        if (EmailBizType.REGISTER.getCode().equals(bizType)) {
             info = String.format(codeFormat, code);
-        } else if (EmailBizType.RESET_PWD.code().equals(bizType)) {
+        } else if (EmailBizType.RESET_PWD.getCode().equals(bizType)) {
             info = String.format(fwdFormat, code);
-        } else if (EmailBizType.LOGIN.code().equals(bizType)) {
+        } else if (EmailBizType.LOGIN.getCode().equals(bizType)) {
             info = String.format(codeFormat, code);
         }
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);

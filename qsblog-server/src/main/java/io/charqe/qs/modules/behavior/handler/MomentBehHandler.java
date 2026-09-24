@@ -24,7 +24,7 @@ public class MomentBehHandler implements BehEntityHandler {
 
     @Override
     public boolean supports(Integer bizType) {
-        return BizTypeEnum.MOMENT.code().equals(bizType);
+        return BizTypeEnum.MOMENT.getCode().equals(bizType);
     }
 
     @Override

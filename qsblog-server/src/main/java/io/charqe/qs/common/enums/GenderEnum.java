@@ -34,12 +34,12 @@ public enum GenderEnum implements BaseEnum<Integer> {
     }
     
     @Override
-    public Integer code() {
+    public Integer getCode() {
         return code;
     }
     
     @Override
-    public String desc() {
+    public String getDesc() {
         return desc;
     }
     

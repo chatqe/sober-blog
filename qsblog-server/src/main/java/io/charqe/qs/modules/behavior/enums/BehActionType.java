@@ -87,7 +87,7 @@ public enum BehActionType implements BaseEnum<Integer> {
      */
     public static BehActionType getByCode(int code) {
         for (BehActionType b : BehActionType.values()) {
-            if (b.code().equals(code)) {
+            if (b.getCode().equals(code)) {
                 return b;
             }
         }
@@ -98,7 +98,7 @@ public enum BehActionType implements BaseEnum<Integer> {
     public static Integer codeByName(String name) {
         for (BehActionType b : BehActionType.values()) {
             if (b.name().equals(name)) {
-                return b.code();
+                return b.getCode();
             }
         }
         // 抛出异常或返回null，这里选择抛出异常更符合严谨性
@@ -113,16 +113,16 @@ public enum BehActionType implements BaseEnum<Integer> {
      */
     public static boolean contains(Integer code) {
         return Arrays.stream(values())
-                .anyMatch(e -> e.code().equals(code));
+                .anyMatch(e -> e.getCode().equals(code));
     }
 
     @Override
-    public Integer code() {
+    public Integer getCode() {
         return code;
     }
 
     @Override
-    public String desc() {
+    public String getDesc() {
         return desc;
     }
 }

@@ -46,13 +46,13 @@ public class MailSendUtil {
                 mail.add(user.getEmail());
             }
         } else {
-            if (CommentTypeEnum.MESSAGE.code().equals(commentVO.getBizType()) ||
-                    CommentTypeEnum.LOVE.code().equals(commentVO.getBizType())) {
+            if (CommentTypeEnum.MESSAGE.getCode().equals(commentVO.getBizType()) ||
+                    CommentTypeEnum.LOVE.getCode().equals(commentVO.getBizType())) {
                 User adminUser = BlogUtil.getAdminUser();
                 if (StringUtils.hasText(adminUser.getEmail()) && !Objects.equals(BlogUtil.getUserId(), adminUser.getId())) {
                     mail.add(adminUser.getEmail());
                 }
-            } else if (CommentTypeEnum.ARTICLE.code().equals(commentVO.getBizType())) {
+            } else if (CommentTypeEnum.ARTICLE.getCode().equals(commentVO.getBizType())) {
                 User user = commonQuery.getUser(one.getUserId());
                 if (user != null && StringUtils.hasText(user.getEmail()) && !user.getId().equals(BlogUtil.getUserId())) {
                     mail.add(user.getEmail());
@@ -62,7 +62,7 @@ public class MailSendUtil {
 
         if (!CollectionUtils.isEmpty(mail)) {
             String sourceName = "";
-            if (CommentTypeEnum.ARTICLE.code().equals(commentVO.getBizType())) {
+            if (CommentTypeEnum.ARTICLE.getCode().equals(commentVO.getBizType())) {
                 sourceName = one.getArticleTitle();
             }
             String commentMail = getCommentMail(commentVO.getBizType(), sourceName,
@@ -102,11 +102,11 @@ public class MailSendUtil {
                 toMail = String.format(MailUtil.originalText, toName, toComment.getContent());
             }
         } else {
-            if (CommentTypeEnum.MESSAGE.code().equals(commentType)) {
+            if (CommentTypeEnum.MESSAGE.getCode().equals(commentType)) {
                 mailType = String.format(MailUtil.messageMail, fromName);
-            } else if (CommentTypeEnum.ARTICLE.code().equals(commentType)) {
+            } else if (CommentTypeEnum.ARTICLE.getCode().equals(commentType)) {
                 mailType = String.format(MailUtil.commentMail, source, fromName);
-            } else if (CommentTypeEnum.LOVE.code().equals(commentType)) {
+            } else if (CommentTypeEnum.LOVE.getCode().equals(commentType)) {
                 mailType = String.format(MailUtil.loveMail, fromName);
             }
         }

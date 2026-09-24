@@ -24,7 +24,8 @@ public class ArticlePageDTO extends PageQuery {
 
 
     private Integer tagId;
-    private String articleSearch;
+
+    // private String articleSearch;
 
 }
 

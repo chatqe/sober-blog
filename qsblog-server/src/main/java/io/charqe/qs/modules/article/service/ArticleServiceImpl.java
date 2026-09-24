@@ -143,7 +143,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
         try {
             if (articleVO.getViewStatus()) {
-                List<User> users = userService.lambdaQuery().select(User::getEmail, User::getSubscribe).eq(User::getUserStatus, StatusEnum.ENABLE.code()).list();
+                List<User> users = userService.lambdaQuery().select(User::getEmail, User::getSubscribe).eq(User::getUserStatus, StatusEnum.ENABLE.getCode()).list();
                 List<String> emails = users.stream().filter(u -> {
                     List<Integer> sub = JSON.parseArray(u.getSubscribe(), Integer.class);
                     return !CollectionUtils.isEmpty(sub) && sub.contains(articleVO.getTagId());
@@ -241,7 +241,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
     //     ArticlePageDTO articlePage = articleMapper.selectPage(, Wrappers.<Article>lambdaQuery()
     //             .in(!CollectionUtils.isEmpty(ids), Article::getId, ids)
     //             .like(StringUtils.hasText(baseReqVO.getSearchKey()), Article::getArticleTitle, baseReqVO.getArticleSearch())
-    //             .eq(baseReqVO.getRecommendStatus() != null && baseReqVO.getRecommendStatus(), Article::getRecommendStatus, StatusEnum.ENABLE.code())
+    //             .eq(baseReqVO.getRecommendStatus() != null && baseReqVO.getRecommendStatus(), Article::getRecommendStatus, StatusEnum.ENABLE.getCode())
     //             .eq(baseReqVO.getTagId() != null, Article::getTagId, baseReqVO.getTagId())
     //             .eq(baseReqVO.getCategoryId() != null, Article::getCategoryId, baseReqVO.getCategoryId())
     //             .orderByDesc(Article::getCreateTime));
@@ -318,7 +318,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             lambdaQuery.like(Article::getArticleTitle, baseReqVO.getSearchKey());
         }
         if (baseReqVO.getRecommendStatus() != null && baseReqVO.getRecommendStatus()) {
-            lambdaQuery.eq(Article::getRecommendStatus, StatusEnum.ENABLE.code());
+            lambdaQuery.eq(Article::getRecommendStatus, StatusEnum.ENABLE.getCode());
         }
 
         if (baseReqVO.getTagId() != null) {
@@ -425,7 +425,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             if (dto.getOperation() == 1 && !hasLike) {
                 BehDTO behDTO = new BehDTO();
                 behDTO.setBizId(dto.getArticleId());
-                behDTO.setBizType(BizTypeEnum.ARTICLE.code());
+                behDTO.setBizType(BizTypeEnum.ARTICLE.getCode());
                 likeService.like(behDTO, dto.getUserId());
             }
             // 取消点赞
@@ -433,7 +433,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 qingSiCache.delHashKey(CommonConst.USER_LIKES.concat(dto.getArticleId().toString()), dto.getUserId().toString());
                 BehDTO behDTO = new BehDTO();
                 behDTO.setBizId(dto.getArticleId());
-                behDTO.setBizType(BizTypeEnum.ARTICLE.code());
+                behDTO.setBizType(BizTypeEnum.ARTICLE.getCode());
                 likeService.unlike(behDTO, dto.getUserId());
 
                 this.update(Wrappers.<Article>lambdaUpdate().
@@ -472,8 +472,8 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         return behaviorStateService.lambdaQuery()
                 .eq(io.charqe.qs.modules.behavior.domain.pojo.BehaviorState::getUserId, userId)
                 .eq(io.charqe.qs.modules.behavior.domain.pojo.BehaviorState::getBizId, Long.valueOf(articleId))
-                .eq(io.charqe.qs.modules.behavior.domain.pojo.BehaviorState::getBizType, BizTypeEnum.ARTICLE.code())
-                .eq(io.charqe.qs.modules.behavior.domain.pojo.BehaviorState::getAction, io.charqe.qs.modules.behavior.enums.BehActionType.LIKE.code())
+                .eq(io.charqe.qs.modules.behavior.domain.pojo.BehaviorState::getBizType, BizTypeEnum.ARTICLE.getCode())
+                .eq(io.charqe.qs.modules.behavior.domain.pojo.BehaviorState::getAction, io.charqe.qs.modules.behavior.enums.BehActionType.LIKE.getCode())
                 .eq(io.charqe.qs.modules.behavior.domain.pojo.BehaviorState::getStatus, 1)
                 .count() > 0;
     }
@@ -553,7 +553,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             }
 
             if (Boolean.TRUE.equals(article.getCommentStatus())) {
-                vo.setCommentCount(commonQuery.getCommentCount(article.getId(), CommentTypeEnum.ARTICLE.code()));
+                vo.setCommentCount(commonQuery.getCommentCount(article.getId(), CommentTypeEnum.ARTICLE.getCode()));
             } else {
                 vo.setCommentCount(0);
             }
@@ -582,9 +582,9 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
         List<Long> ids = null;
         List<List<Long>> idList = null;
-        if (StringUtils.hasText(dto.getArticleSearch())) {
-            idList = commonQuery.getArticleIds(dto.getArticleSearch());
-            ids = idList.stream().flatMap(Collection::stream).collect(Collectors.toList());
+        if (StringUtils.hasText(dto.getSearchKey())) {
+            idList = commonQuery.getArticleIds(dto.getSearchKey());
+            ids = idList.stream().flatMap(Collection::stream).toList();
             if (CollectionUtils.isEmpty(ids)) {
                 return new ArticlePageVO();
             }
@@ -594,8 +594,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         Page<Article> page = new Page<>(dto.getPageNum(), dto.getPageSize());
         Page<Article> articlePage = articleMapper.selectPage(page, Wrappers.<Article>lambdaQuery()
                 .like(StringUtils.hasText(dto.getSearchKey()), Article::getArticleTitle, dto.getSearchKey())
-                .like(StringUtils.hasText(dto.getArticleSearch()), Article::getArticleTitle, dto.getArticleSearch())
-                .eq((Objects.nonNull(dto.getRecommendStatus()) && dto.getRecommendStatus()), Article::getRecommendStatus, StatusEnum.ENABLE.code())
+                .eq((Objects.nonNull(dto.getRecommendStatus()) && dto.getRecommendStatus()), Article::getRecommendStatus, StatusEnum.ENABLE.getCode())
                 .eq(Objects.nonNull(dto.getCategoryId()), Article::getCategoryId, dto.getCategoryId())
                 .eq(Objects.nonNull(dto.getTagId()), Article::getTagId, dto.getTagId())
                 .orderByDesc(Article::getCreateTime));
@@ -656,7 +655,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             articleVO.setUsername(BlogUtil.getRandomName(articleVO.getUserId().toString()));
         }
         if (articleVO.getCommentStatus()) {
-            articleVO.setCommentCount(commonQuery.getCommentCount(articleVO.getId(), CommentTypeEnum.ARTICLE.code()));
+            articleVO.setCommentCount(commonQuery.getCommentCount(articleVO.getId(), CommentTypeEnum.ARTICLE.getCode()));
         } else {
             articleVO.setCommentCount(0);
         }

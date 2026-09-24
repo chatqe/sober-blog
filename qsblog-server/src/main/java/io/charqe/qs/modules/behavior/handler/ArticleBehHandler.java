@@ -31,7 +31,7 @@ public class ArticleBehHandler implements BehEntityHandler {
 
     @Override
     public boolean supports(Integer bizType) {
-        return BizTypeEnum.ARTICLE.code().equals(bizType);
+        return BizTypeEnum.ARTICLE.getCode().equals(bizType);
     }
 
     @Override
@@ -50,8 +50,8 @@ public class ArticleBehHandler implements BehEntityHandler {
         // 同步更新 article.like_count，确保列表页显示正确
         BehaviorCnt likeCnt = behCntService.getOne(Lb.<BehaviorCnt>q()
                 .eq(BehaviorCnt::getBizId, bizId)
-                .eq(BehaviorCnt::getBizType, BizTypeEnum.ARTICLE.code())
-                .eq(BehaviorCnt::getAction, BehActionType.LIKE.code()));
+                .eq(BehaviorCnt::getBizType, BizTypeEnum.ARTICLE.getCode())
+                .eq(BehaviorCnt::getAction, BehActionType.LIKE.getCode()));
         if (likeCnt != null && likeCnt.getCount() != null) {
             articleMapper.updateLikeCount(bizId, likeCnt.getCount());
         }
@@ -63,8 +63,8 @@ public class ArticleBehHandler implements BehEntityHandler {
         // 取消点赞后同步更新 article.like_count
         BehaviorCnt likeCnt = behCntService.getOne(Lb.<BehaviorCnt>q()
                 .eq(BehaviorCnt::getBizId, bizId)
-                .eq(BehaviorCnt::getBizType, BizTypeEnum.ARTICLE.code())
-                .eq(BehaviorCnt::getAction, BehActionType.LIKE.code()));
+                .eq(BehaviorCnt::getBizType, BizTypeEnum.ARTICLE.getCode())
+                .eq(BehaviorCnt::getAction, BehActionType.LIKE.getCode()));
         if (likeCnt != null && likeCnt.getCount() != null) {
             articleMapper.updateLikeCount(bizId, likeCnt.getCount());
         }

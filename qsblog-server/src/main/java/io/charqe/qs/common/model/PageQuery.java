@@ -44,7 +44,7 @@ public class PageQuery implements Serializable {
     private Integer pageSize = 10;
 
     /**
-     * 排序条件：格式如 "createTime desc, id asc"
+     * 排序条件：格式如 "createTime getDesc, id asc"
      * 用于兼容多字段排序，避免前端传多个排序参数
      */
     @Schema(description = "排序条件")

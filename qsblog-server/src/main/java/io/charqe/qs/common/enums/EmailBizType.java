@@ -39,12 +39,12 @@ public enum EmailBizType implements BaseEnum<String> {
     }
 
     @Override
-    public String code() {
+    public String getCode() {
         return key;
     }
     
     @Override
-    public String desc() {
+    public String getDesc() {
         return desc;
     }
     

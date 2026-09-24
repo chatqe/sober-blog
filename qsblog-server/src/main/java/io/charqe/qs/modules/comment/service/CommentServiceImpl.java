@@ -58,7 +58,7 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
             return R.fail("评论来源类型不存在！");
         }
         Article one = null;
-        if (CommentTypeEnum.ARTICLE.code().equals(commentVO.getBizType())) {
+        if (CommentTypeEnum.ARTICLE.getCode().equals(commentVO.getBizType())) {
             LambdaQueryChainWrapper<Article> articleWrapper = new LambdaQueryChainWrapper<>(articleMapper);
             one = articleWrapper.eq(Article::getId, commentVO.getBizId()).select(Article::getUserId, Article::getArticleTitle, Article::getCommentStatus).one();
 
@@ -119,7 +119,7 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
             return R.fail("评论来源类型不存在！");
         }
 
-        if (CommentTypeEnum.ARTICLE.code().equals(commentType)) {
+        if (CommentTypeEnum.ARTICLE.getCode().equals(commentType)) {
             LambdaQueryChainWrapper<Article> articleWrapper = new LambdaQueryChainWrapper<>(articleMapper);
             Article one = articleWrapper.eq(Article::getId, baseReqVO.getBizId()).select(Article::getCommentStatus).one();
 
@@ -181,9 +181,9 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
                 baseReqVO.setRecords(new ArrayList());
             } else {
                 if (baseReqVO.getBizId() != null) {
-                    wrapper.eq(Comment::getBizId, baseReqVO.getBizId()).eq(Comment::getBizType, CommentTypeEnum.ARTICLE.code());
+                    wrapper.eq(Comment::getBizId, baseReqVO.getBizId()).eq(Comment::getBizType, CommentTypeEnum.ARTICLE.getCode());
                 } else {
-                    wrapper.eq(Comment::getBizType, CommentTypeEnum.ARTICLE.code()).in(Comment::getBizId, userArticleIds);
+                    wrapper.eq(Comment::getBizType, CommentTypeEnum.ARTICLE.getCode()).in(Comment::getBizId, userArticleIds);
                 }
                 wrapper.orderByDesc(Comment::getCreateTime).page(baseReqVO);
             }
@@ -200,7 +200,7 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
 
         LambdaQueryChainWrapper<Comment> wrapper = lambdaQuery()
                 .in(Comment::getBizId, articleIds)
-                .eq(Comment::getBizType, CommentTypeEnum.ARTICLE.code())
+                .eq(Comment::getBizType, CommentTypeEnum.ARTICLE.getCode())
                 .orderByDesc(Comment::getCreateTime);
 
         if (dto.getStatus() != null) {
@@ -278,7 +278,7 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
             return Integer.parseInt(type);
         } catch (NumberFormatException e) {
             CommentTypeEnum cte = CommentTypeEnum.getByDesc(type);
-            return cte != null ? cte.code() : null;
+            return cte != null ? cte.getCode() : null;
         }
     }
 

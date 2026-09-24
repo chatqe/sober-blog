@@ -1,5 +1,7 @@
 package io.charqe.qs.common.enums;
 
+import java.util.Objects;
+
 /**
  * 业务枚举基类接口，定义所有枚举的通用方法
  *
@@ -8,18 +10,23 @@ package io.charqe.qs.common.enums;
  */
 public interface BaseEnum<T> {
     /**
-     * 获取枚举编码
+     * 枚举编码
      *
      * @return 枚举编码
      */
-    T code();
+    T getCode();
 
     /**
-     * 获取枚举描述
+     * 枚举描述
      *
      * @return 枚举描述
      */
-    String desc();
+    String getDesc();
 
-
+    /**
+     * 判断编码是否匹配
+     */
+    default boolean match(T targetCode) {
+        return Objects.equals(getCode(), targetCode);
+    }
 }

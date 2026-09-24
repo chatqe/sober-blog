@@ -43,12 +43,12 @@ public class LoginCheckAspect {
         }
 
         if (token.contains(CommonConst.USER_ACCESS_TOKEN)) {
-            if (loginCheck.value() == UserTypeEnum.ADMIN.code() || loginCheck.value() == UserTypeEnum.DEV.code()) {
+            if (loginCheck.value() == UserTypeEnum.ADMIN.getCode() || loginCheck.value() == UserTypeEnum.DEV.getCode()) {
                 throw new LoginException("请输入管理员账号！");
             }
         } else if (token.contains(CommonConst.ADMIN_ACCESS_TOKEN)) {
             log.debug("管理员请求IP：{}", IPUtil.getRealIp(IPUtil.getRequest()));
-            if (loginCheck.value() == UserTypeEnum.ADMIN.code() && user.getUserType() > UserTypeEnum.DEV.code()) {
+            if (loginCheck.value() == UserTypeEnum.ADMIN.getCode() && user.getUserType() > UserTypeEnum.DEV.getCode()) {
                 throw new LoginException("请输入管理员账号！");
             }
         } else {

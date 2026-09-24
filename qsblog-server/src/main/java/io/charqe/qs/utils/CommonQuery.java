@@ -267,7 +267,7 @@ public class CommonQuery {
             bizType = Integer.parseInt(type);
         } catch (NumberFormatException e) {
             CommentTypeEnum cte = CommentTypeEnum.getByDesc(type);
-            bizType = cte != null ? cte.code() : null;
+            bizType = cte != null ? cte.getCode() : null;
         }
         if (bizType == null) {
             return 0;

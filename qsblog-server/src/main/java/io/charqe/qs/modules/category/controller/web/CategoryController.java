@@ -106,7 +106,7 @@ public class CategoryController {
 
         BehDTO dto = new BehDTO();
         dto.setBizId(categoryId);
-        dto.setBizType(BizTypeEnum.CATEGORY.code());
+        dto.setBizType(BizTypeEnum.CATEGORY.getCode());
         if (Boolean.TRUE.equals(flag)) {
             subscribeService.subscribe(dto, userInfo.getId());
         } else {

@@ -126,7 +126,7 @@ public class WeblinksController {
             @Parameter(name = "resourceType", description = "资源类型") @RequestParam(required = false) String resourceType,
             @Parameter(name = "classify", description = "分类") @RequestParam(required = false) String classify,
             @Parameter(name = "order", description = "排序字段") @RequestParam(defaultValue = "createTime") String order,
-            @Parameter(name = "desc", description = "是否降序") @RequestParam(defaultValue = "true") boolean desc,
+            @Parameter(name = "getDesc", description = "是否降序") @RequestParam(defaultValue = "true") boolean desc,
             @Parameter(name = "pageNum", description = "页码") @RequestParam(defaultValue = "1") int pageNum,
             @Parameter(name = "pageSize", description = "每页条数") @RequestParam(defaultValue = "10") int pageSize) {
         return R.success(weblinksService.listWeblinks(resourceType, classify, order, desc, pageNum, pageSize));
