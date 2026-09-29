@@ -35,6 +35,7 @@ log/
 *.jar
 *.war
 *.zip
+*.rar
 *.tar
 *.tar.gz
 *.pid
