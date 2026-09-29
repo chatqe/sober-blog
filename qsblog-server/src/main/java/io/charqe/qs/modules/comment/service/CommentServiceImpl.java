@@ -307,4 +307,18 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
         }
         return commentVO;
     }
+
+    @Override
+    public List<CommentVO> listCommentByBiz(Long bizId, Integer bizType) {
+        if (bizId == null || bizType == null) {
+            return Collections.emptyList();
+        }
+        List<Comment> comments = lambdaQuery()
+                .eq(Comment::getBizId, bizId)
+                .eq(Comment::getBizType, bizType)
+                .eq(Comment::getParentId, 0)
+                .orderByDesc(Comment::getCreateTime)
+                .list();
+        return comments.stream().map(this::buildCommentVO).collect(Collectors.toList());
+    }
 }

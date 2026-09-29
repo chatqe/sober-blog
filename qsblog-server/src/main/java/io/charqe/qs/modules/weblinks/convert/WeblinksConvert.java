@@ -21,16 +21,16 @@ public interface WeblinksConvert {
 
     /**
      * VO -> Entity
-     * WeblinksVO.introduction 对应 Weblinks.getDesc
+     * WeblinksVO.introduction 对应 Weblinks.desc
      */
-    @Mapping(target = "getDesc", source = "introduction")
+    @Mapping(target = "desc", source = "introduction")
     Weblinks toEntity(WeblinksVO vo);
 
     /**
      * Entity -> VO
-     * Weblinks.getDesc 对应 WeblinksVO.introduction
+     * Weblinks.desc 对应 WeblinksVO.introduction
      */
-    @Mapping(target = "introduction", source = "getDesc")
+    @Mapping(target = "introduction", source = "desc")
     WeblinksVO toVO(Weblinks entity);
 
     /**

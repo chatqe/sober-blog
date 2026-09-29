@@ -46,7 +46,7 @@ public class ArticleBehHandler implements BehEntityHandler {
     }
 
     @Override
-    public void afterAction(Long bizId, Long userId) {
+    public void afterAction(Long bizId, Long userId, Integer action) {
         // 同步更新 article.like_count，确保列表页显示正确
         BehaviorCnt likeCnt = behCntService.getOne(Lb.<BehaviorCnt>q()
                 .eq(BehaviorCnt::getBizId, bizId)
@@ -59,7 +59,7 @@ public class ArticleBehHandler implements BehEntityHandler {
     }
 
     @Override
-    public void afterCancelAction(Long bizId, Long userId) {
+    public void afterCancelAction(Long bizId, Long userId, Integer action) {
         // 取消点赞后同步更新 article.like_count
         BehaviorCnt likeCnt = behCntService.getOne(Lb.<BehaviorCnt>q()
                 .eq(BehaviorCnt::getBizId, bizId)

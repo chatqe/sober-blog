@@ -22,6 +22,12 @@ public class MomentListVO {
     @Schema(description = "内容摘要（截取前50字）")
     private String contentSummary;
 
+    @Schema(description = "发布者昵称")
+    private String authorName;
+
+    @Schema(description = "发布者头像URL")
+    private String authorAvatar;
+
     @Schema(description = "是否有图片")
     private Boolean hasImages;
 
@@ -48,6 +54,9 @@ public class MomentListVO {
 
     @Schema(description = "来源: 1-本站 2-微信 3-QQ 4-微博 5-抖音")
     private Integer source;
+
+    @Schema(description = "当前用户是否已点赞")
+    private Boolean liked;
 
     @Schema(description = "创建时间")
     private String createTime;

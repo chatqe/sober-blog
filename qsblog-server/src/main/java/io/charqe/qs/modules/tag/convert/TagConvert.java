@@ -25,25 +25,25 @@ public interface TagConvert {
     /**
      * DTO → Entity：保存/更新时使用
      */
-    @Mapping(source = "getDesc", target = "tagDesc")
+    @Mapping(source = "desc", target = "tagDesc")
     Tag toEntity(TagSaveReqDTO dto);
 
     /**
      * Entity → ListVO
      */
-    @Mapping(source = "tagDesc", target = "getDesc")
+    @Mapping(source = "tagDesc", target = "desc")
     TagListVO toListVO(Tag entity);
 
     /**
      * Entity → DetailVO
      */
-    @Mapping(source = "tagDesc", target = "getDesc")
+    @Mapping(source = "tagDesc", target = "desc")
     TagDetailVO toDetailVO(Tag entity);
 
     /**
      * Entity → WebVO
      */
-    @Mapping(source = "tagDesc", target = "getDesc")
+    @Mapping(source = "tagDesc", target = "desc")
     TagWebVO toWebVO(Tag entity);
 
     /**

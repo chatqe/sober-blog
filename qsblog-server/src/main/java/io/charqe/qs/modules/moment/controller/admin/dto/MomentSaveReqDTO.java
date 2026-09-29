@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
  * 动态新增/编辑请求
@@ -48,4 +49,7 @@ public class MomentSaveReqDTO {
 
     @Schema(description = "审核/驳回原因")
     private String auditReason;
+
+    @Schema(description = "媒体文件ID列表")
+    private List<Long> mediaIds;
 }

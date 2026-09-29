@@ -30,8 +30,9 @@ public interface BehEntityHandler {
      *
      * @param bizId  业务主键ID
      * @param userId 操作人ID
+     * @param action 行为编码（来自 BehActionType）
      */
-    default void afterAction(Long bizId, Long userId) {
+    default void afterAction(Long bizId, Long userId, Integer action) {
         // 默认空实现
     }
 
@@ -40,8 +41,9 @@ public interface BehEntityHandler {
      *
      * @param bizId  业务主键ID
      * @param userId 操作人ID
+     * @param action 正向行为编码（来自 BehActionType，用于计算回退量）
      */
-    default void afterCancelAction(Long bizId, Long userId) {
+    default void afterCancelAction(Long bizId, Long userId, Integer action) {
         // 默认空实现
     }
 }

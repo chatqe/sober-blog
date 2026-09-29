@@ -83,7 +83,7 @@ public abstract class AbstractBehService {
         incrementCount(dto, actionType);
 
         // 6. 实体后置处理
-        handler.afterAction(dto.getBizId(), userId);
+        handler.afterAction(dto.getBizId(), userId, actionType.getCode());
 
         // 7. 发布事件（异步写日志）
         eventPublisher.publishEvent(new BehActionEvent(this, userId, dto.getBizId(), dto.getBizType(), actionType));
@@ -121,7 +121,7 @@ public abstract class AbstractBehService {
         decrementCount(dto, getPositiveAction(unActionType));
 
         // 5. 实体后置处理（取消回退）
-        handler.afterCancelAction(dto.getBizId(), userId);
+        handler.afterCancelAction(dto.getBizId(), userId, getPositiveAction(unActionType).getCode());
 
         // 6. 发布取消事件
         eventPublisher.publishEvent(new BehActionEvent(this, userId, dto.getBizId(), dto.getBizType(), unActionType));
@@ -144,7 +144,7 @@ public abstract class AbstractBehService {
      */
     protected void syncAfterMutexCancel(BehDTO dto, Long userId, BehActionType mutexType) {
         BehEntityHandler handler = handlerFactory.getHandler(dto.getBizType());
-        handler.afterCancelAction(dto.getBizId(), userId);
+        handler.afterCancelAction(dto.getBizId(), userId, mutexType.getCode());
     }
 
     // ==================== 辅助方法 ====================

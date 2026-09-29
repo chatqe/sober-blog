@@ -10,13 +10,8 @@ import io.charqe.qs.modules.comment.controller.web.dto.AuthorCommentQueryDTO;
 import io.charqe.qs.modules.comment.controller.web.vo.AuthorCommentListVO;
 import io.charqe.qs.modules.comment.controller.web.vo.CommentVO;
 
+import java.util.List;
 
-/**
- * *
- *
- * @author Joy
- * @since 2026-01-17 10:47
- */
 public interface CommentService extends CoreService<Comment> {
 
     R saveComment(CommentVO commentVO);
@@ -28,6 +23,8 @@ public interface CommentService extends CoreService<Comment> {
     R<Page> listAdminComment(BaseReqVO baseReqVO, Boolean isBoss);
 
     AuthorCommentListVO listAuthorComments(AuthorCommentQueryDTO dto, Long currentUserId);
+
+    List<CommentVO> listCommentByBiz(Long bizId, Integer bizType);
 }
 
 

@@ -21,6 +21,12 @@ public class MomentDetailVO {
     @Schema(description = "发布者ID")
     private Long userId;
 
+    @Schema(description = "发布者昵称")
+    private String authorName;
+
+    @Schema(description = "发布者头像URL")
+    private String authorAvatar;
+
     @Schema(description = "纯文本内容")
     private String content;
 
