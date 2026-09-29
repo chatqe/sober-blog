@@ -1,0 +1,89 @@
+﻿server:
+  port: 18081
+  tomcat:
+    threads.max: 50
+    max-connections: 100
+    max-http-form-post-size: 120MB
+    connection-timeout: 60000
+
+
+mybatis-plus:
+  # 1. 配置 Mapper 接口包路径
+  #  type-aliases-package: io.charqe.qs.modules.comment.domain
+  mapper-locations: classpath*:mapper/**/*.xml  # 如果有XML文件
+  #  configuration:
+  #      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印sql
+  global-config:
+    db-config:
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+im:
+  #  enable: true
+  enable: false
+
+user:
+  code:
+    #    %06d String.format()占位符 0 表示 不足6位前面补0 6表示位数 d表示十进制整数
+    format: "【青肆博客】本次验证码 %s，请在5分钟内完成验证。为保证账号安全，请勿泄漏此验证码。"
+  fwd:
+    format: "【青肆博客】本次更新密码操作，请确保为本人操作! 校验码 %s，请在5分钟内完成验证。为保证账号安全，请勿泄漏此验证码。"
+  subscribe:
+    format: "【青肆博客】%s 订阅了 %s 的博客，请及时关注。"
+
+########################定时任务配置########################
+scheduling:
+  enabled: false
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+  # 环境配置
+  profiles:
+    active: dev
+
+# JWT 配置
+jwt:
+  secret: ${QS_JWT_SECRET}  # Base64编码的256位密钥，通过环境变量配置
+
+# AES 加密配置
+crypto:
+  aes-key: ${QS_AES_KEY}  # AES加密密钥，通过环境变量配置
+
+# baidu api 配置
+baidu:
+  ak: ${QS_BAIDU_AK}  # 百度地图API Key，通过环境变量配置
+  url:
+    ip-location: "http://api.map.baidu.com/location/ip"
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha         # 标签按字母顺序排序
+    operations-sorter: method  # 接口内的操作按HTTP方法排序 (GET, POST, PUT, DELETE)
+
+  info:
+    title: "Openapi在线JSON文档"
+    description: "这是一个用于演示springdoc-openapi和orval集成的后端服务API文档。"
+    version: "0.0.1"
+    contact:
+      name: "Joy"
+      email: "hilary98qs@163.com"
+
+  packages-to-scan: io.charqe.qs.modules # 指定要扫描的基础包，用于发现Controller
+  default-produces-media-type: application/json   # API默认产生的媒体类型
+  writer-with-default-pretty-print: true  #让 /v3/api-docs 返回的 JSON 格式带有缩进，非常易于阅读。
+
+knife4j:
+  enable: true  # 启用 knife4j 增强，访问 /doc.html
+  basic: # 是否启用登录认证
+    enable: false
+    # username: admin
+    # password: 123456
+  production: false   # 生产环境屏蔽

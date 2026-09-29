@@ -1,34 +1,60 @@
-HELP.md
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-*.jar
+﻿# Compiled class file
+*.class
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
+# Eclipse
 .project
-.settings
-.springBeans
-.sts4-cache
+.classpath
+.settings/
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
+# Intellij
 *.ipr
+*.iml
+*.iws
+.idea/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+
+# Maven
+target/
+
+# Gradle
+build
+.gradle
+
+# Log file
+*.log
+log/
+
+# out
+**/out/
+
+# Mac
+.DS_Store
+
+# others
+*.jar
+*.war
+*.zip
+*.tar
+*.tar.gz
+*.pid
+*.orig
+temp/
+**/deprecated.txt
+**/jdk-internals.txt
+
+# Environment variables files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Node.js
+node_modules/
+package-lock.json
+
+# Windows
+*.stackdump
+*.swp
+*.swo
+*~

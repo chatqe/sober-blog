@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.charqe.qs.modules.user.domain.dao.UserMapper">
+
+    <resultMap id="ArticleUserNameDTO" type="io.charqe.qs.modules.user.controller.web.dto.ArticleUserNameDTO">
+        <id column="id" property="id"/>
+        <result column="username" property="userName"/>
+    </resultMap>
+
+    <select id="selectBatchIdsWithUsername" resultMap="ArticleUserNameDTO">
+        SELECT id, username FROM user WHERE is_del = 0 AND id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>
