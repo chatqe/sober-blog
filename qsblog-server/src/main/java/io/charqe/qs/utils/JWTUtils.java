@@ -133,17 +133,17 @@ public class JWTUtils {
             parseToken(token);
             return true;
         } catch (ExpiredJwtException e) {
-            log.warn("Token已过期: {}", e.getMessage());
+            log.error("Token已过期: {}", e.getMessage());
         } catch (UnsupportedJwtException e) {
-            log.warn("Token格式不支持: {}", e.getMessage());
+            log.error("Token格式不支持: {}", e.getMessage());
         } catch (MalformedJwtException e) {
-            log.warn("Token格式错误: {}", e.getMessage());
+            log.error("Token格式错误: {}", e.getMessage());
         } catch (SignatureException e) {
-            log.warn("Token签名错误: {}", e.getMessage());
+            log.error("Token签名错误: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
-            log.warn("Token参数错误: {}", e.getMessage());
+            log.error("Token参数错误: {}", e.getMessage());
         } catch (JwtException e) {
-            log.warn("Token验证失败: {}", e.getMessage());
+            log.error("Token验证失败: {}", e.getMessage());
         }
         return false;
     }
