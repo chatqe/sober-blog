@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapp
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.aop.SaveCheck;
 import io.charqe.qs.common.model.R;
+import io.charqe.qs.modules.danmaku.convert.DanmakuConvert;
 import io.charqe.qs.modules.danmaku.domain.dao.DanmakuMapper;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.danmaku.domain.pojo.Danmaku;
@@ -41,6 +42,9 @@ public class DanmakuController {
 
     @Resource
     private DanmakuService danmakuService;
+
+    @Resource
+    private DanmakuConvert danmakuConvert;
 
 
     @Resource
@@ -108,9 +112,9 @@ public class DanmakuController {
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     @GetMapping("/list")
-    public R<List<Danmaku>> list() {
+    public R<List<DanmakuVO>> list() {
 
-        return R.success(danmakuService.racdomList());
+        return R.success(danmakuConvert.toVOList(danmakuService.racdomList()));
     }
 
     /**
