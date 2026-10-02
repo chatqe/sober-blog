@@ -5,9 +5,12 @@ import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.model.PageQuery;
 import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.common.model.mp.Lb;
+import io.charqe.qs.modules.danmaku.controller.web.vo.DanmakuVO;
+import io.charqe.qs.modules.danmaku.convert.DanmakuConvert;
 import io.charqe.qs.modules.danmaku.domain.dao.DanmakuMapper;
 import io.charqe.qs.modules.danmaku.domain.pojo.Danmaku;
 import io.charqe.qs.utils.BlogUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -24,6 +27,9 @@ import java.util.Random;
  */
 @Service
 public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> implements DanmakuService {
+
+    @Autowired
+    private DanmakuConvert danmakuConvert;
 
 
     /**
@@ -65,7 +71,7 @@ public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> 
 
 
     @Override
-    public List<Danmaku> racdomList() {
+    public List<DanmakuVO> randomList() {
         List<Danmaku> danmakus;
         int count = Math.toIntExact(this.count());
         if (count > CommonConst.DANMAKU_COUNT) {
@@ -86,7 +92,7 @@ public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> 
                 danmaku.setAvatar(BlogUtil.getRandomAvatar(danmaku.getId().toString()));
             }
         });
-        return danmakus;
+        return danmakuConvert.toVOList(danmakus);
     }
 }
 

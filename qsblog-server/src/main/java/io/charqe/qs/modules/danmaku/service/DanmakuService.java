@@ -1,6 +1,7 @@
 package io.charqe.qs.modules.danmaku.service;
 
 import io.charqe.qs.common.model.mp.CoreService;
+import io.charqe.qs.modules.danmaku.controller.web.vo.DanmakuVO;
 import io.charqe.qs.modules.danmaku.domain.pojo.Danmaku;
 
 import java.util.List;
@@ -21,7 +22,7 @@ public interface DanmakuService extends CoreService<Danmaku> {
      *
      * @return
      */
-    List<Danmaku> racdomList();
+    List<DanmakuVO> randomList();
 }
 
 

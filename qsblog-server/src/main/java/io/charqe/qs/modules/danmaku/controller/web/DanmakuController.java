@@ -1,15 +1,12 @@
 package io.charqe.qs.modules.danmaku.controller.web;
 
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.aop.SaveCheck;
 import io.charqe.qs.common.model.R;
-import io.charqe.qs.modules.danmaku.convert.DanmakuConvert;
+import io.charqe.qs.modules.danmaku.controller.web.vo.DanmakuVO;
 import io.charqe.qs.modules.danmaku.domain.dao.DanmakuMapper;
-import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.danmaku.domain.pojo.Danmaku;
 import io.charqe.qs.modules.danmaku.service.DanmakuService;
-import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.QingsiUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,10 +39,6 @@ public class DanmakuController {
 
     @Resource
     private DanmakuService danmakuService;
-
-    @Resource
-    private DanmakuConvert danmakuConvert;
-
 
     @Resource
     private QingsiUtil qingsiUtil;
@@ -114,7 +107,7 @@ public class DanmakuController {
     @GetMapping("/list")
     public R<List<DanmakuVO>> list() {
 
-        return R.success(danmakuConvert.toVOList(danmakuService.racdomList()));
+        return R.success(danmakuService.randomList());
     }
 
     /**
