@@ -1,5 +1,6 @@
 package io.charqe.qs.modules.danmaku.convert;
 
+import io.charqe.qs.modules.danmaku.controller.admin.vo.AdminDanmakuVO;
 import io.charqe.qs.modules.danmaku.controller.web.vo.DanmakuVO;
 import io.charqe.qs.modules.danmaku.domain.pojo.Danmaku;
 import org.mapstruct.Mapper;
@@ -17,9 +18,11 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface DanmakuConvert {
 
-    DanmakuConvert INSTANCE = Mappers.getMapper(DanmakuConvert.class);
-
     DanmakuVO toVO(Danmaku danmaku);
 
     List<DanmakuVO> toVOList(List<Danmaku> danmakus);
+
+    AdminDanmakuVO toAdminVO(Danmaku danmaku);
+
+    List<AdminDanmakuVO> toAdminVOList(List<Danmaku> danmakus);
 }

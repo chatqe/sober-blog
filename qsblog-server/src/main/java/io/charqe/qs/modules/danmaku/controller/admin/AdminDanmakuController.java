@@ -1,12 +1,10 @@
 package io.charqe.qs.modules.danmaku.controller.admin;
 
-import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
-import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.common.model.R;
-import io.charqe.qs.modules.danmaku.domain.dao.DanmakuMapper;
-import io.charqe.qs.modules.danmaku.domain.pojo.Danmaku;
+import io.charqe.qs.modules.danmaku.controller.admin.dto.AdminDanmakuPageReqDTO;
+import io.charqe.qs.modules.danmaku.controller.admin.vo.AdminDanmakuPageVO;
+import io.charqe.qs.modules.danmaku.service.DanmakuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,29 +28,26 @@ import javax.annotation.Resource;
 @Tag(name = "adminDanmaku", description = "管理后台-弹幕管理")
 public class AdminDanmakuController {
 
-
     @Resource
-    private DanmakuMapper danmakuMapper;
+    private DanmakuService danmakuService;
 
     /**
      * 管理员查询弹幕列表
      *
-     * @param baseReqVO 查询参数
+     * @param dto 查询参数
      * @return 弹幕分页列表
      */
-    @Operation(summary = "管理员查询弹幕列表", description = "用于管理员在管理后台查询弹幕列表，支持分页和排序")
+    @Operation(summary = "管理员查询弹幕列表", description = "用于管理员在管理后台查询弹幕列表，支持分页、关键字和时间范围过滤")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "查询成功，返回弹幕分页列表"),
         @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
-    @PostMapping("/boss/list")
+    @PostMapping("/list")
     @LoginCheck(0)
-    public R<Page> listBossDanmaku(
-        @Parameter(name = "baseReqVO", description = "查询参数", required = true, example = "{\"page\":1,\"pageSize\":10}")
-        @RequestBody BaseReqVO baseReqVO) {
-        LambdaQueryChainWrapper<Danmaku> wrapper = new LambdaQueryChainWrapper<>(danmakuMapper);
-        wrapper.orderByDesc(Danmaku::getCreateTime).page(baseReqVO);
-        return R.success(baseReqVO);
+    public R<AdminDanmakuPageVO> list(
+        @Parameter(name = "dto", description = "查询参数", required = true, example = "{\"pageNum\":1,\"pageSize\":10,\"keyword\":\"测试\"}")
+        @RequestBody AdminDanmakuPageReqDTO dto) {
+        return R.success(danmakuService.pageList(dto));
     }
 }

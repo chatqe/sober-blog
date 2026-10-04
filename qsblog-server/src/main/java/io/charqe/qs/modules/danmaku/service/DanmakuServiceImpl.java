@@ -1,10 +1,15 @@
 package io.charqe.qs.modules.danmaku.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.common.constants.CommonConst;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.PageQuery;
 import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.common.model.mp.Lb;
+import io.charqe.qs.modules.danmaku.controller.admin.dto.AdminDanmakuPageReqDTO;
+import io.charqe.qs.modules.danmaku.controller.admin.vo.AdminDanmakuPageVO;
 import io.charqe.qs.modules.danmaku.controller.web.vo.DanmakuVO;
 import io.charqe.qs.modules.danmaku.convert.DanmakuConvert;
 import io.charqe.qs.modules.danmaku.domain.dao.DanmakuMapper;
@@ -31,7 +36,6 @@ public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> 
     @Autowired
     private DanmakuConvert danmakuConvert;
 
-
     /**
      * 批量保存
      *
@@ -40,14 +44,6 @@ public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> 
      */
     @Override
     public String saveList(List<Danmaku> danmakus) {
-
-        // for (Danmaku danmaku : danmakus) {
-        //     if (!StringUtils.hasText(danmaku.getAvatar())) {
-        //         danmaku.setAvatar(BlogUtil.getRandomAvatar(null));
-        //     }
-        //
-        // }
-
         return null;
     }
 
@@ -57,18 +53,15 @@ public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> 
      * @return
      */
     @Override
-    public List<Danmaku> latestDanmaku() {
+    public List<DanmakuVO> latestDanmaku() {
         List<Danmaku> latestDanmakuList = list(Lb.<Danmaku>q()
-                // 创建时间倒序排序
                 .orderByDesc(Danmaku::getCreateTime)
-                // 只获取前20条数据
                 .last("limit 20"));
         if (CollectionUtils.isEmpty(latestDanmakuList)) {
-            latestDanmakuList = new ArrayList<>();
+            return new ArrayList<>();
         }
-        return latestDanmakuList;
+        return danmakuConvert.toVOList(latestDanmakuList);
     }
-
 
     @Override
     public List<DanmakuVO> randomList() {
@@ -76,11 +69,11 @@ public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> 
         int count = Math.toIntExact(this.count());
         if (count > CommonConst.DANMAKU_COUNT) {
             int i = new Random().nextInt(count + 1 - CommonConst.DANMAKU_COUNT);
-            int treeHoleCount = CommonConst.DANMAKU_COUNT;
             PageQuery pageQuery = new PageQuery();
             pageQuery.setPageNum(i);
-            pageQuery.setPageSize(treeHoleCount);
-            IPage<Danmaku> danmakuIPage = page(pageQuery, Lb.<Danmaku>q().select(Danmaku::getId, Danmaku::getAvatar, Danmaku::getMessage, Danmaku::getCreateTime)
+            pageQuery.setPageSize(CommonConst.DANMAKU_COUNT);
+            IPage<Danmaku> danmakuIPage = page(new Page<>(i, CommonConst.DANMAKU_COUNT), Lb.<Danmaku>q()
+                    .select(Danmaku::getId, Danmaku::getAvatar, Danmaku::getMessage, Danmaku::getCreateTime)
                     .orderByDesc(Danmaku::getCreateTime));
             danmakus = danmakuIPage.getRecords();
         } else {
@@ -94,6 +87,15 @@ public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> 
         });
         return danmakuConvert.toVOList(danmakus);
     }
+
+    @Override
+    public AdminDanmakuPageVO pageList(AdminDanmakuPageReqDTO dto) {
+        LambdaQueryWrapper<Danmaku> wrapper = Lb.<Danmaku>q()
+                .like(StringUtils.hasText(dto.getKeyword()), Danmaku::getMessage, dto.getKeyword())
+                .ge(dto.getStartTime() != null, Danmaku::getCreateTime, dto.getStartTime())
+                .le(dto.getEndTime() != null, Danmaku::getCreateTime, dto.getEndTime())
+                .orderByDesc(Danmaku::getCreateTime);
+        Page<Danmaku> mpPage = page(new Page<>(dto.getPageNum(), dto.getPageSize()), wrapper);
+        return (AdminDanmakuPageVO) PageResult.fromMpPage(mpPage, danmakuConvert::toAdminVO);
+    }
 }
-
-
