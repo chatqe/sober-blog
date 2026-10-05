@@ -141,7 +141,7 @@ public class DanmakuController {
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
     @GetMapping("/latestDanmaku")
-    public R<List<Danmaku>> latestDanmaku() {
+    public R<List<DanmakuVO>> latestDanmaku() {
         return R.success(danmakuService.latestDanmaku());
     }
 
