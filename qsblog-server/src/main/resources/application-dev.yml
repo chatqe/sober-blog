@@ -109,7 +109,8 @@ qiniu:
   enable: true
   accessKey: ${QS_QINIU_AK}
   secretKey: ${QS_QINIU_SK}
-  bucket: pb-buckets
+#  bucket: pb-buckets
+  bucket: out-pb-bkt
   downloadUrl: "https://img.soberup.top/" # 返回前端用的 CDN 域名
   pipeline: default.sys  # 私有队列可提速
   pfop-size-limit: 314572  # 压缩标准 大于300 单位 Byte，（300 kB）
