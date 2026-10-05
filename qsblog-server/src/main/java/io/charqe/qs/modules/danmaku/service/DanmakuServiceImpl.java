@@ -9,7 +9,7 @@ import io.charqe.qs.common.model.PageQuery;
 import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.common.model.mp.Lb;
 import io.charqe.qs.modules.danmaku.controller.admin.dto.AdminDanmakuPageReqDTO;
-import io.charqe.qs.modules.danmaku.controller.admin.vo.AdminDanmakuPageVO;
+import io.charqe.qs.modules.danmaku.controller.admin.vo.AdminDanmakuVO;
 import io.charqe.qs.modules.danmaku.controller.web.vo.DanmakuVO;
 import io.charqe.qs.modules.danmaku.convert.DanmakuConvert;
 import io.charqe.qs.modules.danmaku.domain.dao.DanmakuMapper;
@@ -89,13 +89,13 @@ public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> 
     }
 
     @Override
-    public AdminDanmakuPageVO pageList(AdminDanmakuPageReqDTO dto) {
+    public PageResult<AdminDanmakuVO> pageList(AdminDanmakuPageReqDTO dto) {
         LambdaQueryWrapper<Danmaku> wrapper = Lb.<Danmaku>q()
                 .like(StringUtils.hasText(dto.getKeyword()), Danmaku::getMessage, dto.getKeyword())
                 .ge(dto.getStartTime() != null, Danmaku::getCreateTime, dto.getStartTime())
                 .le(dto.getEndTime() != null, Danmaku::getCreateTime, dto.getEndTime())
                 .orderByDesc(Danmaku::getCreateTime);
         Page<Danmaku> mpPage = page(new Page<>(dto.getPageNum(), dto.getPageSize()), wrapper);
-        return (AdminDanmakuPageVO) PageResult.fromMpPage(mpPage, danmakuConvert::toAdminVO);
+        return PageResult.fromMpPage(mpPage, danmakuConvert::toAdminVO);
     }
 }

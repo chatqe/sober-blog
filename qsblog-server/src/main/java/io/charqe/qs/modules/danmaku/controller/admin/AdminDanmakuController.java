@@ -1,9 +1,10 @@
 package io.charqe.qs.modules.danmaku.controller.admin;
 
 import io.charqe.qs.aop.LoginCheck;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.danmaku.controller.admin.dto.AdminDanmakuPageReqDTO;
-import io.charqe.qs.modules.danmaku.controller.admin.vo.AdminDanmakuPageVO;
+import io.charqe.qs.modules.danmaku.controller.admin.vo.AdminDanmakuVO;
 import io.charqe.qs.modules.danmaku.service.DanmakuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,7 +46,7 @@ public class AdminDanmakuController {
     })
     @PostMapping("/list")
     @LoginCheck(0)
-    public R<AdminDanmakuPageVO> list(
+    public R<PageResult<AdminDanmakuVO>> list(
         @Parameter(name = "dto", description = "查询参数", required = true, example = "{\"pageNum\":1,\"pageSize\":10,\"keyword\":\"测试\"}")
         @RequestBody AdminDanmakuPageReqDTO dto) {
         return R.success(danmakuService.pageList(dto));

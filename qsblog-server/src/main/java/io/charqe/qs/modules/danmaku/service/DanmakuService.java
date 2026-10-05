@@ -1,8 +1,9 @@
 package io.charqe.qs.modules.danmaku.service;
 
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.mp.CoreService;
 import io.charqe.qs.modules.danmaku.controller.admin.dto.AdminDanmakuPageReqDTO;
-import io.charqe.qs.modules.danmaku.controller.admin.vo.AdminDanmakuPageVO;
+import io.charqe.qs.modules.danmaku.controller.admin.vo.AdminDanmakuVO;
 import io.charqe.qs.modules.danmaku.controller.web.vo.DanmakuVO;
 import io.charqe.qs.modules.danmaku.domain.pojo.Danmaku;
 
@@ -26,5 +27,5 @@ public interface DanmakuService extends CoreService<Danmaku> {
      */
     List<DanmakuVO> randomList();
 
-    AdminDanmakuPageVO pageList(AdminDanmakuPageReqDTO dto);
+    PageResult<AdminDanmakuVO> pageList(AdminDanmakuPageReqDTO dto);
 }
