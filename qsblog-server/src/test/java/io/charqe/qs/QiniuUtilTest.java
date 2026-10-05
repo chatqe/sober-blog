@@ -127,8 +127,9 @@ public class QiniuUtilTest {
      */
     @Test
     public void onlineDirMove() {
-        String srcPrefix = "backgroundImg/";     // TODO: 改为实际源目录前缀
-        String destPrefix = "qingsi/randCover/";   // TODO: 改为实际目标目录前缀
+        // String srcPrefix = "backgroundImg/";     // TODO: 改为实际源目录前缀
+        String srcPrefix = "qingsi/static/avatar/";     // TODO: 改为实际源目录前缀
+        String destPrefix = "qingsi/randAvatar/";   // TODO: 改为实际目标目录前缀
 
         // 先预览源目录有哪些文件
         List<String> srcKeys = qiniuUtil.list(srcPrefix);
