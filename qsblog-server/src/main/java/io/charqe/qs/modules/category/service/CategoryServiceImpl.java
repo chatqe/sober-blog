@@ -45,8 +45,6 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
     @Resource
     private io.charqe.qs.modules.article.domain.dao.ArticleMapper articleMapper;
 
-    @Resource
-    private CategoryConvert categoryConvert;
 
     @Override
     public PageResult<CategoryListVO> pageList(String keyword, Integer type, Integer status, int pageNum, int pageSize) {
@@ -59,7 +57,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         var mpPage = page(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize), wrapper);
         PageResult<CategoryListVO> result = new PageResult<>();
         List<CategoryListVO> voList = mpPage.getRecords()
-                .stream().map(categoryConvert::toListVO).toList();
+                .stream().map(CategoryConvert.INSTANCE::toListVO).toList();
         result.setList(voList);
         result.setTotal(mpPage.getTotal());
         result.setPages((int) mpPage.getPages());
@@ -74,7 +72,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         if (category == null) {
             throw new BizException("分类不存在");
         }
-        return categoryConvert.toDetailVO(category);
+        return CategoryConvert.INSTANCE.toDetailVO(category);
     }
 
     @Override
@@ -83,7 +81,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
             throw new BizException("分类名称不能为空");
         }
 
-        Category entity = categoryConvert.toEntity(dto);
+        Category entity = CategoryConvert.INSTANCE.toEntity(dto);
         save(entity);
         clearCache();
     }
@@ -102,7 +100,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
             throw new BizException("分类不存在");
         }
 
-        Category entity = categoryConvert.toEntity(dto);
+        Category entity = CategoryConvert.INSTANCE.toEntity(dto);
         updateById(entity);
         clearCache();
     }
@@ -150,7 +148,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
 
         List<CategoryWebVO> list = rawList
                 .stream()
-                .map(categoryConvert::toWebVO)
+                .map(CategoryConvert.INSTANCE::toWebVO)
                 .toList();
 
         if (!list.isEmpty()) {

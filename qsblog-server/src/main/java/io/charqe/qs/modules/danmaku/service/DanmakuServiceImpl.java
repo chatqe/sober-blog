@@ -33,8 +33,6 @@ import java.util.Random;
 @Service
 public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> implements DanmakuService {
 
-    @Autowired
-    private DanmakuConvert danmakuConvert;
 
     /**
      * 批量保存
@@ -60,7 +58,7 @@ public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> 
         if (CollectionUtils.isEmpty(latestDanmakuList)) {
             return new ArrayList<>();
         }
-        return danmakuConvert.toVOList(latestDanmakuList);
+        return DanmakuConvert.INSTANCE.toVOList(latestDanmakuList);
     }
 
     @Override
@@ -85,7 +83,7 @@ public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> 
                 danmaku.setAvatar(BlogUtil.getRandomAvatar(danmaku.getId().toString()));
             }
         });
-        return danmakuConvert.toVOList(danmakus);
+        return DanmakuConvert.INSTANCE.toVOList(danmakus);
     }
 
     @Override
@@ -96,6 +94,6 @@ public class DanmakuServiceImpl extends CoreServiceImpl<DanmakuMapper, Danmaku> 
                 .le(dto.getEndTime() != null, Danmaku::getCreateTime, dto.getEndTime())
                 .orderByDesc(Danmaku::getCreateTime);
         Page<Danmaku> mpPage = page(new Page<>(dto.getPageNum(), dto.getPageSize()), wrapper);
-        return PageResult.fromMpPage(mpPage, danmakuConvert::toAdminVO);
+        return PageResult.fromMpPage(mpPage, DanmakuConvert.INSTANCE::toAdminVO);
     }
 }

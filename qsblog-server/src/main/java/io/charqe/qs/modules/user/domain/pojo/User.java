@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * *
+ * 用户信息表实体
  *
  * @author Joy
  * @since 2026-01-17 10:47
@@ -18,75 +18,47 @@ import lombok.EqualsAndHashCode;
 @TableName("user")
 public class User extends BaseDO {
 
-    /**
-     * 用户名
-     */
+    /** 用户名 */
     private String username;
 
-    /**
-     * 密码
-     */
-
+    /** 密码 */
     private String password;
 
-    /**
-     * 手机号
-     */
+    /** 手机号 */
     @TableField("phone_number")
     private String phoneNumber;
 
-    /**
-     * 用户邮箱
-     */
+    /** 用户邮箱 */
     @TableField("email")
     private String email;
 
-    /**
-     * 是否启用[0:否，1:是]
-     */
+    /** 是否启用[0:否，1:是] */
     @TableField("user_status")
     private Integer userStatus;
 
-    /**
-     * 性别[1:男，2:女，0:保密]
-     */
+    /** 性别[1:男，2:女，0:保密] */
     @TableField("gender")
     private Integer gender;
 
-    /**
-     * openId
-     */
+    /** openId */
     private String openId;
 
-    /**
-     * 头像
-     */
+    /** 头像 */
     private String avatar;
 
-    /**
-     * 赞赏
-     */
+    /** 赞赏 */
     private String admire;
 
-    /**
-     * 订阅
-     */
+    /** 订阅 */
     private String subscribe;
 
-    /**
-     * 简介
-     */
+    /** 简介 */
     private String introduction;
 
-    /**
-     * 用户类型[0:超级管理员，1:管理员，2:普通用户]
-     */
+    /** 用户类型[0:超级管理员，1:管理员，2:普通用户] */
     private Integer userType;
 
-    /**
-     * 最终修改人
-     */
-    @TableField(fill = FieldFill.UPDATE)
+    /** 更新人 */
+    @TableField(value = "update_by", fill = FieldFill.UPDATE)
     private String updateBy;
-
 }

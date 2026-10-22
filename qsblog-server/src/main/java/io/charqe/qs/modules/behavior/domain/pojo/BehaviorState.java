@@ -50,9 +50,7 @@ public class BehaviorState {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long bizId;
 
-    /**
-     * 业务主体类型
-     */
+    /** 业务实体类型 1-文章 2-微言/动态 3-评论 4-相册 5-视频 6-音乐 7-分类/专栏 8-标签 */
     @TableField("biz_type")
     private Integer bizType;
     /**

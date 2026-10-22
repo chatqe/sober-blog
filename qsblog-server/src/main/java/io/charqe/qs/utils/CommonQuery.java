@@ -155,6 +155,28 @@ public class CommonQuery {
     }
 
     /**
+     * 查询 IP 归属地（国家|省|市），返回格式如 "中国|广东省|深圳市"
+     *
+     * @param ip IP 地址
+     * @return 地理位置字符串，查询失败返回 null
+     */
+    public String getIpRegion(String ip) {
+        if (!StringUtils.hasText(ip) || searcher == null) {
+            return null;
+        }
+        try {
+            String search = searcher.search(ip);
+            String[] region = search.split("\\|");
+            if (region.length < 4 || "0".equals(region[0])) {
+                return null;
+            }
+            return region[0] + "|" + region[2] + "|" + region[3];
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
      * 按最大长度截断字符串，避免超出数据库列长度导致插入失败
      */
     private static String truncate(String value, int maxLen) {

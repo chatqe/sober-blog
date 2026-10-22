@@ -109,8 +109,6 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
     @Value("${user.subscribe.format}")
     private String subscribeFormat;
 
-    @Resource
-    private ArticleConvert articleConvert;
 
 
     @Override
@@ -350,7 +348,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             return R.fail(ArticleIErrorCode.NOT_FOUND);
         }
 
-        return R.success(articleConvert.convert(article));
+        return R.success(ArticleConvert.INSTANCE.convert(article));
     }
 
     /**
@@ -541,7 +539,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 .collect(Collectors.toMap(ArticleUserNameDTO::getId, ArticleUserNameDTO::getUserName, (a, b) -> a));
 
         List<AdminArticleVO> list = articleList.stream().map(article -> {
-            AdminArticleVO vo = articleConvert.toAdminVO(article);
+            AdminArticleVO vo = ArticleConvert.INSTANCE.toAdminVO(article);
             if (article.getCategoryId() != null) {
                 vo.setCategoryName(cateNameMap.getOrDefault(article.getCategoryId(), ""));
             }

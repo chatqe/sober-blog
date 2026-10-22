@@ -29,7 +29,6 @@ import io.charqe.qs.modules.im.websocket.TioWebsocketStarter;
 import io.charqe.qs.modules.moment.domain.pojo.Moment;
 import io.charqe.qs.modules.moment.service.MomentService;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
-import io.charqe.qs.modules.user.convert.UserConvert;
 import io.charqe.qs.modules.user.domain.dao.UserMapper;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.enums.UserTypeEnum;
@@ -90,8 +89,6 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
     @Resource
     private BehaviorLogService behaviorLogService;
 
-    @Resource
-    private UserConvert userConvert;
 
     @Resource
     private  JWTUtils jwtUtils;

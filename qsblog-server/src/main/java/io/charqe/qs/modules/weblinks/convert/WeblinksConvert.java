@@ -14,7 +14,7 @@ import java.util.List;
  * @author Joy
  * @since 2026-06-21
  */
-@Mapper(componentModel = "spring")
+@Mapper
 public interface WeblinksConvert {
 
     WeblinksConvert INSTANCE = Mappers.getMapper(WeblinksConvert.class);
