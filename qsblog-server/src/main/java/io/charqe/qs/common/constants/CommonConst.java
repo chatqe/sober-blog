@@ -185,7 +185,7 @@ public class CommonConst {
     /**
      * 文章缓存，用于首页
      */
-    public static final String CATEGORY_ARTICLE_LIST = "category_article_list";
+    public static final String CATEGORY_ARTICLE_LIST = "category_article_list_v2";
 
     /**
      * 用户点赞缓存

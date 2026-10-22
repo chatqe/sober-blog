@@ -23,6 +23,9 @@ import java.util.List;
 /**
  * 家庭卡片管理控制器（后台管理）
  *
+ * 注意：本控制器同时服务于 C 端表白墙，普通登录用户需要维护自己的卡片，
+ * 因此统一显式保持 @LoginCheck(2)（仅要求登录），不能收紧为管理员级别。
+ *
  * @author Joy
  * @since 2026-06-22
  */
@@ -44,7 +47,7 @@ public class AdminFamilyController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @GetMapping("/page")
-    @LoginCheck
+    @LoginCheck(2)
     public R<PageResult<FamilyListVO>> pageList(FamilyPageQueryDTO query) {
         return R.success(familyService.pageList(query));
     }
@@ -56,7 +59,7 @@ public class AdminFamilyController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @GetMapping("/{id}")
-    @LoginCheck
+    @LoginCheck(2)
     public R<FamilyDetailVO> getDetail(@Parameter(name = "id", description = "家庭卡片ID", required = true) @PathVariable("id") Long id) {
         return R.success(familyService.getDetail(id));
     }
@@ -68,7 +71,7 @@ public class AdminFamilyController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @PostMapping
-    @LoginCheck
+    @LoginCheck(2)
     public R save(@RequestBody Family family) {
         Long userId = BlogUtil.getUserId();
         family.setUserId(userId);
@@ -89,7 +92,7 @@ public class AdminFamilyController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @DeleteMapping("/{id}")
-    @LoginCheck
+    @LoginCheck(2)
     public R delete(@Parameter(name = "id", description = "家庭卡片ID", required = true) @PathVariable("id") Long id) {
         familyService.softDelete(id);
         return R.success();
@@ -102,7 +105,7 @@ public class AdminFamilyController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @PatchMapping("/{id}/status")
-    @LoginCheck
+    @LoginCheck(2)
     public R toggleStatus(@Parameter(name = "id", description = "家庭卡片ID", required = true) @PathVariable("id") Long id) {
         familyService.toggleStatus(id);
         return R.success();

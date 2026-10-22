@@ -48,6 +48,7 @@ public class SysConfigController {
         @ApiResponse(responseCode = "200", description = "查询成功，返回系统参数映射"),
         @ApiResponse(responseCode = "500", description = "服务器内部错误")
     })
+    // 公开接口：C 端首屏需匿名读取公共配置，服务层已限定 PUBLIC，故不加 @LoginCheck
     @GetMapping("/listSysConfig")
     public R<Map<String, String>> listSysConfig(
         @Parameter(hidden = true) HttpServletRequest request) {

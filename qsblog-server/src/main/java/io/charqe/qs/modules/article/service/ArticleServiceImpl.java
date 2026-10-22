@@ -371,7 +371,8 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 Map<Long, List<ArticleVO>> map = new HashMap<>();
 
                 List<Article> articles = list(Wrappers.<Article>lambdaQuery()
-                        .eq(Article::getIsDel, 0));
+                        .eq(Article::getIsDel, 0)
+                        .eq(Article::getViewStatus, true));
 
                 // stream 分组
                 Map<Long, List<Article>> sortArticleMap = articles.stream().collect(Collectors.groupingBy(Article::getCategoryId));
@@ -381,7 +382,8 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                     // 获取前6条数据
                     articleList = articleList.stream().limit(6).collect(Collectors.toList());
                     List<ArticleVO> articleVOList = articleList.stream().map(article -> {
-                        if (article.getArticleContent().length() > CommonConst.SUMMARY) {
+                        if (StringUtils.hasText(article.getArticleContent())
+                                && article.getArticleContent().length() > CommonConst.SUMMARY) {
                             article.setArticleContent(article.getArticleContent().substring(0, CommonConst.SUMMARY).replace("`", "").replace("#", "").replace(">", ""));
                         }
 

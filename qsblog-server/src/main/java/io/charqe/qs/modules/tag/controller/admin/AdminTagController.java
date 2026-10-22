@@ -37,7 +37,7 @@ public class AdminTagController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @GetMapping("/page")
-    @LoginCheck
+    @LoginCheck(0)
     public R<PageResult<TagListVO>> pageList(
             @Parameter(name = "categoryId", description = "分类ID") @RequestParam(required = false) Long categoryId,
             @Parameter(name = "keyword", description = "关键词（模糊匹配名称）") @RequestParam(required = false) String keyword,
@@ -53,7 +53,7 @@ public class AdminTagController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @GetMapping("/{id}")
-    @LoginCheck
+    @LoginCheck(0)
     public R<TagDetailVO> getDetail(@Parameter(name = "id", description = "标签ID", required = true) @PathVariable("id") Long id) {
         return R.success(tagService.getDetail(id));
     }
@@ -65,7 +65,7 @@ public class AdminTagController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @PostMapping
-    @LoginCheck
+    @LoginCheck(0)
     public R save(@RequestBody TagSaveReqDTO dto) {
         tagService.save(dto);
         return R.success();
@@ -78,7 +78,7 @@ public class AdminTagController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @PutMapping("/{id}")
-    @LoginCheck
+    @LoginCheck(0)
     public R update(@PathVariable("id") Long id, @RequestBody TagSaveReqDTO dto) {
         dto.setId(id);
         tagService.update(dto);
@@ -92,7 +92,7 @@ public class AdminTagController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @DeleteMapping("/{id}")
-    @LoginCheck
+    @LoginCheck(0)
     public R delete(@Parameter(name = "id", description = "标签ID", required = true) @PathVariable("id") Long id) {
         tagService.delete(id);
         return R.success();

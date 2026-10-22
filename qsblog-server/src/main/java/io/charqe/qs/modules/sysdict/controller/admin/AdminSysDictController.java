@@ -45,7 +45,7 @@ public class AdminSysDictController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @GetMapping("/type/list")
-    @LoginCheck
+    @LoginCheck(0)
     public R<PageResult<SysDictType>> listType(
             @Parameter(name = "typeName", description = "类型名称（模糊查询）") @RequestParam(required = false) String typeName,
             @Parameter(name = "status", description = "状态：0-禁用, 1-启用") @RequestParam(required = false) Integer status,
@@ -61,7 +61,7 @@ public class AdminSysDictController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @PostMapping("/type/save")
-    @LoginCheck
+    @LoginCheck(0)
     public R saveType(@RequestBody SysDictTypeReq req) {
         sysDictTypeService.save(req);
         return R.success();
@@ -74,7 +74,7 @@ public class AdminSysDictController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @PostMapping("/type/update")
-    @LoginCheck
+    @LoginCheck(0)
     public R updateType(@RequestBody SysDictTypeReq req) {
         sysDictTypeService.update(req);
         return R.success();
@@ -87,7 +87,7 @@ public class AdminSysDictController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @DeleteMapping("/type/batchDelete")
-    @LoginCheck
+    @LoginCheck(0)
     public R batchDeleteType(@RequestBody Long[] ids) {
         sysDictTypeService.batchDelete(ids);
         return R.success();
@@ -98,6 +98,7 @@ public class AdminSysDictController {
             @ApiResponse(responseCode = "200", description = "查询成功")
     })
     @GetMapping("/type/listEnabled")
+    @LoginCheck(0)
     public R<List<SysDictType>> listEnabledType() {
         return R.success(sysDictTypeService.listEnabled());
     }
@@ -110,6 +111,7 @@ public class AdminSysDictController {
             @ApiResponse(responseCode = "400", description = "请求参数错误")
     })
     @GetMapping("/data/listByTypeCode")
+    @LoginCheck(0)
     public R<List<SysDictData>> listDataByTypeCode(
             @Parameter(name = "typeCode", description = "字典类型编码", required = true, example = "gender")
             @RequestParam("typeCode") String typeCode) {
@@ -127,7 +129,7 @@ public class AdminSysDictController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @PostMapping("/data/save")
-    @LoginCheck
+    @LoginCheck(0)
     public R saveData(@RequestBody SysDictDataReq req) {
         sysDictDataService.save(req);
         return R.success();
@@ -140,7 +142,7 @@ public class AdminSysDictController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @PostMapping("/data/update")
-    @LoginCheck
+    @LoginCheck(0)
     public R updateData(@RequestBody SysDictDataReq req) {
         sysDictDataService.update(req);
         return R.success();
@@ -153,7 +155,7 @@ public class AdminSysDictController {
             @ApiResponse(responseCode = "401", description = "未授权")
     })
     @DeleteMapping("/data/batchDelete")
-    @LoginCheck
+    @LoginCheck(0)
     public R batchDeleteData(@RequestBody Long[] ids) {
         sysDictDataService.batchDelete(ids);
         return R.success();
