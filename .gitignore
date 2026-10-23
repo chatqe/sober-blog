@@ -48,7 +48,32 @@ temp/
 .env
 .env.local
 .env.*.local
-!.env.example
+# 模板同样不入库，凭据一律通过本地 .env 或部署环境注入
+.env.example
+
+# SQL 脚本：仅跟踪 qingsi-model.sql
+*.sql
+!**/qingsi-model.sql
+
+# AI / 本地协作文档
+CLAUDE.md
+CLAUDE.md.bak-*
+CLAUDE.md.before-*
+CLAUDE_before_ai.md
+memory/
+*.bak
+
+# 一次性分析产物
+structure.txt
+_java_files.txt
+aes_test.json
+headroom_readme.json
+modify_comments.ps1
+ENUM_OPTIMIZATION_SUMMARY.md
+OPENAPI_DOCS_IMPLEMENTATION_PLAN.md
+
+# Shell 重定向事故产物（文件名含全角冒号，用通配符避开非 ASCII 字符）
+/C*UsersUpjqs*.json
 
 # Node.js
 node_modules/

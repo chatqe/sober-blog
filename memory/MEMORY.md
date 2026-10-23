@@ -1,6 +1,0 @@
-- [项目概述](qs-blog-project-overview.md) — 技术栈、包结构、开发规范
-- [行为模块重构](behavior-module-refactor.md) — 点赞/评论/收藏行为模块重构进展
-- [HistoryInfo → AccessLog 迁移](historyinfo-to-accesslog-migration.md) — 迁移已完成，遗留 SQL 问题
-- [开发工作流](development-workflow.md) — 代理使用策略、代码质量偏好、配置约定
-- [当前优化点](current-optimization-points.md) — 识别出的优化项清单，用户决定暂不处理
-- [Git 自动提交](git-auto-commit-with-reminder.md) — 修改/删除文件测试通过后提醒用户再提交
