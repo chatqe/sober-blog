@@ -33,8 +33,6 @@
         <fastjson2.version>2.0.43</fastjson2.version>
         <!-- JJWT Token -->
         <jjwt.version>0.11.5</jjwt.version>
-        <!-- Redisson 分布式锁 -->
-        <redisson.version>3.16.3</redisson.version>
         <!-- 参数校验 -->
         <hibernate-validator.version>6.1.7.Final</hibernate-validator.version>
         <validation-api.version>2.0.1.Final</validation-api.version>
@@ -163,13 +161,6 @@
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt-jackson</artifactId>
                 <version>${jjwt.version}</version>
-            </dependency>
-
-            <!-- Redisson 分布式锁 -->
-            <dependency>
-                <groupId>org.redisson</groupId>
-                <artifactId>redisson-spring-boot-starter</artifactId>
-                <version>${redisson.version}</version>
             </dependency>
 
             <!-- 参数校验 -->

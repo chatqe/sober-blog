@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.category.controller.admin;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
@@ -35,7 +37,7 @@ public class AdminCategoryController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/page")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R<PageResult<CategoryListVO>> pageList(
             @Parameter(name = "keyword", description = "关键词（模糊匹配名称）") @RequestParam(required = false) String keyword,
             @Parameter(name = "type", description = "分类类型: 0-导航栏分类, 1-普通分类") @RequestParam(required = false) Integer type,
@@ -50,7 +52,7 @@ public class AdminCategoryController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/{id}")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R<CategoryDetailVO> getDetail(@Parameter(name = "id", description = "分类ID", required = true) @PathVariable("id") Long id) {
         return R.success(categoryService.getDetail(id));
     }
@@ -60,7 +62,7 @@ public class AdminCategoryController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R save(@RequestBody CategorySaveReqDTO dto) {
         categoryService.save(dto);
         return R.success();
@@ -71,7 +73,7 @@ public class AdminCategoryController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PutMapping("/{id}")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R update(@PathVariable("id") Long id, @RequestBody CategorySaveReqDTO dto) {
         dto.setId(id);
         categoryService.update(dto);
@@ -83,7 +85,7 @@ public class AdminCategoryController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @DeleteMapping("/{id}")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R delete(@Parameter(name = "id", description = "分类ID", required = true) @PathVariable("id") Long id) {
         categoryService.delete(id);
         return R.success();
@@ -94,7 +96,7 @@ public class AdminCategoryController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PutMapping("/batchSort")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R batchSort(@RequestBody CategoryBatchSortDTO dto) {
         categoryService.batchSort(dto);
         return R.success();

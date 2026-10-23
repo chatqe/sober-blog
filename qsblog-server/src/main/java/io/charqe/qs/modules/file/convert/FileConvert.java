@@ -5,11 +5,7 @@ import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileRespVO;
 import io.charqe.qs.modules.file.domain.pojo.FileInfo;
 import org.mapstruct.Mapper;
-import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 /**
  * MapStruct转换接口：编译期自动生成实现类，无需手动编写
@@ -24,8 +20,7 @@ public interface FileConvert {
     FileConvert INSTANCE = Mappers.getMapper(FileConvert.class);
 
     /**
-     * reqVO → entity：新增用户时的转换
-     * 说明：字段名一致时无需配置@Mapping，不一致时需指定
+     * reqVO → entity：按同名字段复制，业务元数据由服务层派生
      */
     FileInfo convert(FileCreateReqVO reqVO);
 
@@ -34,14 +29,4 @@ public interface FileConvert {
      */
     FileRespVO convert(FileInfo file);
 
-    /**
-     * 自定义转换方法：LocalDateTime → 格式化的String
-     */
-    @Named("localDateTimeToString")
-    default String localDateTimeToString(LocalDateTime localDateTime) {
-        if (localDateTime == null) {
-            return null;
-        }
-        return localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-    }
 }

@@ -12,6 +12,9 @@ import io.charqe.qs.modules.im.websocket.TioUtil;
 import io.charqe.qs.modules.im.websocket.TioWebsocketStarter;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.service.UserService;
+import io.charqe.qs.modules.user.auth.AuthSessionService;
+import io.charqe.qs.modules.user.auth.AuthSessionVO;
+import io.charqe.qs.modules.user.auth.SessionScope;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.cache.QingSiCache;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +46,29 @@ public class AdminUserController {
     @Resource
     private QingSiCache qingSiCache;
 
+    @Resource
+    private AuthSessionService sessions;
+
+    @PostMapping("/login")
+    @Operation(summary = "后台独立登录", description = "仅允许站长和管理员，签发 ADMIN 会话")
+    public R<AuthSessionVO> login(@RequestParam("account") String account,
+                                  @RequestParam("password") String password) {
+        return userService.login(account, password, SessionScope.ADMIN);
+    }
+
+    @GetMapping("/session")
+    @Operation(summary = "查询当前后台会话", description = "不签发或续期")
+    public R<AuthSessionVO> session() {
+        return R.success(sessions.inspect(SessionScope.ADMIN));
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "退出当前后台会话")
+    public R<Void> logout() {
+        sessions.logout(BlogUtil.getToken(), SessionScope.ADMIN);
+        return R.success();
+    }
+
     /**
      * 查询用户列表
      *
@@ -54,7 +80,7 @@ public class AdminUserController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/page")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R<Page> listUser(
             @Parameter(name = "baseReqVO", description = "查询条件", required = true, example = "{\"page\":1,\"pageSize\":10}")
             @RequestBody BaseReqVO baseReqVO) {
@@ -77,7 +103,7 @@ public class AdminUserController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/changeUserStatus")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R changeUserStatus(
             @Parameter(name = "userId", description = "用户ID", required = true, example = "1")
             @RequestParam("userId") Integer userId,
@@ -109,7 +135,7 @@ public class AdminUserController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/changeUserAdmire")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R changeUserAdmire(
             @Parameter(name = "userId", description = "用户ID", required = true, example = "1")
             @RequestParam("userId") Integer userId,
@@ -136,7 +162,7 @@ public class AdminUserController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/changeUserType")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R changeUserType(
             @Parameter(name = "userId", description = "用户ID", required = true, example = "1")
             @RequestParam("userId") Integer userId,
@@ -156,21 +182,8 @@ public class AdminUserController {
     }
 
     private void logout(Integer userId) {
-        if (qingSiCache.get(CommonConst.ADMIN_TOKEN + userId) != null) {
-            String token = qingSiCache.get(CommonConst.ADMIN_TOKEN + userId);
-            qingSiCache.del(CommonConst.ADMIN_TOKEN + userId);
-            qingSiCache.del(token);
-        }
-
-        if (qingSiCache.get(CommonConst.USER_TOKEN + userId) != null) {
-            String token = qingSiCache.get(CommonConst.USER_TOKEN + userId);
-            qingSiCache.del(CommonConst.USER_TOKEN + userId);
-            qingSiCache.del(token);
-        }
-        TioWebsocketStarter tioWebsocketStarter = TioUtil.getTio();
-        if (tioWebsocketStarter != null) {
-            Tio.removeUser(tioWebsocketStarter.getServerTioConfig(), String.valueOf(userId), "remove user");
-        }
+        sessions.revokeAll(userId.longValue());
+        qingSiCache.del(CommonConst.USER_CACHE + userId);
 
     }
 }

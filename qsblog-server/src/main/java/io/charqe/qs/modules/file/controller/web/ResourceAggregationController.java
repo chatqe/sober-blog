@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.file.controller.web;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
@@ -41,7 +43,7 @@ public class ResourceAggregationController {
     /**
      * 保存
      */
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     @PostMapping("/saveWeblinks")
     public R saveWeblinks(@RequestBody WeblinksVO weblinksVO) {
         if (!StringUtils.hasText(weblinksVO.getTitle()) || !StringUtils.hasText(weblinksVO.getType())) {
@@ -60,7 +62,7 @@ public class ResourceAggregationController {
      * 删除
      */
     @GetMapping("/deleteWeblinks")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R deleteWeblinks(@RequestParam("id") Integer id) {
         weblinksMapper.deleteById(id);
         return R.success();
@@ -70,7 +72,7 @@ public class ResourceAggregationController {
      * 更新
      */
     @PostMapping("/updateWeblinks")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R updateWeblinks(@RequestBody WeblinksVO weblinksVO) {
         if (!StringUtils.hasText(weblinksVO.getTitle()) || !StringUtils.hasText(weblinksVO.getType())) {
             return R.fail("标题和资源类型不能为空！");

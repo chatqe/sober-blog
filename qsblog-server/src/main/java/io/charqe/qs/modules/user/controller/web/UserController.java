@@ -7,6 +7,10 @@ import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
 import io.charqe.qs.modules.user.service.UserService;
+import io.charqe.qs.modules.user.auth.AuthSessionService;
+import io.charqe.qs.modules.user.auth.AuthSessionVO;
+import io.charqe.qs.modules.user.auth.AuthAccessException;
+import io.charqe.qs.modules.user.auth.SessionScope;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.cache.QingSiCache;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +40,9 @@ public class UserController {
     private UserService userService;
 
     @Resource
+    private AuthSessionService sessions;
+
+    @Resource
     private QingSiCache qingSiCache;
 
 
@@ -52,7 +59,7 @@ public class UserController {
     @ApiResponse(responseCode = "400", description = "请求参数错误，如用户名已存在、密码格式不正确等")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/register")
-    public R<UserVO> regist(
+    public R<AuthSessionVO> regist(
         @Parameter(name = "user", description = "用户注册信息", required = true, example = "{\"username\":\"testuser\",\"password\":\"123456\"}")
         @Validated @RequestBody UserVO user) {
         return userService.regist(user);
@@ -75,14 +82,17 @@ public class UserController {
     @ApiResponse(responseCode = "401", description = "账号或密码错误")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/login")
-    public R<UserVO> login(
+    public R<AuthSessionVO> login(
         @Parameter(name = "account", description = "登录账号（用户名、邮箱或手机号）", required = true, example = "testuser") 
         @RequestParam("account") String account,
         @Parameter(name = "password", description = "登录密码", required = true, example = "123456") 
         @RequestParam("password") String password,
         @Parameter(name = "isAdmin", description = "是否为管理员登录，默认为false", required = false, example = "false") 
         @RequestParam(value = "isAdmin", defaultValue = "false") Boolean isAdmin) {
-        return userService.login(account, password, isAdmin);
+        if (Boolean.TRUE.equals(isAdmin)) {
+            throw new AuthAccessException(400, "后台登录请使用 /admin/user/login");
+        }
+        return userService.login(account, password, SessionScope.WEB);
     }
 
 
@@ -99,8 +109,9 @@ public class UserController {
     @ApiResponse(responseCode = "400", description = "请求参数错误，如Token为空")
     @ApiResponse(responseCode = "401", description = "Token无效或已过期")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    @Deprecated
     @PostMapping("/token")
-    public R<UserVO> login(
+    public R<AuthSessionVO> login(
         @Parameter(name = "userToken", description = "用户Token", required = true, example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...") 
         @RequestParam("userToken") String userToken) {
         return userService.token(userToken);
@@ -118,10 +129,15 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "退出成功")
     @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    @GetMapping("/logout")
-    @LoginCheck
+    @RequestMapping(value = "/logout", method = {RequestMethod.GET, RequestMethod.POST})
     public R exit() {
         return userService.exit();
+    }
+
+    @GetMapping("/session")
+    @Operation(summary = "查询当前前台会话", description = "仅接受 WEB 会话，不签发或续期")
+    public R<AuthSessionVO> session() {
+        return R.success(sessions.inspect(SessionScope.WEB));
     }
 
 
@@ -139,7 +155,7 @@ public class UserController {
     @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/updateUserInfo")
-    @LoginCheck
+    @LoginCheck(scope = SessionScope.EITHER)
     public R<UserVO> updateUserInfo(
         @Parameter(name = "user", description = "用户信息", required = true, example = "{\"nickname\":\"测试用户\",\"avatar\":\"https://example.com/avatar.jpg\"}") 
         @RequestBody UserVO user) {
@@ -162,7 +178,7 @@ public class UserController {
     @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
     @ApiResponse(responseCode = "500", description = "服务器内部错误或验证码发送失败")
     @GetMapping("/getCode")
-    @LoginCheck
+    @LoginCheck(scope = SessionScope.EITHER)
     @SaveCheck
     public R getCode(
         @Parameter(name = "flag", description = "验证码类型，1-手机号验证码，2-邮箱验证码", required = true, example = "1") 
@@ -211,7 +227,7 @@ public class UserController {
     @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
     @ApiResponse(responseCode = "500", description = "服务器内部错误或验证码发送失败")
     @GetMapping("/getCodeForBind")
-    @LoginCheck
+    @LoginCheck(scope = SessionScope.EITHER)
     @SaveCheck
     public R getCodeForBind(
         @Parameter(name = "place", description = "手机号或邮箱", required = true, example = "test@example.com") 
@@ -240,7 +256,7 @@ public class UserController {
     @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/updateSecretInfo")
-    @LoginCheck
+    @LoginCheck(scope = SessionScope.EITHER)
     public R<UserVO> updateSecretInfo(
         @Parameter(name = "place", description = "原手机号、原邮箱或原密码", required = true, example = "oldpassword123") 
         @RequestParam("place") String place, 
@@ -298,7 +314,7 @@ public class UserController {
     @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/getUserByUsername")
-    @LoginCheck
+    @LoginCheck(scope = SessionScope.EITHER)
     public R<List<UserVO>> getUserByUsername(
         @Parameter(name = "username", description = "用户名", required = true, example = "test") 
         @RequestParam("username") String username) {

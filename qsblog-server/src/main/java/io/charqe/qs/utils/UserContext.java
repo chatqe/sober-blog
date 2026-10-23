@@ -24,7 +24,9 @@ public class UserContext {
      * 获取用户
      */
     public static LoginUserInfo get() {
-        return WM_USER_THREAD_LOCAL.get();
+        io.charqe.qs.modules.user.domain.pojo.User user = BlogUtil.getCurrentUser();
+        return user == null ? null : new LoginUserInfo(user.getId(), user.getUsername(),
+                user.getUserType(), user.getAvatar());
     }
 
     /**

@@ -1,6 +1,7 @@
 package io.charqe.qs.modules.file.controller.web;
 
 import io.charqe.qs.aop.LoginCheck;
+import io.charqe.qs.modules.user.auth.SessionScope;
 import io.charqe.qs.aop.SaveCheck;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.infra.storage.QiniuUtil;
@@ -28,7 +29,7 @@ public class QiniuController {
      * 获取覆盖凭证，用于七牛云
      */
     @GetMapping("/getUpToken")
-    @LoginCheck
+    @LoginCheck(scope = SessionScope.EITHER)
     @SaveCheck
     public R<String> getUpToken(@RequestParam("key") String key) {
         return R.success(qiniuUtil.getToken(key));

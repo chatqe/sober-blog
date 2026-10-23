@@ -29,6 +29,10 @@ import io.charqe.qs.modules.im.websocket.TioWebsocketStarter;
 import io.charqe.qs.modules.moment.domain.pojo.Moment;
 import io.charqe.qs.modules.moment.service.MomentService;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
+import io.charqe.qs.modules.user.auth.AuthSessionService;
+import io.charqe.qs.modules.user.auth.AuthSessionVO;
+import io.charqe.qs.modules.user.auth.SessionScope;
+import io.charqe.qs.modules.user.auth.UserCredentialService;
 import io.charqe.qs.modules.user.domain.dao.UserMapper;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.enums.UserTypeEnum;
@@ -94,7 +98,10 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
     private  JWTUtils jwtUtils;
 
     @Resource
-    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private AuthSessionService sessions;
+
+    @Resource
+    private UserCredentialService credentials;
 
     @Value("${user.code.format}")
     private String codeFormat;
@@ -103,94 +110,20 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
 
 
     @Override
-    public R<UserVO> login(String account, String password, Boolean isAdmin) {
-        try {
-            password = new String(
-                    // 解密网页密码
-                    SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt(password));
-        } catch (Exception e) {
-            return R.fail("密码格式错误，请重新输入！");
-        }
-
-        User one = lambdaQuery().and(wrapper -> wrapper
-                        .eq(User::getUsername, account)
-                        .or()
-                        .eq(User::getEmail, account)
-                        .or()
-                        .eq(User::getPhoneNumber, account))
-                // 传入密码解密之后 进行MD5字符串加密 同数据库密码进行比对
-                // .eq(User::getPassword, DigestUtils.md5DigestAsHex(password.getBytes()))
-                .one();
-
-        if (one == null) {
-            return R.fail("账号不存在! 请先注册");
-        } else if (one.getUserStatus() == 0) {
-            return R.fail("账号被冻结！");
-        } else if (StringUtils.hasText(one.getPassword()) &&
-                !verifyAndUpgrade(password, one)) {
-            return R.fail("账号/密码错误，请重新输入！");
-        }
-
-
-        boolean isBoss = one.getUserType() == UserTypeEnum.ADMIN.getCode();
-
-        String adminToken = "";
-        String userToken = "";
-
-        if (isBoss) {
-            if (qingSiCache.get(CommonConst.ADMIN_TOKEN + one.getId()) != null) {
-                adminToken = qingSiCache.get(CommonConst.ADMIN_TOKEN + one.getId());
-            }
-        } else {
-            if (qingSiCache.get(CommonConst.USER_TOKEN + one.getId()) != null) {
-                userToken = qingSiCache.get(CommonConst.USER_TOKEN + one.getId());
-            }
-        }
-
-        UUID.randomUUID().toString().replaceAll("-", "");
-        if (isBoss && !StringUtils.hasText(adminToken)) {
-            String uuid = UUID.randomUUID().toString().replaceAll("-", "");
-            adminToken = CommonConst.ADMIN_ACCESS_TOKEN + uuid;
-
-            qingSiCache.put(adminToken, one, CommonConst.TOKEN_EXPIRE);
-            qingSiCache.put(CommonConst.ADMIN_TOKEN + one.getId(), adminToken, CommonConst.TOKEN_EXPIRE);
-        } else if (!isBoss && !StringUtils.hasText(userToken)) {
-            String uuid = UUID.randomUUID().toString().replace("-", "");
-            userToken = CommonConst.USER_ACCESS_TOKEN + uuid;
-
-            qingSiCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
-            qingSiCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
-        }
-
-
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(one, userVO);
-        userVO.setPassword(null);
-        userVO.setIsAdmin(isBoss);
-        userVO.setAccessToken(isBoss ? adminToken : userToken);
-        return R.success(userVO);
+    public R<AuthSessionVO> login(String account, String password, SessionScope scope) {
+        UserCredentialService.Verified verified = credentials.authenticate(account, password);
+        return R.success(sessions.issue(verified.user(), scope, verified.revision()));
     }
 
     @Override
     public R exit() {
-        String token = BlogUtil.getToken();
-        Long userId = BlogUtil.getUserId();
-        if (token.contains(CommonConst.USER_ACCESS_TOKEN)) {
-            qingSiCache.del(CommonConst.USER_TOKEN + userId);
-            TioWebsocketStarter tioWebsocketStarter = TioUtil.getTio();
-            if (tioWebsocketStarter != null) {
-                Tio.removeUser(tioWebsocketStarter.getServerTioConfig(), String.valueOf(userId), "remove user");
-            }
-        } else if (token.contains(CommonConst.ADMIN_ACCESS_TOKEN)) {
-            qingSiCache.del(CommonConst.ADMIN_TOKEN + userId);
-        }
-        qingSiCache.del(token);
+        sessions.logout(BlogUtil.getToken(), SessionScope.WEB);
         return R.success();
     }
 
 
     @Override
-    public R<UserVO> regist(UserVO user) {
+    public R<AuthSessionVO> regist(UserVO user) {
         // 正则表达式 用于校验手机号(11位数字)
         String regex = "\\d{11}";
         if (user.getUsername().matches(regex)) {
@@ -247,20 +180,13 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         u.setPhoneNumber(user.getPhoneNumber());
         u.setEmail(user.getEmail());
         u.setPassword(encodePassword(user.getPassword()));
+        u.setUserType(2);
+        u.setUserStatus(1);
         // u.setAvatar(BlogUtil.getRandomAvatar(null));
         u.setAvatar(qingsiUtil.getRandomAvatar());
         save(u);
 
         User one = lambdaQuery().eq(User::getId, u.getId()).one();
-
-        String userToken = CommonConst.USER_ACCESS_TOKEN + UUID.randomUUID().toString().replaceAll("-", "");
-        qingSiCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
-        qingSiCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
-
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(one, userVO);
-        userVO.setPassword(null);
-        userVO.setAccessToken(userToken);
 
         Moment moment = new Moment();
         moment.setUserId(one.getId());
@@ -292,7 +218,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         imChatFriend.setFriendStatus(ImConfigConst.FRIEND_STATUS_PASS);
         imChatUserFriendMapper.insert(imChatFriend);
 
-        return R.success(userVO);
+        return R.success(sessions.issue(one, SessionScope.WEB, sessions.revision(one.getId())));
     }
 
     @Override
@@ -320,8 +246,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         u.setIntroduction(user.getIntroduction());
         updateById(u);
         User one = lambdaQuery().eq(User::getId, u.getId()).one();
-        qingSiCache.put(BlogUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
-        qingSiCache.put(CommonConst.USER_TOKEN + one.getId(), BlogUtil.getToken(), CommonConst.TOKEN_EXPIRE);
+        qingSiCache.del(CommonConst.USER_CACHE + one.getId());
 
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
@@ -401,7 +326,8 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
     public R<UserVO> updateSecretInfo(String place, Integer flag, String code, String password) {
         password = new String(SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt(password));
 
-        User user = BlogUtil.getCurrentUser();
+        User user = getById(BlogUtil.getUserId());
+        AuthSessionService.checkUser(user);
         if ((flag == 1 || flag == 2) && !verifyPassword(password, user.getPassword())) {
             return R.fail("密码错误！");
         }
@@ -447,10 +373,10 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
             }
         }
         updateById(updateUser);
+        if (flag == 3) sessions.revokeAll(user.getId());
 
         User one = lambdaQuery().eq(User::getId, user.getId()).one();
-        qingSiCache.put(BlogUtil.getToken(), one, CommonConst.TOKEN_EXPIRE);
-        qingSiCache.put(CommonConst.USER_TOKEN + one.getId(), BlogUtil.getToken(), CommonConst.TOKEN_EXPIRE);
+        qingSiCache.del(CommonConst.USER_CACHE + one.getId());
 
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
@@ -519,6 +445,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
             }
 
             lambdaUpdate().eq(User::getPhoneNumber, place).set(User::getPassword, encodePassword(password)).update();
+            sessions.revokeAll(user.getId());
             qingSiCache.del(CommonConst.USER_CACHE + user.getId().toString());
         } else if (flag == 2) {
             User user = lambdaQuery().eq(User::getEmail, place).one();
@@ -531,6 +458,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
             }
 
             lambdaUpdate().eq(User::getEmail, place).set(User::getPassword, encodePassword(password)).update();
+            sessions.revokeAll(user.getId());
             qingSiCache.del(CommonConst.USER_CACHE + user.getId().toString());
         }
 
@@ -585,26 +513,9 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
     }
 
     @Override
-    public R<UserVO> token(String userToken) {
-        userToken = new String(SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt(userToken));
-
-        if (!StringUtils.hasText(userToken)) {
-            throw new BizException("未登陆，请登陆后再进行操作！");
-        }
-
-        User user = JSON.parseObject(qingSiCache.get(userToken), User.class);
-
-        if (user == null) {
-            throw new BizException("登录已过期，请重新登陆！");
-        }
-
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
-        userVO.setPassword(null);
-
-        userVO.setAccessToken(userToken);
-
-        return R.success(userVO);
+    public R<AuthSessionVO> token(String userToken) {
+        AuthSessionService.Resolved resolved = sessions.resolve(userToken, SessionScope.WEB, false);
+        return R.success(AuthSessionVO.from(resolved.session(), resolved.user(), null));
     }
 
 
@@ -768,11 +679,12 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
             return R.fail("该邮箱未绑定账号！");
         }
 
-        if (Boolean.FALSE.equals(user.getUserStatus())) {
+        if (!Integer.valueOf(1).equals(user.getUserStatus())) {
             return R.fail("账号被冻结！");
         }
 
         lambdaUpdate().eq(User::getEmail, email).set(User::getPassword, encodePassword(pwd)).update();
+        sessions.revokeAll(user.getId());
         qingSiCache.del(CommonConst.USER_CACHE + user.getId().toString());
 
         return R.success();
@@ -845,7 +757,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
      * 使用BCrypt编码密码
      */
     private String encodePassword(String rawPassword) {
-        return passwordEncoder.encode(rawPassword);
+        return credentials.encode(rawPassword);
     }
 
     /**
@@ -856,50 +768,9 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
      * @return true-验证通过
      */
     private boolean verifyPassword(String rawPassword, String storedHash) {
-        if (storedHash == null || storedHash.isEmpty()) {
-            return false;
-        }
-        // BCrypt ($2a$开头)
-        if (storedHash.startsWith("$2a$")) {
-            return passwordEncoder.matches(rawPassword, storedHash);
-        }
-        // 兼容旧MD5（32位hex字符串）
-        if (storedHash.length() == 32) {
-            return DigestUtils.md5DigestAsHex(rawPassword.getBytes()).equals(storedHash);
-        }
-        return false;
+        return credentials.matches(rawPassword, storedHash);
     }
 
-    /**
-     * 验证密码并在使用MD5时自动升级为BCrypt。
-     * 仅用于登录场景，确保逐步迁移所有用户密码。
-     *
-     * @param rawPassword 明文密码
-     * @param user        用户实体（会更新其密码字段）
-     * @return true-验证通过
-     */
-    private boolean verifyAndUpgrade(String rawPassword, User user) {
-        String storedHash = user.getPassword();
-        if (storedHash == null || storedHash.isEmpty()) {
-            return false;
-        }
-        // BCrypt — 直接比对
-        if (storedHash.startsWith("$2a$")) {
-            return passwordEncoder.matches(rawPassword, storedHash);
-        }
-        // 旧MD5 — 验证后自动升级
-        if (storedHash.length() == 32) {
-            boolean matched = DigestUtils.md5DigestAsHex(rawPassword.getBytes()).equals(storedHash);
-            if (matched) {
-                String newHash = passwordEncoder.encode(rawPassword);
-                lambdaUpdate().eq(User::getId, user.getId()).set(User::getPassword, newHash).update();
-                user.setPassword(newHash);
-                log.info("用户 {} 的密码已从MD5自动升级为BCrypt", user.getId());
-            }
-            return matched;
-        }
-        return false;
-    }
 
 }
 

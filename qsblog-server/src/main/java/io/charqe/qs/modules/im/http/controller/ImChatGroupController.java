@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.im.http.controller;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
@@ -86,7 +88,7 @@ public class ImChatGroupController {
      * 创建话题
      */
     @PostMapping("/creatGroupTopic")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R creatGroupTopic(@RequestBody ImChatGroup imChatGroup) {
         if (!StringUtils.hasText(imChatGroup.getGroupName())) {
             return R.fail(CodeMsg.PARAMETER_ERROR);
@@ -176,7 +178,7 @@ public class ImChatGroupController {
      * 管理员查询所有群
      */
     @PostMapping("/listGroupForAdmin")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R<BaseReqVO> listGroupForAdmin(@RequestBody BaseReqVO baseReqVO) {
         LambdaQueryChainWrapper<ImChatGroup> lambdaQuery = imChatGroupService.lambdaQuery();
         lambdaQuery.orderByDesc(ImChatGroup::getCreateTime).page(baseReqVO);

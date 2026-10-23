@@ -25,21 +25,10 @@ public class WebInfoHandlerInterceptor implements HandlerInterceptor {
     @Resource
     private QingSiCache qingSiCache;
 
-    @Resource
-    private JWTUtils jwtUtils;
 
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-
-        String token = request.getHeader("Authorization");
-
-        if (StrUtil.isNotBlank( token) && jwtUtils.validateToken(token)) {
-                LoginUserInfo userInfo = jwtUtils.parseUser(token);
-                if (Objects.nonNull(userInfo)) {
-                    UserContext.set(userInfo);
-                }
-            }
 
 
         WebInfo webInfo = JSON.parseObject(qingSiCache.get(CommonConst.WEB_INFO), WebInfo.class);

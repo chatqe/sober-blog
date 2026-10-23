@@ -6,6 +6,8 @@ import io.charqe.qs.common.enums.CodeMsg;
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.common.exception.LoginException;
 import io.charqe.qs.modules.user.domain.pojo.User;
+import io.charqe.qs.modules.user.auth.AuthSessionService;
+import io.charqe.qs.modules.user.auth.SessionScope;
 import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
@@ -21,11 +23,7 @@ public class BlogUtil {
             SpringContextHolder.getBean(QingSiCache.class);
 
     public static void checkEmail() {
-        String token = BlogUtil.getToken();
-        if (!StringUtils.hasText(token)) {
-            throw new LoginException(CodeMsg.NOT_LOGIN.getMsg());
-        }
-        User user = JSON.parseObject(qingSiCache.get(token), User.class);
+        User user = SpringContextHolder.getBean(AuthSessionService.class).current(SessionScope.EITHER, false).user();
         if (!StringUtils.hasText(user.getEmail())) {
             throw new BizException("请先绑定邮箱！");
         }
@@ -51,11 +49,7 @@ public class BlogUtil {
     }
 
     public static User getCurrentUser() {
-        String token = BlogUtil.getToken();
-        if (!StringUtils.hasText(token)) {
-            return null;
-        }
-        return JSON.parseObject(qingSiCache.get(token), User.class);
+        return SpringContextHolder.getBean(AuthSessionService.class).currentUserOrNull();
     }
 
     public static User getAdminUser() {
@@ -63,24 +57,12 @@ public class BlogUtil {
     }
 
     public static Long getUserId() {
-        String token = BlogUtil.getToken();
-        if (!StringUtils.hasText(token)) {
-            return null;
-        }
-
-        User user = JSON.parseObject(qingSiCache.get(token), User.class);
+        User user = getCurrentUser();
         return user == null ? null : user.getId();
     }
 
     public static String getUsername() {
-        String token = BlogUtil.getToken();
-        if (!StringUtils.hasText(token)) {
-            return null;
-        }
-        if (qingSiCache.get(token) == null) {
-            return null;
-        }
-        User user = JSON.parseObject(qingSiCache.get(token), User.class);
+        User user = getCurrentUser();
         return user == null ? null : user.getUsername();
     }
 

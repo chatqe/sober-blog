@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.danmaku.controller.admin;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
@@ -42,7 +44,7 @@ public class AdminDanmakuController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/list")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R<PageResult<AdminDanmakuVO>> list(
         @Parameter(name = "dto", description = "查询参数", required = true, example = "{\"pageNum\":1,\"pageSize\":10,\"keyword\":\"测试\"}")
         @RequestBody AdminDanmakuPageReqDTO dto) {

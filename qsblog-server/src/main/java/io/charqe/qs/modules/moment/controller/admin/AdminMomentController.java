@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.moment.controller.admin;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
@@ -40,7 +42,7 @@ public class AdminMomentController {
     @ApiResponse(responseCode = "200", description = "查询成功")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/page")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<PageResult<MomentListVO>> page(
             @Parameter(name = "query", description = "分页查询参数")
             @RequestBody MomentPageQueryDTO query) {
@@ -53,7 +55,7 @@ public class AdminMomentController {
     @ApiResponse(responseCode = "200", description = "查询成功")
     @ApiResponse(responseCode = "404", description = "动态不存在")
     @GetMapping("/detail/{id}")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<MomentDetailVO> detail(
             @Parameter(name = "id", description = "动态ID", required = true)
             @PathVariable("id") Long id) {
@@ -67,7 +69,7 @@ public class AdminMomentController {
     @ApiResponse(responseCode = "400", description = "参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/save")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Void> save(
             @Parameter(name = "dto", description = "动态数据", required = true)
             @RequestBody MomentSaveReqDTO dto) {
@@ -82,7 +84,7 @@ public class AdminMomentController {
     @ApiResponse(responseCode = "400", description = "参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PutMapping("/update")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Void> update(
             @Parameter(name = "dto", description = "动态数据", required = true)
             @RequestBody MomentSaveReqDTO dto) {
@@ -97,7 +99,7 @@ public class AdminMomentController {
     @ApiResponse(responseCode = "404", description = "动态不存在")
     @ApiResponse(responseCode = "401", description = "未授权")
     @DeleteMapping("/delete/{id}")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Void> delete(
             @Parameter(name = "id", description = "动态ID", required = true)
             @PathVariable("id") Long id) {
@@ -111,7 +113,7 @@ public class AdminMomentController {
     @ApiResponse(responseCode = "200", description = "删除成功")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/batchDelete")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Void> batchDelete(
             @Parameter(name = "ids", description = "动态ID列表", required = true)
             @RequestBody List<Long> ids) {
@@ -126,7 +128,7 @@ public class AdminMomentController {
     @ApiResponse(responseCode = "400", description = "参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/audit")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Void> audit(
             @Parameter(name = "id", description = "动态ID", required = true)
             @RequestParam("id") Long id,
@@ -143,7 +145,7 @@ public class AdminMomentController {
     @Operation(summary = "动态数据统计")
     @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("/dashboard/stats")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Map<String, Object>> dashboardStats() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalMoments", 0L);
@@ -158,7 +160,7 @@ public class AdminMomentController {
     @Operation(summary = "获取同步记录列表")
     @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("/sync/list")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<List<MomentSyncRecordVO>> listSyncRecords(
             @Parameter(name = "momentId", description = "动态ID", required = true)
             @RequestParam("momentId") Long momentId) {
@@ -172,7 +174,7 @@ public class AdminMomentController {
     @ApiResponse(responseCode = "404", description = "动态不存在")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/sync/dispatch")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Void> dispatchSync(
             @Parameter(name = "momentId", description = "动态ID", required = true)
             @RequestParam("momentId") Long momentId) {

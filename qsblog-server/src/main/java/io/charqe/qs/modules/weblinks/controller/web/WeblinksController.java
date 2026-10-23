@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.weblinks.controller.web;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.aop.SaveCheck;
 import io.charqe.qs.common.model.PageResult;
@@ -67,7 +69,7 @@ public class WeblinksController {
     @ApiResponse(responseCode = "200", description = "保存成功")
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     @PostMapping("/saveWeblinks")
     public R saveWeblinks(@RequestBody WeblinksVO vo) {
         weblinksService.saveWeblinks(vo);
@@ -82,7 +84,7 @@ public class WeblinksController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @DeleteMapping("/deleteWeblinks")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R deleteWeblinks(@RequestParam("id") Long id) {
         weblinksService.deleteWeblinks(id);
         return R.success();
@@ -96,7 +98,7 @@ public class WeblinksController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/update")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R updateWeblinks(@RequestBody WeblinksVO vo) {
         weblinksService.updateWeblinks(vo);
         return R.success();

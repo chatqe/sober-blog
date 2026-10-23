@@ -3,6 +3,8 @@ package io.charqe.qs.infra.storage;
 import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.user.domain.pojo.User;
+import io.charqe.qs.modules.user.auth.AuthSessionService;
+import io.charqe.qs.modules.user.auth.SessionScope;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.IPUtil;
 import io.charqe.qs.utils.cache.QingSiCache;
@@ -33,14 +35,18 @@ public class FileFilter {
     @Resource
     private QingSiCache qingSiCache;
 
+    @Resource
+    private AuthSessionService sessions;
+
     public boolean doFilterFile(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         log.info("=================> 进入FileFilter过滤器处理,URL:{}", httpServletRequest.getRequestURI());
-        if (matcher.match("/resource/upload", httpServletRequest.getRequestURI())) {
+        if (matcher.match("/file/admin/upload", httpServletRequest.getRequestURI())) {
             // 根据自定义的请求头 Authorization 获取是否进行缓存用户信息
-            String token = BlogUtil.getToken();
+            String token = httpServletRequest.getHeader("Authorization");
+            User identity = sessions.resolve(token, SessionScope.ADMIN, false).user();
             boolean hasText = StringUtils.hasText(token);
             if (hasText) {
-                User user = JSON.parseObject(qingSiCache.get(token), User.class);
+                User user = identity;
 
                 if (user != null) {
 

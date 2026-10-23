@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.article.controller.admin;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.BaseReqVO;
@@ -45,7 +47,7 @@ public class AdminArticleController {
     @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/pageList")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<AdminArticlePageRespVO> pageList(@RequestBody AdminArticlePageReqDTO dto) {
         return R.success(articleService.pageList(dto));
     }
@@ -63,7 +65,7 @@ public class AdminArticleController {
     @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/user/list")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Page> listUserArticle(
             @Parameter(name = "baseReqVO", description = "分页查询参数", required = true, example = "{\"pageNum\":1,\"pageSize\":10}")
             @RequestBody BaseReqVO baseReqVO) {
@@ -83,7 +85,7 @@ public class AdminArticleController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/admin/list")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R<Page> listBossArticle(
             @Parameter(name = "baseReqVO", description = "分页查询参数", required = true, example = "{\"pageNum\":1,\"pageSize\":10}")
             @RequestBody BaseReqVO baseReqVO) {
@@ -108,7 +110,7 @@ public class AdminArticleController {
     @ApiResponse(responseCode = "403", description = "无权限修改该文章")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/changeArticleStatus")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R changeArticleStatus(
             @Parameter(name = "articleId", description = "文章ID", required = true, example = "1")
             @RequestParam("articleId") Long articleId,
@@ -140,7 +142,7 @@ public class AdminArticleController {
     @ApiResponse(responseCode = "404", description = "文章不存在")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/getArticleWithPwd")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<ArticleVO> getArticleWithPwd(
             @Parameter(name = "id", description = "文章ID", required = true, example = "1")
             @NotNull

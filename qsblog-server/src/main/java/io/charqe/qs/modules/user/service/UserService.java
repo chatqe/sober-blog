@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.modules.user.domain.pojo.User;
+import io.charqe.qs.modules.user.auth.AuthSessionVO;
+import io.charqe.qs.modules.user.auth.SessionScope;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
 import io.charqe.qs.common.model.mp.CoreService;
 
@@ -25,11 +27,11 @@ public interface UserService extends CoreService<User> {
      * @param password
      * @return
      */
-    R<UserVO> login(String account, String password, Boolean isAdmin);
+    R<AuthSessionVO> login(String account, String password, SessionScope scope);
 
     R exit();
 
-    R<UserVO> regist(UserVO user);
+    R<AuthSessionVO> regist(UserVO user);
 
     R<UserVO> updateUserInfo(UserVO user);
 
@@ -47,7 +49,7 @@ public interface UserService extends CoreService<User> {
 
     R<List<UserVO>> getUserByUsername(String username);
 
-    R<UserVO> token(String userToken);
+    R<AuthSessionVO> token(String userToken);
 
     R<UserVO> subscribe(Integer labelId, Boolean flag);
 

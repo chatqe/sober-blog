@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.file.controller.admin;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.FileVO;
@@ -7,6 +9,7 @@ import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.infra.storage.StoreService;
 import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
+import io.charqe.qs.modules.file.controller.admin.vo.FileRespVO;
 import io.charqe.qs.modules.file.service.FileInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 
 /**
  * *
@@ -41,11 +45,8 @@ public class FileAdminController {
      * 保存
      */
     @PostMapping("/save")
-    @LoginCheck(0)
-    public R save(@RequestBody FileCreateReqVO vo) {
-        if (!StringUtils.hasText(vo.getFileType()) || !StringUtils.hasText(vo.getFilePath())) {
-            return R.fail("资源类型和资源路径不能为空！");
-        }
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    public R<FileRespVO> save(@Valid @RequestBody FileCreateReqVO vo) {
         return R.success("新增成功", fileInfoService.save(vo));
     }
 
@@ -53,7 +54,7 @@ public class FileAdminController {
      * 上传文件
      */
     @PostMapping("/upload")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R<String> upload(@RequestParam("file") MultipartFile file, FileVO fileVO) {
 
         log.info("========================> /resource/upload 接口调用");
@@ -72,7 +73,7 @@ public class FileAdminController {
      * 删除文件
      */
     @PostMapping("/delete")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R delete(@RequestParam("id") Long id) {
         fileInfoService.removeById(id);
         return R.success();
@@ -82,7 +83,7 @@ public class FileAdminController {
      * 查询文件列表
      */
     @PostMapping("/list")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R list(@RequestBody BaseReqVO baseReqVO) {
         fileInfoService.page(baseReqVO, null);
         return R.success(baseReqVO);

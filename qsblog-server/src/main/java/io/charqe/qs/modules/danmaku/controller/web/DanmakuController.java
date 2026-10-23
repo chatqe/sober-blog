@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.danmaku.controller.web;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.aop.SaveCheck;
 import io.charqe.qs.common.model.R;
@@ -80,7 +82,7 @@ public class DanmakuController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/del")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R del(
         @Parameter(name = "id", description = "弹幕留言ID", required = true, example = "1")
         @RequestParam("id") Integer id) {

@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.webInfo.controller.admin;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.R;
@@ -35,7 +37,7 @@ public class AdminWebInfoController {
      * 获取网站信息
      */
     @GetMapping("/get")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R<WebInfo> getWebInfo() {
         LambdaQueryChainWrapper<WebInfo> wrapper = new LambdaQueryChainWrapper<>(webInfoMapper);
         List<WebInfo> list = wrapper.list();

@@ -1,12 +1,10 @@
 package io.charqe.qs.aop;
 
-import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.IPUtil;
-import io.charqe.qs.utils.cache.QingSiCache;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -27,9 +25,6 @@ import java.util.concurrent.TimeUnit;
 public class SaveCheckAspect {
 
     @Resource
-    private QingSiCache qingSiCache;
-
-    @Resource
     private StringRedisTemplate stringRedisTemplate;
 
     @Around("@annotation(saveCheck)")
@@ -38,7 +33,7 @@ public class SaveCheckAspect {
 
         String token = BlogUtil.getToken();
         if (StringUtils.hasText(token)) {
-            User user = JSON.parseObject(qingSiCache.get(token), User.class);
+            User user = BlogUtil.getCurrentUser();
             if (user != null) {
                 if (user.getId().intValue() == BlogUtil.getAdminUser().getId().intValue()) {
                     return joinPoint.proceed();

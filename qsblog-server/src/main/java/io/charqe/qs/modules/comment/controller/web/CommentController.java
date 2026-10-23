@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.comment.controller.web;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
@@ -158,7 +160,7 @@ public class CommentController {
     @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/author/list")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<AuthorCommentListVO> listAuthorComments(
         @Parameter(name = "dto", description = "查询参数", required = true, example = "{\"pageNum\":1,\"pageSize\":10,\"status\":1,\"searchKey\":\"很棒\"}")
         @RequestBody AuthorCommentQueryDTO dto) {

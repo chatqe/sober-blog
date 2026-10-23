@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.article.controller.web;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.constants.CommonConst;
@@ -55,7 +57,7 @@ public class ArticleController {
     @ApiResponse(responseCode = "400", description = "请求参数错误，如文章标题或内容为空")
     @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @PostMapping("/save")
     public R saveArticle(
             @Parameter(name = "articleVO", description = "文章信息对象", required = true, example = "{\"articleTitle\":\"测试文章\",\"articleContent\":\"文章内容\"}")
@@ -81,7 +83,7 @@ public class ArticleController {
     @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/del")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R deleteArticle(
             @Parameter(name = "id", description = "文章ID", required = true, example = "1")
             @RequestParam("id") Long id) {
@@ -106,7 +108,7 @@ public class ArticleController {
     @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/update")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R updateArticle(
             @Parameter(name = "articleVO", description = "文章信息对象", required = true, example = "{\"id\":1,\"articleTitle\":\"更新后的文章标题\",\"articleContent\":\"更新后的文章内容\"}")
             @Validated @RequestBody ArticleVO articleVO) {

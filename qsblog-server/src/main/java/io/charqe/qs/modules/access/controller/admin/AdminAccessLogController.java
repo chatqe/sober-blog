@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.access.controller.admin;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import io.charqe.qs.aop.LoginCheck;
@@ -50,7 +52,7 @@ public class AdminAccessLogController {
     /**
      * 获取网站统计信息
      */
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     @GetMapping("/getData")
     public R<Map<String, Object>> getAccessLogData() {
 

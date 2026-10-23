@@ -10,6 +10,12 @@ import org.tio.websocket.server.WsServerAioListener;
 @Slf4j
 public class ImServerAioListener extends WsServerAioListener {
 
+    private final ImWsMsgHandler messages;
+
+    public ImServerAioListener(ImWsMsgHandler messages) {
+        this.messages = messages;
+    }
+
     /**
      * 建链后触发本方法，注：建链不一定成功，需要关注参数isConnected
      *
@@ -47,6 +53,7 @@ public class ImServerAioListener extends WsServerAioListener {
      */
     @Override
     public void onBeforeClose(ChannelContext channelContext, Throwable throwable, String remark, boolean isRemove) throws Exception {
+        messages.forget(channelContext);
         super.onBeforeClose(channelContext, throwable, remark, isRemove);
     }
 

@@ -1,6 +1,7 @@
 package io.charqe.qs.modules.family.controller.admin;
 
 import io.charqe.qs.aop.LoginCheck;
+import io.charqe.qs.modules.user.auth.SessionScope;
 import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.family.controller.admin.dto.FamilyPageQueryDTO;
@@ -44,7 +45,7 @@ public class AdminFamilyController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/page")
-    @LoginCheck(2)
+    @LoginCheck(scope = SessionScope.EITHER)
     public R<PageResult<FamilyListVO>> pageList(FamilyPageQueryDTO query) {
         return R.success(familyService.pageList(query));
     }
@@ -54,7 +55,7 @@ public class AdminFamilyController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/{id}")
-    @LoginCheck(2)
+    @LoginCheck(scope = SessionScope.EITHER)
     public R<FamilyDetailVO> getDetail(@Parameter(name = "id", description = "家庭卡片ID", required = true) @PathVariable("id") Long id) {
         return R.success(familyService.getDetail(id));
     }
@@ -64,7 +65,7 @@ public class AdminFamilyController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping
-    @LoginCheck(2)
+    @LoginCheck(scope = SessionScope.EITHER)
     public R save(@RequestBody Family family) {
         Long userId = BlogUtil.getUserId();
         family.setUserId(userId);
@@ -83,7 +84,7 @@ public class AdminFamilyController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @DeleteMapping("/{id}")
-    @LoginCheck(2)
+    @LoginCheck(scope = SessionScope.EITHER)
     public R delete(@Parameter(name = "id", description = "家庭卡片ID", required = true) @PathVariable("id") Long id) {
         familyService.softDelete(id);
         return R.success();
@@ -94,7 +95,7 @@ public class AdminFamilyController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PatchMapping("/{id}/status")
-    @LoginCheck(2)
+    @LoginCheck(scope = SessionScope.EITHER)
     public R toggleStatus(@Parameter(name = "id", description = "家庭卡片ID", required = true) @PathVariable("id") Long id) {
         familyService.toggleStatus(id);
         return R.success();

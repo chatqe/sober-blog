@@ -7,8 +7,9 @@ import io.charqe.qs.modules.file.convert.FileConvert;
 import io.charqe.qs.modules.file.domain.dao.FileStorageMapper;
 import io.charqe.qs.modules.file.domain.pojo.FileInfo;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import javax.annotation.Resource;
+import java.util.Locale;
 
 /**
  * 文件存储表 服务实现类
@@ -23,9 +24,23 @@ public class FileInfoServiceImpl extends CoreServiceImpl<FileStorageMapper, File
     @Override
     public FileRespVO save(FileCreateReqVO vo) {
 
-        FileInfo convert = FileConvert.INSTANCE.convert(vo);
+        FileInfo file = FileConvert.INSTANCE.convert(vo);
+        file.setStoredName(StringUtils.getFilename(file.getStoragePath()));
+        String extension = StringUtils.getFilenameExtension(file.getStoragePath());
+        file.setFileExt(extension == null ? "" : extension.toLowerCase(Locale.ROOT));
+        file.setFileCategory(category(file.getMimeType()));
 
-        save(convert);
-        return FileConvert.INSTANCE.convert(convert);
+        save(file);
+        return FileConvert.INSTANCE.convert(file);
+    }
+
+    /** 元数据派生属于业务层，转换层仅复制同名字段。 */
+    private String category(String mimeType) {
+        if (mimeType == null) return "other";
+        if (mimeType.startsWith("image/")) return "image";
+        if (mimeType.startsWith("video/")) return "video";
+        if (mimeType.startsWith("audio/")) return "audio";
+        if (mimeType.startsWith("text/") || mimeType.equals("application/pdf")) return "document";
+        return "other";
     }
 }

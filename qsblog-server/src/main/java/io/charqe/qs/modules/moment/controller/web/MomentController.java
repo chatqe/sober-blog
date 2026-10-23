@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.moment.controller.web;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
@@ -64,7 +66,7 @@ public class MomentController {
     @Operation(summary = "当前用户自己的动态时间线")
     @ApiResponse(responseCode = "200", description = "成功返回分页列表")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @PostMapping("/my/timeline")
     public R<PageResult<MomentListVO>> myTimeline(
             @Parameter(name = "query", description = "分页查询参数", required = true)
@@ -107,7 +109,7 @@ public class MomentController {
     @ApiResponse(responseCode = "200", description = "发布成功，返回动态ID")
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @PostMapping("/publish")
     public R<Long> publish(
             @Parameter(name = "dto", description = "动态内容", required = true)
@@ -119,7 +121,7 @@ public class MomentController {
     @ApiResponse(responseCode = "200", description = "更新成功")
     @ApiResponse(responseCode = "400", description = "请求参数错误或无权操作")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @PutMapping("/{id}")
     public R<Void> update(
             @Parameter(name = "id", description = "动态ID", required = true)
@@ -134,7 +136,7 @@ public class MomentController {
     @ApiResponse(responseCode = "200", description = "删除成功")
     @ApiResponse(responseCode = "401", description = "未登录")
     @ApiResponse(responseCode = "403", description = "无权删除")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @DeleteMapping("/{id}")
     public R<Void> delete(
             @Parameter(name = "id", description = "动态ID", required = true)
@@ -148,7 +150,7 @@ public class MomentController {
     @Operation(summary = "点赞动态")
     @ApiResponse(responseCode = "200", description = "点赞成功")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @PostMapping("/{id}/like")
     public R<Void> like(
             @Parameter(name = "id", description = "动态ID", required = true)
@@ -163,7 +165,7 @@ public class MomentController {
     @Operation(summary = "取消点赞动态")
     @ApiResponse(responseCode = "200", description = "取消成功")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @DeleteMapping("/{id}/like")
     public R<Void> unlike(
             @Parameter(name = "id", description = "动态ID", required = true)
@@ -190,7 +192,7 @@ public class MomentController {
     @ApiResponse(responseCode = "200", description = "评论成功")
     @ApiResponse(responseCode = "400", description = "评论内容不合法")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @PostMapping("/{id}/comment")
     public R<Void> comment(
             @Parameter(name = "id", description = "动态ID", required = true)
@@ -219,7 +221,7 @@ public class MomentController {
     @Operation(summary = "删除评论")
     @ApiResponse(responseCode = "200", description = "删除成功")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @DeleteMapping("/comment/{commentId}")
     public R<Void> deleteComment(
             @Parameter(name = "commentId", description = "评论ID", required = true)
@@ -230,7 +232,7 @@ public class MomentController {
     @Operation(summary = "点赞评论")
     @ApiResponse(responseCode = "200", description = "点赞成功")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @PostMapping("/comment/{commentId}/like")
     public R<Void> likeComment(
             @Parameter(name = "commentId", description = "评论ID", required = true)
@@ -245,7 +247,7 @@ public class MomentController {
     @Operation(summary = "取消点赞评论")
     @ApiResponse(responseCode = "200", description = "取消成功")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @DeleteMapping("/comment/{commentId}/like")
     public R<Void> unlikeComment(
             @Parameter(name = "commentId", description = "评论ID", required = true)
@@ -271,7 +273,7 @@ public class MomentController {
     @Operation(summary = "记录浏览（幂等）")
     @ApiResponse(responseCode = "200", description = "记录成功")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @PostMapping("/{id}/view")
     public R<Void> view(
             @Parameter(name = "id", description = "动态ID", required = true)
@@ -292,7 +294,7 @@ public class MomentController {
     @Operation(summary = "同步到多平台")
     @ApiResponse(responseCode = "200", description = "同步结果")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(1)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @PostMapping("/sync")
     public R<MomentSyncVO> sync(
             @Parameter(name = "dto", description = "同步请求", required = true)

@@ -2,6 +2,8 @@ package io.charqe.qs.modules.file.controller.admin.vo;
 
 import lombok.Data;
 
+import javax.validation.constraints.NotBlank;
+
 /**
  * file基础VO
  *
@@ -13,12 +15,13 @@ public class FileBaseVO {
     /**
      * 文件名称
      */
-    private String fileName;
+    private String originalName;
 
     /**
      * 文件路径
      */
-    private String filePath;
+    @NotBlank(message = "存储路径不能为空")
+    private String storagePath;
 
     /**
      * 文件大小
@@ -28,15 +31,16 @@ public class FileBaseVO {
     /**
      * 文件类型
      */
-    private String fileType;
+    @NotBlank(message = "MIME 类型不能为空")
+    private String mimeType;
 
     /**
      * 存储类型
      */
-    private Integer storageType;
+    private Integer thirdPartyName;
 
     /**
-     * 访问URL
+     * CDN 访问前缀，可包含路径；为空时使用存储路径
      */
-    private String accessUrl;
+    private String cdnDomain;
 }

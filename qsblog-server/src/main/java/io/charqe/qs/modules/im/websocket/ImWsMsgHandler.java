@@ -11,7 +11,10 @@ import io.charqe.qs.modules.im.http.service.ImChatUserMessageService;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.utils.CommonQuery;
 import io.charqe.qs.utils.StrUtil;
-import io.charqe.qs.utils.cache.QingSiCache;
+import io.charqe.qs.modules.user.auth.AuthSessionService;
+import io.charqe.qs.modules.user.auth.SessionScope;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -30,6 +33,9 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @Slf4j
@@ -48,7 +54,48 @@ public class ImWsMsgHandler implements IWsMsgHandler {
     private CommonQuery commonQuery;
 
     @Resource
-    private QingSiCache qingSiCache;
+    private AuthSessionService sessions;
+
+    private record Connection(String token, Long userId, String sessionId) { }
+    private final Map<ChannelContext, Connection> connections = new ConcurrentHashMap<>();
+
+    public void forget(ChannelContext channel) {
+        connections.remove(channel);
+    }
+
+    public boolean checkConnection(ChannelContext channel, boolean activity) {
+        Connection connection = connections.get(channel);
+        if (connection == null) return false;
+        try {
+            sessions.resolve(connection.token(), SessionScope.WEB, activity);
+            return true;
+        } catch (RuntimeException e) {
+            forget(channel);
+            Tio.remove(channel, "前台会话已失效");
+            return false;
+        }
+    }
+
+    @EventListener
+    public void onSessionRevoked(AuthSessionService.Revoked event) {
+        if (event.scope() == SessionScope.ADMIN) return;
+        connections.forEach((channel, connection) -> {
+            if (!Objects.equals(connection.userId(), event.userId())) return;
+            if (event.sessionId() == null) {
+                // 校验版本而非按用户全踢，保留安全事件之后建立的新会话连接。
+                checkConnection(channel, false);
+            } else if (event.sessionId().equals(connection.sessionId())) {
+                forget(channel);
+                Tio.remove(channel, "当前前台会话已退出");
+            }
+        });
+    }
+
+    @Scheduled(fixedDelay = 30000)
+    public void checkIdleConnections() {
+        // 心跳和定时检查不续期，同时发现其他实例触发的撤销。
+        connections.keySet().forEach(channel -> checkConnection(channel, false));
+    }
 
     /**
      * 握手时走这个方法，业务可以在这里获取cookie，request等
@@ -63,15 +110,15 @@ public class ImWsMsgHandler implements IWsMsgHandler {
             return null;
         }
 
-        User user = JSON.parseObject(qingSiCache.get(token), User.class);
-
-        if (user == null) {
+        try {
+            AuthSessionService.Resolved identity = sessions.resolve(token, SessionScope.WEB, false);
+            connections.put(channelContext, new Connection(identity.token(), identity.user().getId(),
+                    identity.session().getSessionId()));
+            log.info("握手成功：用户ID：{}", identity.user().getId());
+            return httpResponse;
+        } catch (RuntimeException e) {
             return null;
         }
-
-        log.info("握手成功：用户ID：{}, 用户名：{}", user.getId(), user.getUsername());
-
-        return httpResponse;
     }
 
     /**
@@ -79,8 +126,17 @@ public class ImWsMsgHandler implements IWsMsgHandler {
      */
     @Override
     public void onAfterHandshaked(HttpRequest httpRequest, HttpResponse httpResponse, ChannelContext channelContext) {
-        String token = httpRequest.getParam(CommonConst.TOKEN_HEADER);
-        User user = JSON.parseObject(qingSiCache.get(token), User.class);
+        if (!checkConnection(channelContext, false)) return;
+        Connection connection = connections.get(channelContext);
+        if (connection == null) return;
+        User user;
+        try {
+            user = sessions.resolve(connection.token(), SessionScope.WEB, false).user();
+        } catch (RuntimeException e) {
+            forget(channelContext);
+            Tio.remove(channelContext, "握手期间会话已失效");
+            return;
+        }
         Tio.closeUser(channelContext.tioConfig, user.getId().toString(), null);
         Tio.bindUser(channelContext, user.getId().toString());
 
@@ -126,12 +182,14 @@ public class ImWsMsgHandler implements IWsMsgHandler {
 
     @Override
     public Object onClose(WsRequest wsRequest, byte[] bytes, ChannelContext channelContext) {
+        forget(channelContext);
         Tio.remove(channelContext, "连接关闭");
         return null;
     }
 
     @Override
     public Object onText(WsRequest wsRequest, String text, ChannelContext channelContext) {
+        if (!checkConnection(channelContext, false)) return null;
         if (!StringUtils.hasText(text)) {
             return null;
         }
@@ -143,6 +201,10 @@ public class ImWsMsgHandler implements IWsMsgHandler {
                 return null;
             }
             imMessage.setContent(content);
+            Integer type = imMessage.getMessageType();
+            if (type == null || (type != ImEnum.MESSAGE_TYPE_MSG_SINGLE.getCode()
+                    && type != ImEnum.MESSAGE_TYPE_MSG_GROUP.getCode())) return null;
+            if (!checkConnection(channelContext, true)) return null;
 
             WsResponse wsResponse = WsResponse.fromText(JSON.toJSONString(imMessage), ImConfigConst.CHARSET);
             if (imMessage.getMessageType().intValue() == ImEnum.MESSAGE_TYPE_MSG_SINGLE.getCode()) {

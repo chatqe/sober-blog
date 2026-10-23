@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import io.charqe.qs.common.enums.CodeMsg;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.infra.storage.FileFilter;
+import io.charqe.qs.modules.user.auth.AuthAccessException;
 import io.charqe.qs.modules.access.domain.pojo.AccessLog;
 import io.charqe.qs.modules.access.service.AccessLogAsyncService;
 import io.charqe.qs.utils.BlogUtil;
@@ -71,8 +72,15 @@ public class BizFilter extends OncePerRequestFilter {
 
         try {
             // 3. 执行文件安全检查
-            if (!checkFileSecurity(request, response)) {
-                // 安全检查失败，已返回响应，直接结束
+            try {
+                if (!checkFileSecurity(request, response)) {
+                    // 安全检查失败，已返回响应，直接结束
+                    return;
+                }
+            } catch (AuthAccessException e) {
+                response.setStatus(e.getStatus());
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write(JSON.toJSONString(R.fail(e.getStatus(), e.getMessage())));
                 return;
             }
 

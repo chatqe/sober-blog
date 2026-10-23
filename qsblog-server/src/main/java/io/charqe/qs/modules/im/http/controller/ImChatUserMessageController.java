@@ -1,5 +1,7 @@
 package io.charqe.qs.modules.im.http.controller;
 
+import io.charqe.qs.modules.user.auth.SessionScope;
+
 
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -83,7 +85,7 @@ public class ImChatUserMessageController {
      * 管理员添加系统消息
      */
     @GetMapping("/saveSystemMessage")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R saveSystemMessage(@RequestParam("content") String content) {
         ImChatUserMessage userMessage = new ImChatUserMessage();
         userMessage.setContent(content);
@@ -99,7 +101,7 @@ public class ImChatUserMessageController {
      * 删除系统消息
      */
     @GetMapping("/deleteSystemMessage")
-    @LoginCheck(0)
+    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R deleteSystemMessage(@RequestParam("id") Integer id) {
         imChatUserMessageService.removeById(id);
         return R.success();
