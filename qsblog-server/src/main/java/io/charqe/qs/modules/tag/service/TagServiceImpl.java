@@ -172,4 +172,18 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
         }
         return dictList;
     }
+
+    @Override
+    public List<String> getCloudNames() {
+        // BaseDO.isDel 带 @TableLogic，MyBatis-Plus 会自动追加 is_del = 0 条件
+        return lambdaQuery()
+                .orderByAsc(Tag::getSort)
+                .orderByAsc(Tag::getId)
+                .list()
+                .stream()
+                .map(Tag::getName)
+                .filter(StringUtils::hasText)
+                .distinct()
+                .toList();
+    }
 }

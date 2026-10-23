@@ -43,4 +43,11 @@ public class TagController {
     public R<List<TagDictVO>> dict() {
         return R.success(tagService.getDictList());
     }
+
+    @Operation(summary = "获取标签云数据", description = "返回所有未删除标签的名称，按 sort、id 升序，供首页标签云展示")
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @GetMapping("/cloud")
+    public R<List<String>> cloud() {
+        return R.success(tagService.getCloudNames());
+    }
 }
