@@ -54,4 +54,9 @@ public interface TagService extends CoreService<Tag> {
      * 获取标签下拉字典列表
      */
     List<TagDictVO> getDictList();
+
+    /**
+     * 获取标签云名称列表（Web）
+     */
+    List<String> getCloudNames();
 }

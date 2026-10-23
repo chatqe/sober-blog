@@ -13,12 +13,11 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * MapStruct转换接口：编译期自动生成实现类，无需手动编写
- * componentModel = "spring"：生成的实现类会被Spring管理，可直接注入
  *
  * @author Joy
  * @since 2026-01-21 19:32
  */
-@Mapper(componentModel = "spring")
+@Mapper
 public interface FileConvert {
 
     // 单例实例（如果不使用Spring注入，可直接用这个）

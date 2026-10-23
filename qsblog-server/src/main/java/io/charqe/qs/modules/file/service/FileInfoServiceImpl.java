@@ -19,15 +19,13 @@ import javax.annotation.Resource;
 @Service
 public class FileInfoServiceImpl extends CoreServiceImpl<FileStorageMapper, FileInfo> implements FileInfoService {
 
-    @Resource
-    private FileConvert fileConvert;
 
     @Override
     public FileRespVO save(FileCreateReqVO vo) {
 
-        FileInfo convert = fileConvert.convert(vo);
+        FileInfo convert = FileConvert.INSTANCE.convert(vo);
 
         save(convert);
-        return fileConvert.convert(convert);
+        return FileConvert.INSTANCE.convert(convert);
     }
 }

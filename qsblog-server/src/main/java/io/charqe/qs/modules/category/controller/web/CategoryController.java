@@ -6,7 +6,6 @@ import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
 import io.charqe.qs.modules.behavior.service.subscribe.SubscribeService;
 import io.charqe.qs.modules.category.controller.web.vo.CategoryWebVO;
-import io.charqe.qs.modules.category.controller.web.vo.HomeStatsVO;
 import io.charqe.qs.modules.category.service.CategoryService;
 import io.charqe.qs.modules.file.enums.BizTypeEnum;
 import io.charqe.qs.modules.sysdict.controller.web.vo.DictVO;
@@ -15,7 +14,6 @@ import io.charqe.qs.utils.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,28 +41,22 @@ public class CategoryController {
     private SubscribeService subscribeService;
 
     @Operation(summary = "获取导航栏分类列表", description = "返回启用且展示的分类，支持按类型过滤")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("/listNavBar")
     public R<List<CategoryWebVO>> listNavBar() {
         return R.success(categoryService.listNavBar());
     }
 
-    @Operation(summary = "获取首页分类统计", description = "聚合返回分类列表（含每类文章数）和文章总数，供侧边栏展示")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功")
-    })
-    @GetMapping("/homeStats")
-    public R<HomeStatsVO> homeStats() {
-        return R.success(categoryService.getHomeStats());
+    @Operation(summary = "获取公开分类列表", description = "返回启用且展示的全部分类（含导航栏与普通分类），供前端分类导航与首页分类区展示")
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @GetMapping("/list")
+    public R<List<CategoryWebVO>> list() {
+        return R.success(categoryService.listWebCategories());
     }
 
     @Operation(summary = "获取分类下拉字典", description = "返回所有可用分类的 id/name 列表，用于表单下拉选择，结果带Redis缓存，数据变更时主动刷新")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功"),
-            @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/dict")
     public R<List<DictVO>> dict() {
         return R.success(categoryService.getDictList());
@@ -81,12 +73,10 @@ public class CategoryController {
      * @return 操作结果
      */
     @Operation(summary = "订阅/取消订阅专栏", description = "用于订阅或取消订阅专栏（标签）。订阅成功后，用户将收到该专栏的最新文章通知。")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "操作成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误，如分类ID为空"),
-            @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作"),
-            @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "操作成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误，如分类ID为空")
+    @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/subscribe")
     @LoginCheck
     public R subscribe(

@@ -30,8 +30,6 @@ import java.util.Map;
 @Service
 public class WeblinksServiceImpl extends CoreServiceImpl<WeblinksMapper, Weblinks> implements WeblinksService {
 
-    @Resource
-    private WeblinksConvert weblinksConvert;
 
     @Override
     public void saveFriend(WeblinksVO vo) {
@@ -76,7 +74,7 @@ public class WeblinksServiceImpl extends CoreServiceImpl<WeblinksMapper, Weblink
         }
 
         // 使用 Convert 转换（自动处理 getDesc -> introduction 映射）
-        return weblinksConvert.toVOList(list).stream()
+        return WeblinksConvert.INSTANCE.toVOList(list).stream()
                 .collect(java.util.stream.Collectors.groupingBy(WeblinksVO::getClassify));
     }
 
@@ -89,7 +87,7 @@ public class WeblinksServiceImpl extends CoreServiceImpl<WeblinksMapper, Weblink
             throw new BizException("资源类型不能为空");
         }
 
-        Weblinks entity = weblinksConvert.toEntity(vo);
+        Weblinks entity = WeblinksConvert.INSTANCE.toEntity(vo);
 
         // lovePhoto 类型自动设置 remark 为管理员 ID
         if (CommonConst.RESOURCE_PATH_TYPE_LOVE_PHOTO.equals(vo.getType())) {
@@ -119,7 +117,7 @@ public class WeblinksServiceImpl extends CoreServiceImpl<WeblinksMapper, Weblink
             throw new BizException("ID不能为空");
         }
 
-        Weblinks entity = weblinksConvert.toEntity(vo);
+        Weblinks entity = WeblinksConvert.INSTANCE.toEntity(vo);
 
         // lovePhoto 类型自动设置 remark 为管理员 ID
         if (CommonConst.RESOURCE_PATH_TYPE_LOVE_PHOTO.equals(vo.getType())) {
@@ -153,6 +151,6 @@ public class WeblinksServiceImpl extends CoreServiceImpl<WeblinksMapper, Weblink
         page(mpPage, wrapper);
 
         // 使用 PageResult.fromMpPage 的 mapper 重载，一步完成分页+VO转换
-        return PageResult.fromMpPage(mpPage, weblinksConvert::toVO);
+        return PageResult.fromMpPage(mpPage, WeblinksConvert.INSTANCE::toVO);
     }
 }

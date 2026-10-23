@@ -29,7 +29,6 @@ import io.charqe.qs.modules.im.websocket.TioWebsocketStarter;
 import io.charqe.qs.modules.moment.domain.pojo.Moment;
 import io.charqe.qs.modules.moment.service.MomentService;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
-import io.charqe.qs.modules.user.convert.UserConvert;
 import io.charqe.qs.modules.user.domain.dao.UserMapper;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.enums.UserTypeEnum;
@@ -90,8 +89,6 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
     @Resource
     private BehaviorLogService behaviorLogService;
 
-    @Resource
-    private UserConvert userConvert;
 
     @Resource
     private  JWTUtils jwtUtils;
@@ -209,17 +206,19 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         }
 
         if (StringUtils.hasText(user.getPhoneNumber())) {
-            Integer codeCache = JSON.parseObject(qingSiCache.get(CommonConst.CODE_MAIL + user.getPhoneNumber() + "_1"), Integer.class);
+            String codeKey = CommonConst.CODE_MAIL + user.getPhoneNumber() + "_" + EmailBizType.REGISTER.getType();
+            Integer codeCache = JSON.parseObject(qingSiCache.get(codeKey), Integer.class);
             if (codeCache == null || codeCache != Integer.parseInt(user.getCode())) {
                 return R.fail("验证码错误！");
             }
-            qingSiCache.del(CommonConst.FORGET_PASSWORD + user.getPhoneNumber() + "_1");
+            qingSiCache.del(codeKey);
         } else if (StringUtils.hasText(user.getEmail())) {
-            Integer codeCache = JSON.parseObject(qingSiCache.get(CommonConst.FORGET_PASSWORD + user.getEmail() + "_2"), Integer.class);
+            String codeKey = CommonConst.CODE_MAIL + user.getEmail() + "_" + EmailBizType.REGISTER.getType();
+            Integer codeCache = JSON.parseObject(qingSiCache.get(codeKey), Integer.class);
             if (codeCache == null || codeCache != Integer.parseInt(user.getCode())) {
                 return R.fail("验证码错误！");
             }
-            qingSiCache.del(CommonConst.FORGET_PASSWORD + user.getEmail() + "_2");
+            qingSiCache.del(codeKey);
         } else {
             return R.fail("请输入邮箱或手机号！");
         }

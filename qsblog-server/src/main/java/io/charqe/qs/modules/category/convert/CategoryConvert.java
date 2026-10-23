@@ -17,7 +17,7 @@ import java.util.List;
  * @author Joy
  * @since 2026-09-11
  */
-@Mapper(componentModel = "spring")
+@Mapper
 public interface CategoryConvert {
 
     CategoryConvert INSTANCE = Mappers.getMapper(CategoryConvert.class);

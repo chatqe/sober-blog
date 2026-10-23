@@ -30,6 +30,7 @@ import io.charqe.qs.modules.article.controller.web.vo.ArticlePageVO;
 import io.charqe.qs.modules.article.controller.web.vo.ArticleVO;
 import io.charqe.qs.modules.article.convert.ArticleConvert;
 import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
+import io.charqe.qs.modules.article.domain.dto.ArticleStatsDTO;
 import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.article.enums.ArticleIErrorCode;
 import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
@@ -109,8 +110,6 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
     @Value("${user.subscribe.format}")
     private String subscribeFormat;
 
-    @Resource
-    private ArticleConvert articleConvert;
 
 
     @Override
@@ -350,7 +349,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             return R.fail(ArticleIErrorCode.NOT_FOUND);
         }
 
-        return R.success(articleConvert.convert(article));
+        return R.success(ArticleConvert.INSTANCE.convert(article));
     }
 
     /**
@@ -373,7 +372,8 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 Map<Long, List<ArticleVO>> map = new HashMap<>();
 
                 List<Article> articles = list(Wrappers.<Article>lambdaQuery()
-                        .eq(Article::getIsDel, 0));
+                        .eq(Article::getIsDel, 0)
+                        .eq(Article::getViewStatus, true));
 
                 // stream 分组
                 Map<Long, List<Article>> sortArticleMap = articles.stream().collect(Collectors.groupingBy(Article::getCategoryId));
@@ -383,7 +383,8 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                     // 获取前6条数据
                     articleList = articleList.stream().limit(6).collect(Collectors.toList());
                     List<ArticleVO> articleVOList = articleList.stream().map(article -> {
-                        if (article.getArticleContent().length() > CommonConst.SUMMARY) {
+                        if (StringUtils.hasText(article.getArticleContent())
+                                && article.getArticleContent().length() > CommonConst.SUMMARY) {
                             article.setArticleContent(article.getArticleContent().substring(0, CommonConst.SUMMARY).replace("`", "").replace("#", "").replace(">", ""));
                         }
 
@@ -541,7 +542,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 .collect(Collectors.toMap(ArticleUserNameDTO::getId, ArticleUserNameDTO::getUserName, (a, b) -> a));
 
         List<AdminArticleVO> list = articleList.stream().map(article -> {
-            AdminArticleVO vo = articleConvert.toAdminVO(article);
+            AdminArticleVO vo = ArticleConvert.INSTANCE.toAdminVO(article);
             if (article.getCategoryId() != null) {
                 vo.setCategoryName(cateNameMap.getOrDefault(article.getCategoryId(), ""));
             }
@@ -675,6 +676,12 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             }
         }
         return articleVO;
+    }
+
+    @Override
+    public ArticleStatsDTO getStats() {
+        ArticleStatsDTO stats = articleMapper.selectStats();
+        return stats != null ? stats : new ArticleStatsDTO();
     }
 }
 

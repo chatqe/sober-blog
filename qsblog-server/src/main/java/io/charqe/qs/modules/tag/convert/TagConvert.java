@@ -17,7 +17,7 @@ import java.util.List;
  * @author Joy
  * @since 2026-09-12
  */
-@Mapper(componentModel = "spring")
+@Mapper
 public interface TagConvert {
 
     TagConvert INSTANCE = Mappers.getMapper(TagConvert.class);

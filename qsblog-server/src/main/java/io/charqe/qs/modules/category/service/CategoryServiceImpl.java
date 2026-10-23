@@ -13,7 +13,6 @@ import io.charqe.qs.modules.category.controller.admin.dto.CategorySaveReqDTO;
 import io.charqe.qs.modules.category.controller.admin.vo.CategoryDetailVO;
 import io.charqe.qs.modules.category.controller.admin.vo.CategoryListVO;
 import io.charqe.qs.modules.category.controller.web.vo.CategoryWebVO;
-import io.charqe.qs.modules.category.controller.web.vo.HomeStatsVO;
 import io.charqe.qs.modules.category.convert.CategoryConvert;
 import io.charqe.qs.modules.category.enums.CategoryTypeEnum;
 import io.charqe.qs.modules.sysdict.controller.web.vo.DictVO;
@@ -26,8 +25,6 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 分类服务实现
@@ -42,11 +39,6 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
     @Resource
     private QingSiCache qingSiCache;
 
-    @Resource
-    private io.charqe.qs.modules.article.domain.dao.ArticleMapper articleMapper;
-
-    @Resource
-    private CategoryConvert categoryConvert;
 
     @Override
     public PageResult<CategoryListVO> pageList(String keyword, Integer type, Integer status, int pageNum, int pageSize) {
@@ -59,7 +51,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         var mpPage = page(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize), wrapper);
         PageResult<CategoryListVO> result = new PageResult<>();
         List<CategoryListVO> voList = mpPage.getRecords()
-                .stream().map(categoryConvert::toListVO).toList();
+                .stream().map(CategoryConvert.INSTANCE::toListVO).toList();
         result.setList(voList);
         result.setTotal(mpPage.getTotal());
         result.setPages((int) mpPage.getPages());
@@ -74,7 +66,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         if (category == null) {
             throw new BizException("分类不存在");
         }
-        return categoryConvert.toDetailVO(category);
+        return CategoryConvert.INSTANCE.toDetailVO(category);
     }
 
     @Override
@@ -83,7 +75,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
             throw new BizException("分类名称不能为空");
         }
 
-        Category entity = categoryConvert.toEntity(dto);
+        Category entity = CategoryConvert.INSTANCE.toEntity(dto);
         save(entity);
         clearCache();
     }
@@ -102,7 +94,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
             throw new BizException("分类不存在");
         }
 
-        Category entity = categoryConvert.toEntity(dto);
+        Category entity = CategoryConvert.INSTANCE.toEntity(dto);
         updateById(entity);
         clearCache();
     }
@@ -145,12 +137,13 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         List<Category> rawList = list(Lb.<Category>q()
                 .eq(Category::getStatus, StatusEnum.ENABLE.getCode())
                 .eq(Category::getIsShow, StatusEnum.ENABLE.getCode())
+                .eq(Category::getIsDel, StatusEnum.DISABLE.getCode())
                 .eq(Category::getType, CategoryTypeEnum.BAR.getCode())
                 .orderByAsc(Category::getSort));
 
         List<CategoryWebVO> list = rawList
                 .stream()
-                .map(categoryConvert::toWebVO)
+                .map(CategoryConvert.INSTANCE::toWebVO)
                 .toList();
 
         if (!list.isEmpty()) {
@@ -160,48 +153,42 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
     }
 
     @Override
-    public HomeStatsVO getHomeStats() {
-        // 1. 查基础分类数据（isShow=1 且 status=1，按 sort 升序）
-        List<Category> categories = lambdaQuery()
-                .eq(Category::getIsShow, 1)
-                .eq(Category::getStatus, 1)
-                .orderByAsc(Category::getSort)
-                .list();
-        if (categories.isEmpty()) {
-            return new HomeStatsVO();
+    public List<CategoryWebVO> listWebCategories() {
+        String cached = qingSiCache.get(CateConstant.CATEGORY_PUBLIC);
+        if (cached != null) {
+            return JSON.parseArray(cached, CategoryWebVO.class);
         }
 
-        // 2. 批量统计每分类文章数（1次SQL GROUP BY）
-        Map<Long, Long> categoryCountMap = articleMapper.countByCategoryId();
+        List<Category> categories = lambdaQuery()
+                // .eq(Category::getIsShow, StatusEnum.ENABLE.getCode())
+                .eq(Category::getStatus, StatusEnum.ENABLE.getCode())
+                .eq(Category::getIsDel, StatusEnum.DISABLE.getCode())
+                .orderByAsc(Category::getSort)
+                .list();
 
-        // 3. 内存组装
-        long articleTotal = categoryCountMap.values().stream().mapToLong(Long::longValue).sum();
+        List<CategoryWebVO> list = categories.stream()
+                .map(CategoryConvert.INSTANCE::toWebVO)
+                .toList();
 
-        List<HomeStatsVO.CategoryStatsVO> statsList = categories.stream()
-                .map(cat -> {
-                    HomeStatsVO.CategoryStatsVO vo = new HomeStatsVO.CategoryStatsVO();
-                    vo.setId(cat.getId());
-                    vo.setName(cat.getName());
-                    vo.setDesc(cat.getCateDesc());
-                    vo.setType(cat.getType());
-                    vo.setSort(cat.getSort());
-                    vo.setIcon(cat.getIcon());
-                    vo.setCountOfSort(categoryCountMap.getOrDefault(cat.getId(), 0L));
-                    return vo;
-                })
-                .collect(Collectors.toList());
+        if (!list.isEmpty()) {
+            qingSiCache.put(CateConstant.CATEGORY_PUBLIC, JSON.toJSONString(list));
+        }
+        return list;
+    }
 
-        HomeStatsVO result = new HomeStatsVO();
-        result.setArticleTotal(articleTotal);
-        result.setCategoryTotal((long) statsList.size());
-        result.setCategories(statsList);
-        return result;
+    @Override
+    public long countVisible() {
+        return lambdaQuery()
+                .eq(Category::getIsShow, 1)
+                .eq(Category::getStatus, 1)
+                .count();
     }
 
     private void clearCache() {
         qingSiCache.del(CommonConst.CATEGORY_INFO);
         qingSiCache.del(CommonConst.CATEGORY_DICT);
         qingSiCache.del(CateConstant.CATEGORY_NAVBAR);
+        qingSiCache.del(CateConstant.CATEGORY_PUBLIC);
         qingSiCache.del("category:public:type_0");
         qingSiCache.del("category:public:type_1");
     }

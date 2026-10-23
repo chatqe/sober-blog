@@ -18,7 +18,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.tio.core.Tio;
@@ -51,11 +50,9 @@ public class AdminUserController {
      * @return 用户分页列表
      */
     @Operation(summary = "查询用户列表", description = "用于管理后台查询用户列表，支持分页和条件筛选")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功，返回用户分页列表"),
-            @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录"),
-            @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功，返回用户分页列表")
+    @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/page")
     @LoginCheck(0)
     public R<Page> listUser(
@@ -75,12 +72,10 @@ public class AdminUserController {
      * @return 修改结果
      */
     @Operation(summary = "修改用户状态", description = "用于管理后台修改用户状态，支持解禁和封禁操作")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "修改成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误，如站长状态不能修改"),
-            @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录"),
-            @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "修改成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误，如站长状态不能修改")
+    @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/changeUserStatus")
     @LoginCheck(0)
     public R changeUserStatus(
@@ -110,11 +105,9 @@ public class AdminUserController {
      * @return 修改结果
      */
     @Operation(summary = "修改用户赞赏信息", description = "用于管理后台修改用户的赞赏信息")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "修改成功"),
-            @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录"),
-            @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "修改成功")
+    @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/changeUserAdmire")
     @LoginCheck(0)
     public R changeUserAdmire(
@@ -138,12 +131,10 @@ public class AdminUserController {
      * @return 修改结果
      */
     @Operation(summary = "修改用户类型", description = "用于管理后台修改用户类型，支持普通用户、管理员和超级管理员三种类型")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "修改成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误，如站长类型不能修改或用户类型无效"),
-            @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录"),
-            @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "修改成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误，如站长类型不能修改或用户类型无效")
+    @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/changeUserType")
     @LoginCheck(0)
     public R changeUserType(

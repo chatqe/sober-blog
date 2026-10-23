@@ -13,7 +13,6 @@ import io.charqe.qs.utils.BlogUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,12 +42,10 @@ public class AdminCommentController {
      * @return 删除结果
      */
     @Operation(summary = "作者删除评论", description = "用于文章作者删除自己文章下的评论")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "删除成功"),
-        @ApiResponse(responseCode = "400", description = "请求参数错误或权限不足"),
-        @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "删除成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误或权限不足")
+    @ApiResponse(responseCode = "401", description = "未授权，需要登录后操作")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/user/deleteComment")
     @LoginCheck(1)
     public R userDeleteComment(
@@ -76,12 +73,10 @@ public class AdminCommentController {
      * @return 删除结果
      */
     @Operation(summary = "管理员删除评论", description = "用于管理员删除任意评论")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "删除成功"),
-        @ApiResponse(responseCode = "400", description = "请求参数错误"),
-        @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "删除成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/delComment")
     @LoginCheck(0)
     public R adminDelComment(
@@ -100,11 +95,9 @@ public class AdminCommentController {
      * @return 评论分页列表
      */
     @Operation(summary = "管理员查询评论", description = "用于管理员查询所有评论列表")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功，返回评论分页列表"),
-        @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功，返回评论分页列表")
+    @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/list")
     @LoginCheck(0)
     public R<Page> listBossComment(

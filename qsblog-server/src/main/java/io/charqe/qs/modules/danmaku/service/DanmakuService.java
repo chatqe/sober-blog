@@ -1,6 +1,10 @@
 package io.charqe.qs.modules.danmaku.service;
 
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.mp.CoreService;
+import io.charqe.qs.modules.danmaku.controller.admin.dto.AdminDanmakuPageReqDTO;
+import io.charqe.qs.modules.danmaku.controller.admin.vo.AdminDanmakuVO;
+import io.charqe.qs.modules.danmaku.controller.web.vo.DanmakuVO;
 import io.charqe.qs.modules.danmaku.domain.pojo.Danmaku;
 
 import java.util.List;
@@ -14,14 +18,14 @@ import java.util.List;
 public interface DanmakuService extends CoreService<Danmaku> {
     String saveList(List<Danmaku> danmakus);
 
-    List<Danmaku> latestDanmaku();
+    List<DanmakuVO> latestDanmaku();
 
     /**
      * 随机获取弹幕留言
      *
      * @return
      */
-    List<Danmaku> racdomList();
+    List<DanmakuVO> randomList();
+
+    PageResult<AdminDanmakuVO> pageList(AdminDanmakuPageReqDTO dto);
 }
-
-

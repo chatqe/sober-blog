@@ -41,7 +41,7 @@ public class FileAdminController {
      * 保存
      */
     @PostMapping("/save")
-    @LoginCheck
+    @LoginCheck(0)
     public R save(@RequestBody FileCreateReqVO vo) {
         if (!StringUtils.hasText(vo.getFileType()) || !StringUtils.hasText(vo.getFilePath())) {
             return R.fail("资源类型和资源路径不能为空！");
@@ -53,7 +53,7 @@ public class FileAdminController {
      * 上传文件
      */
     @PostMapping("/upload")
-    @LoginCheck
+    @LoginCheck(0)
     public R<String> upload(@RequestParam("file") MultipartFile file, FileVO fileVO) {
 
         log.info("========================> /resource/upload 接口调用");
@@ -72,7 +72,7 @@ public class FileAdminController {
      * 删除文件
      */
     @PostMapping("/delete")
-    @LoginCheck
+    @LoginCheck(0)
     public R delete(@RequestParam("id") Long id) {
         fileInfoService.removeById(id);
         return R.success();
@@ -82,7 +82,7 @@ public class FileAdminController {
      * 查询文件列表
      */
     @PostMapping("/list")
-    @LoginCheck
+    @LoginCheck(0)
     public R list(@RequestBody BaseReqVO baseReqVO) {
         fileInfoService.page(baseReqVO, null);
         return R.success(baseReqVO);

@@ -42,8 +42,6 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
     @Resource
     private QingSiCache qingSiCache;
 
-    @Resource
-    private TagConvert tagConvert;
 
     @Override
     public PageResult<TagListVO> pageList(Long categoryId, String keyword, int pageNum, int pageSize) {
@@ -54,7 +52,7 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
 
         var mpPage = page(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize), wrapper);
         PageResult<TagListVO> result = new PageResult<>();
-        List<TagListVO> voList = mpPage.getRecords().stream().map(tagConvert::toListVO).collect(Collectors.toList());
+        List<TagListVO> voList = mpPage.getRecords().stream().map(TagConvert.INSTANCE::toListVO).collect(Collectors.toList());
         result.setList(voList);
         result.setTotal(mpPage.getTotal());
         result.setPages((int) mpPage.getPages());
@@ -69,7 +67,7 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
         if (tag == null) {
             throw new BizException("标签不存在");
         }
-        TagDetailVO vo = tagConvert.toDetailVO(tag);
+        TagDetailVO vo = TagConvert.INSTANCE.toDetailVO(tag);
         // 填充分类名称
         Category category = categoryService.getById(tag.getCategoryId());
         if (category != null) {
@@ -81,7 +79,7 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
     @Override
     public void save(TagSaveReqDTO dto) {
         validate(dto);
-        Tag entity = tagConvert.toEntity(dto);
+        Tag entity = TagConvert.INSTANCE.toEntity(dto);
         save(entity);
         clearCache();
     }
@@ -98,7 +96,7 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
             throw new BizException("标签不存在");
         }
 
-        Tag entity = tagConvert.toEntity(dto);
+        Tag entity = TagConvert.INSTANCE.toEntity(dto);
         entity.setId(dto.getId());
         updateById(entity);
         clearCache();
@@ -127,7 +125,7 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
                 .orderByAsc(Tag::getId)
                 .list()
                 .stream()
-                .map(tagConvert::toWebVO)
+                .map(TagConvert.INSTANCE::toWebVO)
                 .collect(Collectors.toList());
 
         if (!list.isEmpty()) {
@@ -173,5 +171,19 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
             qingSiCache.put(CommonConst.TAG_DICT, JSON.toJSONString(dictList));
         }
         return dictList;
+    }
+
+    @Override
+    public List<String> getCloudNames() {
+        // BaseDO.isDel 带 @TableLogic，MyBatis-Plus 会自动追加 is_del = 0 条件
+        return lambdaQuery()
+                .orderByAsc(Tag::getSort)
+                .orderByAsc(Tag::getId)
+                .list()
+                .stream()
+                .map(Tag::getName)
+                .filter(StringUtils::hasText)
+                .distinct()
+                .toList();
     }
 }

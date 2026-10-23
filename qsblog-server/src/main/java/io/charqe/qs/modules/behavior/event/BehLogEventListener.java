@@ -1,6 +1,5 @@
 package io.charqe.qs.modules.behavior.event;
 
-import io.charqe.qs.modules.behavior.convert.BehaviorConvert;
 import io.charqe.qs.modules.behavior.domain.pojo.BehaviorLog;
 import io.charqe.qs.modules.behavior.service.BehaviorLogService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +23,6 @@ public class BehLogEventListener {
     @Resource
     private BehaviorLogService behaviorLogService;
 
-    @Resource
-    private BehaviorConvert behaviorConvert;
 
     @Async
     @EventListener

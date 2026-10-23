@@ -56,7 +56,12 @@ public enum BizTypeEnum implements BaseEnum<Integer> {
     /**
      * 标签
      */
-    TAG(8, "标签");
+    TAG(8, "标签"),
+
+    /**
+     * 留言
+     */
+    MESSAGE(9, "留言");
 
     /**
      * code -> enum 缓存，O(1) 查找

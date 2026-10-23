@@ -8,6 +8,7 @@ import com.qiniu.processing.OperationManager;
 import com.qiniu.storage.BucketManager;
 import com.qiniu.storage.Configuration;
 import com.qiniu.storage.Region;
+import com.qiniu.storage.UploadManager;
 import com.qiniu.storage.model.BatchStatus;
 import com.qiniu.storage.model.BucketInfo;
 import com.qiniu.storage.model.FileInfo;
@@ -16,19 +17,17 @@ import com.qiniu.util.Auth;
 import com.qiniu.util.StringMap;
 import com.qiniu.util.UrlSafeBase64;
 import io.charqe.qs.common.FileVO;
-import io.charqe.qs.common.constants.CommonConst;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
+import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * qiniu工具类
+ * 七牛云工具类（Kodo）
  *
  * @author Joy
  * @since 2026-01-02 19:45
@@ -38,9 +37,8 @@ import java.util.stream.Collectors;
 @ConditionalOnProperty(name = "qiniu.enable", havingValue = "true")
 public class QiniuUtil implements StoreService {
 
-    /**
-     * 七牛云
-     */
+    /* ====================== 配置 ====================== */
+
     @Value("${qiniu.accessKey}")
     private String accessKey;
 
@@ -56,105 +54,359 @@ public class QiniuUtil implements StoreService {
     @Value("${qiniu.pipeline}")
     private String pipeline;
 
-    @Value("${qiniu.pfop-size-limit}")
-    private long pfopSizeLimit;
-
-
+    /** 上传凭证有效期（秒） */
     private static final long EXPIRE_SECONDS = 60L;
+
+    /** 单次上传大小限制（字节），20MB */
     private static final long F_SIZE_LIMIT = 20971520L;
 
-    
+    /** 七牛批量操作单次上限 */
+    private static final int BATCH_LIMIT = 1000;
 
+    private volatile Configuration configuration;
+    private volatile Auth auth;
+
+    /* ====================== 基础组件 ====================== */
+
+    private Configuration getConfiguration() {
+        if (configuration == null) {
+            synchronized (this) {
+                if (configuration == null) {
+                    configuration = new Configuration(Region.region0());
+                }
+            }
+        }
+        return configuration;
+    }
+
+    private Auth getAuth() {
+        if (auth == null) {
+            synchronized (this) {
+                if (auth == null) {
+                    auth = Auth.create(accessKey, secretKey);
+                }
+            }
+        }
+        return auth;
+    }
+
+    private BucketManager getBucketManager() {
+        return new BucketManager(getAuth(), getConfiguration());
+    }
+
+    /**
+     * 归一化 key：去掉 downloadUrl 前缀，保留裸 key。
+     * 用于 deleteFile / getFileInfo 等接收"完整 URL 或裸 key"混用的场景。
+     */
+    private String normalizeKey(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        if (StrUtil.isNotBlank(downloadUrl) && raw.startsWith(downloadUrl)) {
+            return raw.substring(downloadUrl.length());
+        }
+        return raw;
+    }
+
+    private List<String> normalizeKeys(Collection<String> raw) {
+        if (CollUtil.isEmpty(raw)) {
+            return Collections.emptyList();
+        }
+        return raw.stream()
+                .filter(Objects::nonNull)
+                .map(this::normalizeKey)
+                .filter(StrUtil::isNotBlank)
+                .collect(Collectors.toList());
+    }
+
+    /** 列表分批，用于超过 BATCH_LIMIT 的批量操作 */
+    private <T> List<List<T>> partition(List<T> list, int size) {
+        List<List<T>> parts = new ArrayList<>();
+        for (int i = 0; i < list.size(); i += size) {
+            parts.add(list.subList(i, Math.min(i + size, list.size())));
+        }
+        return parts;
+    }
+
+    /* ====================== 上传凭证 ====================== */
+
+    /**
+     * 生成上传凭证。
+     *
+     * @param key 目标文件名；传 null 表示允许任意 key
+     */
     public String getToken(String key) {
         StringMap putPolicy = new StringMap();
         putPolicy.put("fsizeLimit", F_SIZE_LIMIT);
-        Auth auth = Auth.create(accessKey, secretKey);
-        return auth.uploadToken(bucket, key, EXPIRE_SECONDS, putPolicy);
+        return getAuth().uploadToken(bucket, key, EXPIRE_SECONDS, putPolicy);
     }
 
-    @Override
-    public void deleteFile(List<String> files) {
-        if (CollectionUtils.isEmpty(files)) {
-            return;
-        }
-        //构造一个带指定 Region 对象的配置类
-        Configuration cfg = new Configuration(Region.region0());
-        Auth auth = Auth.create(accessKey, secretKey);
-        BucketManager bucketManager = new BucketManager(auth, cfg);
-        try {
-            //单次批量请求的文件数量不得超过1000
-            String[] keyList = files.stream().map(path -> path.replace(downloadUrl, "")).toArray(String[]::new);
-            BucketManager.BatchOperations batchOperations = new BucketManager.BatchOperations();
-            batchOperations.addDeleteOp(bucket, keyList);
-            Response response = bucketManager.batch(batchOperations);
-            BatchStatus[] batchStatusList = response.jsonToObject(BatchStatus[].class);
-            for (int i = 0; i < keyList.length; i++) {
-                BatchStatus status = batchStatusList[i];
-                String key = keyList[i];
-                if (status.code == 200) {
-                    log.info("文件删除成功：" + key);
-                } else {
-                    log.error("文件删除失败：" + key + "，原因：" + status.data.error);
-                }
-            }
-        } catch (QiniuException ex) {
-            log.error("文件删除失败：" + ex.response.toString());
-        }
-    }
-
-
-    /**
-     * 批量删除
-     *
-     * @param files
-     */
-    public void batchDel(List<String> files) {
-        if (CollectionUtils.isEmpty(files)) {
-            return;
-        }
-        //构造一个带指定 Region 对象的配置类
-        Configuration cfg = new Configuration(Region.region0());
-        Auth auth = Auth.create(accessKey, secretKey);
-        BucketManager bucketManager = new BucketManager(auth, cfg);
-        try {
-            //单次批量请求的文件数量不得超过1000
-            String[] keyList = files.stream().map(path -> path.replace(downloadUrl, "")).toArray(String[]::new);
-            BucketManager.BatchOperations batchOperations = new BucketManager.BatchOperations();
-            batchOperations.addDeleteOp(bucket, keyList);
-            Response response = bucketManager.batch(batchOperations);
-            BatchStatus[] batchStatusList = response.jsonToObject(BatchStatus[].class);
-            for (int i = 0; i < keyList.length; i++) {
-                BatchStatus status = batchStatusList[i];
-                String key = keyList[i];
-                if (status.code == 200) {
-                    log.info("文件删除成功：" + key);
-                    // resourceService.lambdaUpdate().eq(Resource::getPath, downloadUrl + key).remove();
-                } else {
-                    log.error("文件删除失败：" + key + "，原因：" + status.data.error);
-                }
-            }
-        } catch (QiniuException ex) {
-            log.error("文件删除失败：" + ex.response.toString());
-        }
-    }
+    /* ====================== 上传 ====================== */
 
     @Override
     public FileVO saveFile(FileVO fileVO) {
-        return null;
+        if (fileVO == null || fileVO.getFile() == null) {
+            throw new IllegalArgumentException("FileVO 或 file 不能为空");
+        }
+        // 构造裸 key：相对路径 + 原始文件名
+        String key = buildUploadKey(fileVO);
+        String upToken = getToken(key);
+        UploadManager uploadManager = new UploadManager(getConfiguration());
+
+        try {
+            byte[] bytes = fileVO.getFile().getBytes();
+            Response response = uploadManager.put(bytes, key, upToken);
+            if (response.isOK()) {
+                fileVO.setVisitPath(downloadUrl + key);
+                log.info("文件上传成功：key={}", key);
+            } else {
+                log.error("文件上传失败：key={}，响应：{}", key, response.bodyString());
+                throw new RuntimeException("文件上传失败：" + response.bodyString());
+            }
+        } catch (QiniuException e) {
+            log.error("文件上传异常：key={}，code={}，error={}",
+                    key, e.code(), e.response == null ? "" : e.response.toString());
+            throw new RuntimeException("文件上传失败", e);
+        } catch (Exception e) {
+            log.error("文件读取异常：key={}", key, e);
+            throw new RuntimeException("文件上传失败", e);
+        }
+        return fileVO;
     }
+
+    /** 从 FileVO 构造七牛裸 key */
+    private String buildUploadKey(FileVO fileVO) {
+        String rel = StrUtil.isNotBlank(fileVO.getRelativePath()) ? fileVO.getRelativePath() : "";
+        String orig = StrUtil.isNotBlank(fileVO.getOriginalName())
+                ? fileVO.getOriginalName()
+                : "upload_" + System.currentTimeMillis();
+        return rel.startsWith("/") ? rel + orig : rel + "/" + orig;
+    }
+
+    /* ====================== 删除 ====================== */
+
+    /**
+     * 批量删除文件（支持传入完整 URL 或裸 key）。
+     * 单次超过 1000 个会自动分批。
+     *
+     * @return 失败明细 Map&lt;key, 错误信息&gt;，全部成功则为空 Map
+     */
+    @Override
+    public void deleteFile(List<String> files) {
+        batchDeleteFiles(files);
+    }
+
+    /** 保留旧签名，内部委托 deleteFile */
+    public void batchDel(List<String> files) {
+        batchDeleteFiles(files);
+    }
+
+    /**
+     * 批量删除，返回失败明细。
+     *
+     * @return Map&lt;key, 错误信息&gt;
+     */
+    public Map<String, String> batchDeleteFiles(List<String> files) {
+        Map<String, String> failed = new HashMap<>();
+        List<String> keys = normalizeKeys(files);
+        if (CollUtil.isEmpty(keys)) {
+            return failed;
+        }
+
+        BucketManager bucketManager = getBucketManager();
+        for (List<String> part : partition(keys, BATCH_LIMIT)) {
+            try {
+                BucketManager.BatchOperations ops = new BucketManager.BatchOperations();
+                ops.addDeleteOp(bucket, part.toArray(new String[0]));
+                Response response = bucketManager.batch(ops);
+                BatchStatus[] statuses = response.jsonToObject(BatchStatus[].class);
+
+                for (int i = 0; i < part.size(); i++) {
+                    String key = part.get(i);
+                    BatchStatus status = statuses[i];
+                    if (status.code == 200) {
+                        log.info("文件删除成功：{}", key);
+                    } else {
+                        String err = status.data == null ? "unknown" : status.data.error;
+                        log.error("文件删除失败：{}，原因：{}", key, err);
+                        failed.put(key, err);
+                    }
+                }
+            } catch (QiniuException e) {
+                log.error("批量删除请求异常：{}",
+                        e.response == null ? e.getMessage() : e.response.toString());
+                part.forEach(k -> failed.put(k, e.getMessage()));
+            }
+        }
+        return failed;
+    }
+
+    /* ====================== 移动 / 复制 ====================== */
+
+    /**
+     * 移动（或重命名）单个文件。
+     * 源 bucket 与目标 bucket 必须属于同一账号，且同区域。
+     *
+     * @param srcKey  源裸 key（bucket 内路径）
+     * @param destKey 目标裸 key（bucket 内路径）
+     * @param force   目标已存在时是否强制覆盖
+     */
+    public void moveFile(String srcKey, String destKey) {
+        requireNonBlank(srcKey, destKey);
+        try {
+            getBucketManager().move(bucket, srcKey, bucket, destKey);
+            log.info("文件移动成功：{} -> {}", srcKey, destKey);
+        } catch (QiniuException e) {
+            log.error("文件移动失败：{} -> {}，code={}，error={}",
+                    srcKey, destKey, e.code(), e.response == null ? "" : e.response.toString());
+            throw new RuntimeException("文件移动失败", e);
+        }
+    }
+
+    /**
+     * 复制单个文件（同 bucket 内）。
+     *
+     * @param srcKey  源裸 key
+     * @param destKey 目标裸 key
+     */
+    public void copyFile(String srcKey, String destKey) {
+        requireNonBlank(srcKey, destKey);
+        try {
+            getBucketManager().copy(bucket, srcKey, bucket, destKey);
+            log.info("文件复制成功：{} -> {}", srcKey, destKey);
+        } catch (QiniuException e) {
+            log.error("文件复制失败：{} -> {}，code={}，error={}",
+                    srcKey, destKey, e.code(), e.response == null ? "" : e.response.toString());
+            throw new RuntimeException("文件复制失败", e);
+        }
+    }
+
+    /**
+     * 批量移动文件。
+     *
+     * @param srcKeys  源文件裸 key 列表
+     * @param destKeys 目标文件裸 key 列表（与 srcKeys 一一对应）
+     * @return Map&lt;源key, 错误信息&gt;，空 Map 表示全部成功
+     */
+    public Map<String, String> batchMoveFiles(List<String> srcKeys, List<String> destKeys) {
+        return batchTransfer(srcKeys, destKeys, true);
+    }
+
+    /**
+     * 批量复制文件（同 bucket 内）。
+     *
+     * @param srcKeys  源文件裸 key 列表
+     * @param destKeys 目标文件裸 key 列表（与 srcKeys 一一对应）
+     * @return Map&lt;源key, 错误信息&gt;，空 Map 表示全部成功
+     */
+    public Map<String, String> batchCopyFiles(List<String> srcKeys, List<String> destKeys) {
+        return batchTransfer(srcKeys, destKeys, false);
+    }
+
+    /**
+     * 一次性复制整个目录：将 srcPrefix 下所有文件复制到 destPrefix 下，
+     * 文件名保持不变。空文件列表直接返回，不抛异常。
+     *
+     * @param srcPrefix  源目录前缀，例如 "a/"
+     * @param destPrefix 目标目录前缀，例如 "b/"
+     * @return Map&lt;源key, 错误信息&gt;，空 Map 表示全部成功
+     */
+    public Map<String, String> batchCopyDir(String srcPrefix, String destPrefix) {
+        if (StrUtil.isBlank(srcPrefix) || StrUtil.isBlank(destPrefix)) {
+            throw new IllegalArgumentException("srcPrefix / destPrefix 不能为空");
+        }
+        List<String> srcKeys = list(srcPrefix);
+        if (CollUtil.isEmpty(srcKeys)) {
+            log.info("目录 {} 下无文件，跳过复制", srcPrefix);
+            return Collections.emptyMap();
+        }
+        // list() 返回的是带域名的完整 URL，需要转为裸 key
+        List<String> bareKeys = srcKeys.stream()
+                .map(this::normalizeKey)
+                .collect(Collectors.toList());
+        List<String> destKeys = bareKeys.stream()
+                .map(key -> destPrefix + key.substring(srcPrefix.length()))
+                .collect(Collectors.toList());
+        return batchCopyFiles(bareKeys, destKeys);
+    }
+
+    /**
+     * 批量移动 / 复制的公共实现。
+     *
+     * @param isMove true=move，false=copy
+     */
+    private Map<String, String> batchTransfer(List<String> srcKeys,
+                                              List<String> destKeys,
+                                              boolean isMove) {
+        Map<String, String> failed = new HashMap<>();
+        if (CollUtil.isEmpty(srcKeys) || CollUtil.isEmpty(destKeys)) {
+            return failed;
+        }
+        if (srcKeys.size() != destKeys.size()) {
+            throw new IllegalArgumentException(
+                    "源文件列表和目标文件列表长度不一致：" + srcKeys.size() + " vs " + destKeys.size());
+        }
+
+        List<String> normSrc = normalizeKeys(srcKeys);
+        // destKeys 由调用方显式传入，不做 normalize（若误传域名会暴露问题）
+        List<String> normDest = destKeys;
+
+        BucketManager bucketManager = getBucketManager();
+        String opName = isMove ? "移动" : "复制";
+
+        int total = normSrc.size();
+        for (int start = 0; start < total; start += BATCH_LIMIT) {
+            int end = Math.min(start + BATCH_LIMIT, total);
+            List<String> partSrc = normSrc.subList(start, end);
+            List<String> partDest = normDest.subList(start, end);
+
+            try {
+                BucketManager.BatchOperations ops = new BucketManager.BatchOperations();
+                for (int i = 0; i < partSrc.size(); i++) {
+                    if (isMove) {
+                        ops.addMoveOp(bucket, partSrc.get(i), bucket, partDest.get(i));
+                    } else {
+                        ops.addCopyOp(bucket, partSrc.get(i), bucket, partDest.get(i));
+                    }
+                }
+                Response response = bucketManager.batch(ops);
+                BatchStatus[] statuses = response.jsonToObject(BatchStatus[].class);
+
+                for (int i = 0; i < partSrc.size(); i++) {
+                    String src = partSrc.get(i);
+                    String dest = partDest.get(i);
+                    BatchStatus status = statuses[i];
+                    if (status.code == 200) {
+                        log.info("文件{}成功：{} -> {}", opName, src, dest);
+                    } else {
+                        String err = status.data == null ? "unknown" : status.data.error;
+                        log.error("文件{}失败：{} -> {}，原因：{}", opName, src, dest, err);
+                        failed.put(src, err);
+                    }
+                }
+            } catch (QiniuException e) {
+                log.error("批量{}请求异常：{}", opName,
+                        e.response == null ? e.getMessage() : e.response.toString());
+                partSrc.forEach(k -> failed.put(k, e.getMessage()));
+            }
+        }
+        return failed;
+    }
+
+    /* ====================== 存储服务标识 ====================== */
 
     @Override
     public String getStoreName() {
         return StoreEnum.QINIU.getCode();
     }
 
+    /* ====================== 查询 / 列举 ====================== */
+
     public void fileList() {
-        //构造一个带指定 Region 对象的配置类
-        Configuration cfg = new Configuration(Region.region0());
-        Auth auth = Auth.create(accessKey, secretKey);
-        BucketManager bucketManager = new BucketManager(auth, cfg);
+        BucketManager bucketManager = getBucketManager();
         try {
-            FileListing fileListing = bucketManager.listFilesV2(bucket, "/qingsi/static/avatar/", null, 100, null);
+            FileListing fileListing =
+                    bucketManager.listFilesV2(bucket, "/qingsi/static/avatar/", null, 100, null);
             log.info(fileListing.toString());
         } catch (QiniuException e) {
             throw new RuntimeException(e);
@@ -162,10 +414,7 @@ public class QiniuUtil implements StoreService {
     }
 
     public void getBucketInfo() {
-        //构造一个带指定 Region 对象的配置类
-        Configuration cfg = new Configuration(Region.region0());
-        Auth auth = Auth.create(accessKey, secretKey);
-        BucketManager bucketManager = new BucketManager(auth, cfg);
+        BucketManager bucketManager = getBucketManager();
         try {
             BucketInfo bucketInfo = bucketManager.getBucketInfo(bucket);
             log.info(bucketInfo.toString());
@@ -174,52 +423,49 @@ public class QiniuUtil implements StoreService {
         }
     }
 
+    /**
+     * 批量获取文件元信息（size / mimeType）。
+     *
+     * @return Map&lt;key, Map&lt;"size"/"mimeType"&gt;&gt;
+     */
     public Map<String, Map<String, String>> getFileInfo(List<String> files) {
         Map<String, Map<String, String>> result = new HashMap<>();
-
-        //构造一个带指定 Region 对象的配置类
-        Configuration cfg = new Configuration(Region.region0());
-        Auth auth = Auth.create(accessKey, secretKey);
-        BucketManager bucketManager = new BucketManager(auth, cfg);
-        try {
-            //单次批量请求的文件数量不得超过1000
-            String[] keyList = files.toArray(new String[0]);
-            BucketManager.BatchOperations batchOperations = new BucketManager.BatchOperations();
-            batchOperations.addStatOps(bucket, keyList);
-            Response response = bucketManager.batch(batchOperations);
-            BatchStatus[] batchStatusList = response.jsonToObject(BatchStatus[].class);
-            for (int i = 0; i < keyList.length; i++) {
-                BatchStatus status = batchStatusList[i];
-                String key = keyList[i];
-                if (status.code == 200) {
-                    //文件存在
-                    Map<String, String> info = new HashMap<>();
-                    info.put("size", String.valueOf(status.data.fsize));
-                    info.put("mimeType", status.data.mimeType);
-                    result.put(key, info);
-                } else {
-                    log.error(key + "：" + status.data.error);
-                }
-            }
-        } catch (QiniuException ex) {
-            log.error(ex.response.toString());
+        List<String> keys = normalizeKeys(files);
+        if (CollUtil.isEmpty(keys)) {
+            return result;
         }
 
+        BucketManager bucketManager = getBucketManager();
+        for (List<String> part : partition(keys, BATCH_LIMIT)) {
+            try {
+                BucketManager.BatchOperations ops = new BucketManager.BatchOperations();
+                ops.addStatOps(bucket, part.toArray(new String[0]));
+                Response response = bucketManager.batch(ops);
+                BatchStatus[] statuses = response.jsonToObject(BatchStatus[].class);
+
+                for (int i = 0; i < part.size(); i++) {
+                    String key = part.get(i);
+                    BatchStatus status = statuses[i];
+                    if (status.code == 200) {
+                        Map<String, String> info = new HashMap<>(4);
+                        info.put("size", String.valueOf(status.data.fsize));
+                        info.put("mimeType", status.data.mimeType);
+                        result.put(key, info);
+                    } else {
+                        log.error("查询文件信息失败：{}，原因：{}", key,
+                                status.data == null ? "unknown" : status.data.error);
+                    }
+                }
+            } catch (QiniuException e) {
+                log.error("批量查询文件信息异常：{}",
+                        e.response == null ? e.getMessage() : e.response.toString());
+            }
+        }
         return result;
     }
 
     /**
-     * 保存文件信息到数据库（暂时移除实现，因为Resource模块不存在）
-     */
-    public void saveFileInfo() {
-        System.out.println("文件信息同步功能已暂时移除");
-    }
-
-    /**
-     * 获取文件大小
-     *
-     * @param key
-     * @return
+     * 获取文件大小（字节）
      */
     private long getFileSize(String key) {
         Map<String, Map<String, String>> info = getFileInfo(Collections.singletonList(key));
@@ -230,77 +476,46 @@ public class QiniuUtil implements StoreService {
         return Long.parseLong(meta.getOrDefault("size", "0"));
     }
 
-
     /**
-     * 获取图片列表 带域名url
-     *
-     * @param imgPrefix
-     * @return
+     * 按前缀列举文件，返回带域名的完整 URL。
      */
     public List<String> list(String imgPrefix) {
-        //构造一个带指定Zone对象的配置类
-        Configuration cfg = new Configuration(Region.region0());
-        //...其他参数参考类注释
-        Auth auth = Auth.create(accessKey, secretKey);
-        BucketManager bucketManager = new BucketManager(auth, cfg);
+        BucketManager bucketManager = getBucketManager();
+        BucketManager.FileListIterator it =
+                bucketManager.createFileListIterator(bucket, imgPrefix, 1000, "");
 
-        //文件名前缀
-        String prefix = "";
-        //每次迭代的长度限制，最大1000，推荐值 1000
-        int limit = 120;
-        //指定目录分隔符，列出所有公共前缀（模拟列出目录效果）。缺省值为空字符串
-        String delimiter = "";
-        BucketManager.FileListIterator fileListIterator = bucketManager.createFileListIterator(bucket, prefix, limit, delimiter);
-
-        ArrayList<String> randomAvatars = new ArrayList<>();
-        while (fileListIterator.hasNext()) {
-            //处理获取的file list结果
-            FileInfo[] items = fileListIterator.next();
+        List<String> urls = new ArrayList<>();
+        while (it.hasNext()) {
+            FileInfo[] items = it.next();
+            if (items == null) break;
             for (FileInfo item : items) {
-                //打印以"qingsi/static/avatar/"开头的文件的名称
-                // if (StrUtil.startWithAny(item.key, "qingsi/static/avatar/", "backgroundImg")) {
-                // if (StrUtil.startWithAny(item.key, "qingsi/static/avatar/")) {
-                if (StrUtil.startWithAny(item.key, imgPrefix) && !item.key.equals(imgPrefix)) { //&& StrUtil.endWith(item.key, ".webp") 过滤为结尾为 .webp
-                    // 拼接为 访问地址
-                    randomAvatars.add(downloadUrl.concat(item.key));
-                    // System.out.println(downloadUrl.concat(item.key));
-                    // download(item.key);//下载
+                String key = item.key;
+                if (!key.equals(imgPrefix)) {
+                    urls.add(downloadUrl.concat(key));
                 }
             }
         }
-        // log.info("randomAvatars:{}", randomAvatars);
-        return randomAvatars;
+        return urls;
     }
 
     /**
-     * 查询指定前缀下 体积 > 250 kB 且后缀 ≠ .webp 的图片（返回不带域名 URL）
-     *
-     * @param imgPrefix 目录前缀
-     * @return List<String>
+     * 前缀匹配 + 体积 ≥ 250KB + 后缀非 .webp，返回裸 key。
      */
     public List<String> listLargeNonWebp(String imgPrefix) {
-        long minSize = 250 * 1024;          // 250 kB
-
-        Configuration cfg = new Configuration(Region.region0());
-        Auth auth = Auth.create(accessKey, secretKey);
-        BucketManager bucketManager = new BucketManager(auth, cfg);
-
-        String prefix = "";
-        int limit = 120;
-        String delimiter = "";
-        BucketManager.FileListIterator it = bucketManager.createFileListIterator(bucket, prefix, limit, delimiter);
+        long minSize = 250L * 1024;
+        BucketManager bucketManager = getBucketManager();
+        BucketManager.FileListIterator it =
+                bucketManager.createFileListIterator(bucket, imgPrefix, 1000, "");
 
         List<String> result = new ArrayList<>();
         while (it.hasNext()) {
             FileInfo[] items = it.next();
+            if (items == null) break;
             for (FileInfo item : items) {
                 String key = item.key;
-                // 1. 前缀匹配  2. 排除目录本身  3. 体积闸门  4. 非 webp
-                if (StrUtil.startWithAny(key, imgPrefix)
-                        && !key.equals(imgPrefix)
+                if (!key.equals(imgPrefix)
                         && item.fsize >= minSize
                         && !StrUtil.endWithIgnoreCase(key, ".webp")) {
-                    // result.add(downloadUrl.concat(key));
                     result.add(key);
                 }
             }
@@ -309,136 +524,112 @@ public class QiniuUtil implements StoreService {
     }
 
     /**
-     * 获取图片列表 体积大于250kb 不带域名url
-     *
-     * @param imgPrefix
-     * @return
+     * 前缀匹配 + 体积 ≥ 250KB，返回裸 key。
      */
     public List<String> listNoDomain(String imgPrefix) {
-        //构造一个带指定Zone对象的配置类
-        Configuration cfg = new Configuration(Region.region0());
-        //...其他参数参考类注释
-        Auth auth = Auth.create(accessKey, secretKey);
-        BucketManager bucketManager = new BucketManager(auth, cfg);
+        long minSize = 250L * 1024;
+        BucketManager bucketManager = getBucketManager();
+        BucketManager.FileListIterator it =
+                bucketManager.createFileListIterator(bucket, imgPrefix, 1000, "");
 
-        //文件名前缀
-        String prefix = "";
-        //每次迭代的长度限制，最大1000，推荐值 1000
-        int limit = 120;
-        //指定目录分隔符，列出所有公共前缀（模拟列出目录效果）。缺省值为空字符串
-        String delimiter = "";
-        BucketManager.FileListIterator fileListIterator = bucketManager.createFileListIterator(bucket, prefix, limit, delimiter);
-
-        /* 3. 只收集 >= 250 kB 且符合前缀的文件 */
-        long minSize = 250 * 1024;          // 250 kB
-        ArrayList<String> imgKeys = new ArrayList<>();
-        while (fileListIterator.hasNext()) {
-            //处理获取的file list结果
-            FileInfo[] items = fileListIterator.next();
+        List<String> imgKeys = new ArrayList<>();
+        while (it.hasNext()) {
+            FileInfo[] items = it.next();
+            if (items == null) break;
             for (FileInfo item : items) {
-                if (StrUtil.startWithAny(item.key, imgPrefix)
-                        && !item.key.equals(imgPrefix)
-                        && item.fsize >= minSize) {   // 关键：体积闸门
-                    imgKeys.add(item.key);
+                String key = item.key;
+                if (!key.equals(imgPrefix)
+                        && item.fsize >= minSize) {
+                    imgKeys.add(key);
                 }
             }
         }
-        // log.info("imgKeys:{}", imgKeys);
         return imgKeys;
     }
 
+    /* ====================== 持久化转码（pfop） ====================== */
 
     /**
-     * 提交单个七牛云持久化转码任务（pfop）
-     * 支持源文件后缀：.jpg .JPG .jpeg .png → 统一输出 .webp
+     * 提交单个持久化转码任务：jpg/jpeg/png → webp。
      *
-     * @param srcKey   源空间中的文件名，例如 img/2025/12/a.JPG
-     * @param quality  转码质量，推荐 75~85，视觉无损
-     * @param pipeline 私有队列名，null 则走默认队列（免费账号并发 10）
-     * @return persistentId  用于后续轮询任务状态
+     * @param srcKey  源裸 key
+     * @param quality 质量 75~85
+     * @return persistentId
      */
     public String submitPfop(String srcKey, int quality) {
-        /* ---------- 1. 基本合法性校验 ---------- */
         if (StrUtil.isBlank(srcKey)) {
             throw new IllegalArgumentException("srcKey 不能为空");
         }
-        String srcKeyLow = srcKey.toLowerCase();
-        if (!srcKeyLow.endsWith(".jpg") &&
-                !srcKeyLow.endsWith(".jpeg") &&
-                !srcKeyLow.endsWith(".png")) {
+        String low = srcKey.toLowerCase();
+        if (!low.endsWith(".jpg") && !low.endsWith(".jpeg") && !low.endsWith(".png")) {
             throw new IllegalArgumentException("仅支持 jpg/jpeg/png 三种格式，当前 key=" + srcKey);
         }
 
-        /* ---------- 2. 构造目标文件名（统一 .webp） ---------- */
-        // 找到最后一个“.”，把后缀抹掉再拼 .webp，保留原大小写无关
         int lastDot = srcKey.lastIndexOf('.');
         String dstKey = srcKey.substring(0, lastDot) + ".webp";
 
-        /* ---------- 3. 组装 fop 命令串 ---------- */
-        // imageMogr2 是七牛图片处理指令，format/webp 指定输出格式
-        // quality/xx 控制压缩率；strip 去掉 EXIF；interlace/1 输出渐进式 WebP
-        String fops = StrUtil.format("imageMogr2/format/webp/quality/{}/strip/interlace/1", quality);
-
-        // saveas 格式：目标bucket:目标key，需要 UrlSafeBase64
+        String fops = StrUtil.format(
+                "imageMogr2/format/webp/quality/{}/strip/interlace/1", quality);
         String saveas = UrlSafeBase64.encodeToString(bucket + ":" + dstKey);
         String fopStr = fops + "|saveas/" + saveas;
 
-        /* ---------- 4. 提交 pfop ---------- */
-        Auth auth = Auth.create(accessKey, secretKey);
-        Configuration cfg = new Configuration(Region.region0()); //region1()华东  region1() 华北，region2() 华南，regionNa0() 北美，regionAs0() 东南亚
-        OperationManager op = new OperationManager(auth, cfg);
+        OperationManager op = new OperationManager(getAuth(), getConfiguration());
         try {
-            // 最后一个参数 force 传 true，表示如果目标文件已存在就覆盖
             return op.pfop(bucket, srcKey, fopStr, pipeline, true);
         } catch (QiniuException e) {
             log.error("提交 pfop 失败, srcKey={}, code={}, error={}",
-                    srcKey, e.code(), e.response.toString());
+                    srcKey, e.code(), e.response == null ? "" : e.response.toString());
             throw new RuntimeException("提交转码任务失败", e);
         }
     }
 
     /**
-     * 批量提交转码任务（并行流，可替换成自定义线程池）
+     * 批量提交 pfop（串行，避免单个失败导致全部丢失）。
      *
-     * @param srcKeys 源文件 key 列表，元素可以是 img/a.JPG、img/b.png ...
-     * @param quality 统一转码质量
-     * @return Map<源key, persistentId>  方便后续轮询
+     * @return Map&lt;源key, persistentId&gt;
      */
-    public Map<String, String> batchSubmitPfop(List<String> srcKeys,
-                                               int quality) {
+    public Map<String, String> batchSubmitPfop(List<String> srcKeys, int quality) {
         if (CollUtil.isEmpty(srcKeys)) {
             return Collections.emptyMap();
         }
-        // 并行度默认是 CPU 核数，也可包装成 ExecutorService
-        return srcKeys.parallelStream()
-                .collect(Collectors.toMap(k -> k,
-                        k -> submitPfop(k, quality)));
-    }
-
-    /**
-     * 3. 轮询单任务状态
-     *
-     * @param persistentId 提交后拿到的 id
-     * @return 0 成功  1 等待  2 进行中  3 失败
-     */
-    public int queryPfopStatus(String persistentId) {
-        Auth auth = Auth.create(accessKey, secretKey);
-        Configuration cfg = new Configuration(Region.region0());
-        OperationManager op = new OperationManager(auth, cfg);
-        try {
-            return op.prefop(persistentId).code;
-        } catch (QiniuException e) {
-            log.error("查询 pfop 状态失败 pid={}, error={}", persistentId, e.response.toString());
-            return -1;
+        Map<String, String> result = new LinkedHashMap<>();
+        for (String key : srcKeys) {
+            try {
+                result.put(key, submitPfop(key, quality));
+            } catch (Exception e) {
+                log.error("提交 pfop 失败 key={}", key, e);
+            }
         }
+        return result;
     }
 
-    /* ---------- 5. 重载一个“最简”批量接口，默认质量 85，默认队列 ---------- */
     public Map<String, String> batchSubmitPfop(List<String> srcKeys) {
         return batchSubmitPfop(srcKeys, 85);
     }
 
+    /**
+     * 查询 pfop 状态。
+     *
+     * @return 0 成功 / 1 等待 / 2 进行中 / 3 失败 / -1 查询异常
+     */
+    public int queryPfopStatus(String persistentId) {
+        OperationManager op = new OperationManager(getAuth(), getConfiguration());
+        try {
+            return op.prefop(persistentId).code;
+        } catch (QiniuException e) {
+            log.error("查询 pfop 状态失败 pid={}，error={}",
+                    persistentId, e.response == null ? "" : e.response.toString());
+            return -1;
+        }
+    }
 
+    /* ====================== 工具方法 ====================== */
+
+    private void requireNonBlank(String... values) {
+        for (String v : values) {
+            if (StrUtil.isBlank(v)) {
+                throw new IllegalArgumentException("参数不能为空");
+            }
+        }
+    }
 }
-
-

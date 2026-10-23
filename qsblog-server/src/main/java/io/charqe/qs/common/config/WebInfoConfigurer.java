@@ -24,7 +24,18 @@ public class WebInfoConfigurer implements WebMvcConfigurer {
                         "/user/login",
                         "/admin/**",
                         "/webInfo/get",
-                        "/webInfo/updateWebInfo");
+                        "/webInfo/updateWebInfo",
+                        "/danmaku/list",
+                        "/danmaku/latest",
+                        "/comment/list",
+                        "/comment/getCount",
+                        "/category/listNavBar",
+                        "/portal/overview"
+                        );
+
+
+
+
     }
 }
 

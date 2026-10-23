@@ -43,8 +43,6 @@ public class QiniuUtilTest {
         List<String> randomAvatars = qiniuUtil.list("qingsi/static/avatar/");
         // 缓存
         qingSiCache.put(CommonConst.PATH_TYPE_RANDOM_AVATAR, randomAvatars);
-
-
     }
 
     /**
@@ -107,22 +105,50 @@ public class QiniuUtilTest {
         finalResult.entrySet().stream()
                 .filter(e -> e.getValue() == 3)
                 .forEach(e -> log.warn("转码失败 key={}", e.getKey()));
-
-
     }
 
     /**
-     * 2)删除 压缩前旧图片 =>  非 webp 且大于250kb 图片
+     * 2) 删除压缩前旧图片 => 非 webp 且大于 250kb 图片
      */
     @Test
     public void delUnWebpImg() {
         // List<String> delKeys = qiniuUtil.listLargeNonWebp("qingsi/static/avatar/");
         // List<String> delKeys = qiniuUtil.listLargeNonWebp("qingsi/static/backgroundImg/");
-        // List<String> delKeys = qiniuUtil.listLargeNonWebp("backgroundImg/");
         List<String> delKeys = qiniuUtil.listLargeNonWebp("articleCover/");
         log.info("需要删除的有 {} 张图片", delKeys.size());
         qiniuUtil.deleteFile(delKeys);
     }
+
+    /**
+     * 3) 七牛云目录批量复制：将 out-pb-bkt 中 a/ 目录下所有文件复制到 b/ 目录
+     *
+     * 使用前请把下面的 srcPrefix / destPrefix 改成实际值。
+     * 示例：srcPrefix = "a/"，destPrefix = "b/"
+     */
+    @Test
+    public void onlineDirMove() {
+        // String srcPrefix = "backgroundImg/";     // TODO: 改为实际源目录前缀
+        String srcPrefix = "qingsi/static/avatar/";     // TODO: 改为实际源目录前缀
+        String destPrefix = "qingsi/randAvatar/";   // TODO: 改为实际目标目录前缀
+
+        // 先预览源目录有哪些文件
+        List<String> srcKeys = qiniuUtil.list(srcPrefix);
+        log.info("源目录 {} 共有 {} 个文件", srcPrefix, srcKeys.size());
+        srcKeys.forEach(k -> log.info("  {}", k));
+
+        // 执行批量复制，force=true 表示目标存在时覆盖
+        Map<String, String> failed = qiniuUtil.batchCopyDir(srcPrefix, destPrefix);
+        if (failed.isEmpty()) {
+            log.info("目录复制完成，共复制 {} 个文件", srcKeys.size());
+        } else {
+            log.error("目录复制失败 {} 个文件：{}", failed.size(), failed);
+        }
+    }
+
+
+    @Test
+    public void getDirFileList(){
+        List<String> list = qiniuUtil.list("qingsi/randCover/");
+        log.info("{}", list);
+    }
 }
-
-
