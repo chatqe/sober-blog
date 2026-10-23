@@ -37,13 +37,35 @@ public class CodeGenerator {
     }
 
     /**
+     * 读取配置项：优先 JVM 系统属性（-Dkey=value），其次环境变量
+     *
+     * @param key          配置键名
+     * @param defaultValue 缺省值，传 null 表示必填
+     */
+    private static String resolveConfig(String key, String defaultValue) {
+        String value = System.getProperty(key);
+        if (StringUtils.isBlank(value)) {
+            value = System.getenv(key);
+        }
+        if (StringUtils.isBlank(value)) {
+            if (defaultValue != null) {
+                return defaultValue;
+            }
+            throw new IllegalStateException("缺少数据库配置 " + key + "，请通过环境变量或 -D" + key + "=... 提供");
+        }
+        return value;
+    }
+
+    /**
      * 主方法入口
      */
     public static void main(String[] args) {
         // ========== 数据库配置 ==========
-        String dbUrl = "jdbc:mysql://localhost:3306/blog_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai";
-        String dbUsername = "root";
-        String dbPassword = "daxiongroot";
+        // 口令不写入代码：优先读取启动参数 -DQS_DB_xxx，其次读取环境变量 / 本地 .env
+        String dbUrl = resolveConfig("QS_DB_URL",
+                "jdbc:mysql://localhost:3306/blog_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai");
+        String dbUsername = resolveConfig("QS_DB_USERNAME", "root");
+        String dbPassword = resolveConfig("QS_DB_PASSWORD", null);
 
         // ========== 项目配置 ==========
         // 获取当前类所在的项目路径，确保生成到正确的位置
