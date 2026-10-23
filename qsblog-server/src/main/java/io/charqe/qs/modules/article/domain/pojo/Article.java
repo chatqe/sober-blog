@@ -1,7 +1,8 @@
 package io.charqe.qs.modules.article.domain.pojo;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

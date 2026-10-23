@@ -12,7 +12,6 @@ import io.charqe.qs.modules.moment.service.MomentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,10 +37,8 @@ public class AdminMomentController {
     // ── 分页查询 ──────────────────────────────────────────────────
 
     @Operation(summary = "分页查询动态列表")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/page")
     @LoginCheck(1)
     public R<PageResult<MomentListVO>> page(
@@ -53,10 +50,8 @@ public class AdminMomentController {
     // ── 详情 ────────────────────────────────────────────────────
 
     @Operation(summary = "获取动态详情")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功"),
-            @ApiResponse(responseCode = "404", description = "动态不存在")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "404", description = "动态不存在")
     @GetMapping("/detail/{id}")
     @LoginCheck(1)
     public R<MomentDetailVO> detail(
@@ -68,11 +63,9 @@ public class AdminMomentController {
     // ── 新增 ────────────────────────────────────────────────────
 
     @Operation(summary = "新增动态")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "创建成功"),
-            @ApiResponse(responseCode = "400", description = "参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "创建成功")
+    @ApiResponse(responseCode = "400", description = "参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/save")
     @LoginCheck(1)
     public R<Void> save(
@@ -85,11 +78,9 @@ public class AdminMomentController {
     // ── 更新 ────────────────────────────────────────────────────
 
     @Operation(summary = "更新动态")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "更新成功"),
-            @ApiResponse(responseCode = "400", description = "参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "更新成功")
+    @ApiResponse(responseCode = "400", description = "参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @PutMapping("/update")
     @LoginCheck(1)
     public R<Void> update(
@@ -102,11 +93,9 @@ public class AdminMomentController {
     // ── 删除 ────────────────────────────────────────────────────
 
     @Operation(summary = "删除动态")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "删除成功"),
-            @ApiResponse(responseCode = "404", description = "动态不存在"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "删除成功")
+    @ApiResponse(responseCode = "404", description = "动态不存在")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @DeleteMapping("/delete/{id}")
     @LoginCheck(1)
     public R<Void> delete(
@@ -119,10 +108,8 @@ public class AdminMomentController {
     // ── 批量删除 ────────────────────────────────────────────────
 
     @Operation(summary = "批量删除动态")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "删除成功"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "删除成功")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/batchDelete")
     @LoginCheck(1)
     public R<Void> batchDelete(
@@ -135,11 +122,9 @@ public class AdminMomentController {
     // ── 审核 ────────────────────────────────────────────────────
 
     @Operation(summary = "审核动态")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "审核成功"),
-            @ApiResponse(responseCode = "400", description = "参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "审核成功")
+    @ApiResponse(responseCode = "400", description = "参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/audit")
     @LoginCheck(1)
     public R<Void> audit(
@@ -156,9 +141,7 @@ public class AdminMomentController {
     // ── 数据统计 ─────────────────────────────────────────────────
 
     @Operation(summary = "动态数据统计")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("/dashboard/stats")
     @LoginCheck(1)
     public R<Map<String, Object>> dashboardStats() {
@@ -173,9 +156,7 @@ public class AdminMomentController {
     // ── 同步记录 ────────────────────────────────────────────────
 
     @Operation(summary = "获取同步记录列表")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("/sync/list")
     @LoginCheck(1)
     public R<List<MomentSyncRecordVO>> listSyncRecords(
@@ -187,11 +168,9 @@ public class AdminMomentController {
     // ── 同步派发 ────────────────────────────────────────────────
 
     @Operation(summary = "派发同步任务")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "派发成功"),
-            @ApiResponse(responseCode = "404", description = "动态不存在"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "派发成功")
+    @ApiResponse(responseCode = "404", description = "动态不存在")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/sync/dispatch")
     @LoginCheck(1)
     public R<Void> dispatchSync(

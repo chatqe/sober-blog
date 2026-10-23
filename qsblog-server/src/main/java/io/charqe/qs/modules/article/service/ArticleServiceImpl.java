@@ -30,6 +30,7 @@ import io.charqe.qs.modules.article.controller.web.vo.ArticlePageVO;
 import io.charqe.qs.modules.article.controller.web.vo.ArticleVO;
 import io.charqe.qs.modules.article.convert.ArticleConvert;
 import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
+import io.charqe.qs.modules.article.domain.dto.ArticleStatsDTO;
 import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.modules.article.enums.ArticleIErrorCode;
 import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
@@ -675,6 +676,12 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             }
         }
         return articleVO;
+    }
+
+    @Override
+    public ArticleStatsDTO getStats() {
+        ArticleStatsDTO stats = articleMapper.selectStats();
+        return stats != null ? stats : new ArticleStatsDTO();
     }
 }
 

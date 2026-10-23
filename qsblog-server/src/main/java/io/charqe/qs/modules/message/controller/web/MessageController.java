@@ -14,7 +14,6 @@ import io.charqe.qs.utils.StrUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
@@ -33,11 +32,9 @@ public class MessageController {
     private MessageService messageService;
 
     @Operation(summary = "保存留言")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "保存成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "保存成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/save")
     @LoginCheck
     @SaveCheck
@@ -57,10 +54,8 @@ public class MessageController {
     }
 
     @Operation(summary = "查询留言列表")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
     @PostMapping("/list")
     public R<PageResult<MessageVO>> list(
             @Parameter(description = "分页查询参数")
@@ -69,10 +64,8 @@ public class MessageController {
     }
 
     @Operation(summary = "查询留言回复列表")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
     @GetMapping("/replies")
     public R<List<MessageReplyVO>> getReplies(
             @Parameter(description = "留言ID", required = true)

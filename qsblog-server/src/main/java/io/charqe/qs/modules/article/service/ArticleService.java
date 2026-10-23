@@ -9,6 +9,7 @@ import io.charqe.qs.modules.article.controller.web.vo.ArticlePageVO;
 import io.charqe.qs.modules.article.controller.web.vo.ArticleVO;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.modules.article.controller.web.dto.ArticleDTO;
+import io.charqe.qs.modules.article.domain.dto.ArticleStatsDTO;
 import io.charqe.qs.modules.article.domain.pojo.Article;
 import io.charqe.qs.common.model.mp.CoreService;
 
@@ -61,4 +62,11 @@ public interface ArticleService extends CoreService<Article> {
     void setArticleStatus(Long articleId, Boolean viewStatus, Boolean commentStatus, Boolean recommendStatus);
 
     AdminArticlePageRespVO pageList(AdminArticlePageReqDTO dto);
+
+    /**
+     * 获取文章统计（全部未删除文章的总数、累计浏览量、累计点赞数）
+     *
+     * @return 文章统计聚合数据
+     */
+    ArticleStatsDTO getStats();
 }

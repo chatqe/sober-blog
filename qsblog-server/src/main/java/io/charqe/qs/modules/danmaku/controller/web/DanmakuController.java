@@ -11,7 +11,6 @@ import io.charqe.qs.utils.QingsiUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,11 +49,9 @@ public class DanmakuController {
      * @return 保存结果
      */
     @Operation(summary = "保存弹幕留言", description = "用于保存用户的弹幕留言，支持匿名发布。如果未提供头像，系统会自动分配随机头像。")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "保存成功，返回弹幕留言信息"),
-        @ApiResponse(responseCode = "400", description = "请求参数错误，如留言内容为空"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "保存成功，返回弹幕留言信息")
+    @ApiResponse(responseCode = "400", description = "请求参数错误，如留言内容为空")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/save")
     @SaveCheck
     public R<Danmaku> save(
@@ -78,12 +75,10 @@ public class DanmakuController {
      * @return 删除结果
      */
     @Operation(summary = "删除弹幕留言", description = "用于管理员删除弹幕留言，需要管理员权限。")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "删除成功"),
-        @ApiResponse(responseCode = "400", description = "请求参数错误，如留言ID为空"),
-        @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "删除成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误，如留言ID为空")
+    @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/del")
     @LoginCheck(0)
     public R del(
@@ -100,10 +95,8 @@ public class DanmakuController {
      * @return 弹幕留言列表
      */
     @Operation(summary = "查询弹幕留言列表", description = "用于获取弹幕留言列表。当留言数量超过配置上限时，会随机返回指定数量的留言；否则返回所有留言。")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功，返回弹幕留言列表"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功，返回弹幕留言列表")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/list")
     public R<List<DanmakuVO>> list() {
 
@@ -117,11 +110,9 @@ public class DanmakuController {
      * @return 保存结果
      */
     @Operation(summary = "批量保存弹幕留言", description = "用于批量保存弹幕留言，支持一次性保存多条留言。")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "保存成功"),
-        @ApiResponse(responseCode = "400", description = "请求参数错误"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "保存成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/saveList")
     public R saveList(
         @Parameter(name = "danmakus", description = "弹幕留言列表", required = true, example = "[{\"message\":\"弹幕1\"},{\"message\":\"弹幕2\"}]")
@@ -136,10 +127,8 @@ public class DanmakuController {
      * @return 最新的弹幕留言列表
      */
     @Operation(summary = "获取最新的弹幕留言", description = "用于获取最新的弹幕留言，默认返回最近的20条留言。")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功，返回最新的弹幕留言列表"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功，返回最新的弹幕留言列表")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/latestDanmaku")
     public R<List<DanmakuVO>> latestDanmaku() {
         return R.success(danmakuService.latestDanmaku());

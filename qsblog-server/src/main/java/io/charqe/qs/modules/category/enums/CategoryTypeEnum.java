@@ -15,12 +15,12 @@ public enum CategoryTypeEnum implements BaseEnum<Integer> {
     /**
      * 导航栏分类
      */
-    BAR(0, "导航栏分类"),
+    BAR(1, "导航栏分类"),
     
     /**
      * 普通分类
      */
-    NORMAL(1, "普通分类");
+    NORMAL(2, "普通分类");
     
     private final int code;
     private final String desc;

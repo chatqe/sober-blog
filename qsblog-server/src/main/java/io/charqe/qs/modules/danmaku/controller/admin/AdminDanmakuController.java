@@ -9,7 +9,6 @@ import io.charqe.qs.modules.danmaku.service.DanmakuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,11 +38,9 @@ public class AdminDanmakuController {
      * @return 弹幕分页列表
      */
     @Operation(summary = "管理员查询弹幕列表", description = "用于管理员在管理后台查询弹幕列表，支持分页、关键字和时间范围过滤")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功，返回弹幕分页列表"),
-        @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限"),
-        @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功，返回弹幕分页列表")
+    @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/list")
     @LoginCheck(0)
     public R<PageResult<AdminDanmakuVO>> list(

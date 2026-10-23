@@ -11,7 +11,6 @@ import io.charqe.qs.modules.category.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,11 +31,9 @@ public class AdminCategoryController {
     private CategoryService categoryService;
 
     @Operation(summary = "分页查询分类列表", description = "支持按关键词、类型、状态筛选")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/page")
     @LoginCheck(0)
     public R<PageResult<CategoryListVO>> pageList(
@@ -49,11 +46,9 @@ public class AdminCategoryController {
     }
 
     @Operation(summary = "获取分类详情", description = "返回分类的完整信息")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/{id}")
     @LoginCheck(0)
     public R<CategoryDetailVO> getDetail(@Parameter(name = "id", description = "分类ID", required = true) @PathVariable("id") Long id) {
@@ -61,11 +56,9 @@ public class AdminCategoryController {
     }
 
     @Operation(summary = "新增分类", description = "创建新的分类，需保证名称唯一")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "新增成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "新增成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping
     @LoginCheck(0)
     public R save(@RequestBody CategorySaveReqDTO dto) {
@@ -74,11 +67,9 @@ public class AdminCategoryController {
     }
 
     @Operation(summary = "更新分类", description = "更新分类信息")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "更新成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "更新成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @PutMapping("/{id}")
     @LoginCheck(0)
     public R update(@PathVariable("id") Long id, @RequestBody CategorySaveReqDTO dto) {
@@ -88,11 +79,9 @@ public class AdminCategoryController {
     }
 
     @Operation(summary = "删除分类", description = "软删除分类")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "删除成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "删除成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @DeleteMapping("/{id}")
     @LoginCheck(0)
     public R delete(@Parameter(name = "id", description = "分类ID", required = true) @PathVariable("id") Long id) {
@@ -101,11 +90,9 @@ public class AdminCategoryController {
     }
 
     @Operation(summary = "批量排序", description = "批量更新分类排序")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "排序成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "排序成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @PutMapping("/batchSort")
     @LoginCheck(0)
     public R batchSort(@RequestBody CategoryBatchSortDTO dto) {

@@ -19,7 +19,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,11 +71,9 @@ public class WebInfoController {
      * @return 更新结果
      */
     @Operation(summary = "更新网站信息", description = "用于管理员更新网站信息，包括网站标题、描述、Logo等")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "更新成功"),
-            @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限"),
-            @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "更新成功")
+    @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @LoginCheck(0)
     @PostMapping("/update")
     public R<WebInfo> updateWebInfo(
@@ -100,10 +97,8 @@ public class WebInfoController {
      * @return 网站信息
      */
     @Operation(summary = "获取网站信息", description = "用于获取网站的基本信息，包括网站标题、描述、Logo等")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功，返回网站信息"),
-            @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功，返回网站信息")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/get")
     public R<WebInfo> getWebInfo() {
         // 从缓存获取 WebInfo 对象
@@ -137,10 +132,8 @@ public class WebInfoController {
      * @return 赞赏用户列表
      */
     @Operation(summary = "获取赞赏用户信息", description = "用于获取赞赏用户列表")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功，返回赞赏用户列表"),
-            @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功，返回赞赏用户列表")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/getAdmire")
     public R<List<User>> getAdmire() {
         return R.success(commonQuery.getAdmire());
@@ -152,10 +145,8 @@ public class WebInfoController {
      * @return 看板娘消息JSON字符串
      */
     @Operation(summary = "获取看板娘消息", description = "用于获取网站看板娘的配置信息，返回JSON格式的配置数据")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功，返回看板娘配置JSON"),
-            @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功，返回看板娘配置JSON")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/getWaifuJson")
     public String getWaifuJson() {
 

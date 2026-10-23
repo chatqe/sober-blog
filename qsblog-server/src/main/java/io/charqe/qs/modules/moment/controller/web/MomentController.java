@@ -19,7 +19,6 @@ import io.charqe.qs.utils.BlogUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.util.CollectionUtils;
@@ -53,10 +52,8 @@ public class MomentController {
     // ── 时间线 ──────────────────────────────────────────────────
 
     @Operation(summary = "公开动态时间线")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "成功返回分页列表"),
-            @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "成功返回分页列表")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/timeline")
     public R<PageResult<MomentListVO>> timeline(
             @Parameter(name = "query", description = "分页查询参数", required = true)
@@ -65,10 +62,8 @@ public class MomentController {
     }
 
     @Operation(summary = "当前用户自己的动态时间线")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "成功返回分页列表"),
-            @ApiResponse(responseCode = "401", description = "未登录")
-    })
+    @ApiResponse(responseCode = "200", description = "成功返回分页列表")
+    @ApiResponse(responseCode = "401", description = "未登录")
     @LoginCheck(1)
     @PostMapping("/my/timeline")
     public R<PageResult<MomentListVO>> myTimeline(
@@ -78,10 +73,8 @@ public class MomentController {
     }
 
     @Operation(summary = "指定用户的公开动态时间线")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "成功返回分页列表"),
-            @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    })
+    @ApiResponse(responseCode = "200", description = "成功返回分页列表")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/{userId}/timeline")
     public R<PageResult<MomentListVO>> userTimeline(
             @Parameter(name = "userId", description = "用户ID", required = true)
@@ -99,10 +92,8 @@ public class MomentController {
     // ── 详情 ────────────────────────────────────────────────────
 
     @Operation(summary = "获取动态详情")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "成功返回详情"),
-            @ApiResponse(responseCode = "404", description = "动态不存在或不可见")
-    })
+    @ApiResponse(responseCode = "200", description = "成功返回详情")
+    @ApiResponse(responseCode = "404", description = "动态不存在或不可见")
     @GetMapping("/{id}")
     public R<MomentDetailVO> getDetail(
             @Parameter(name = "id", description = "动态ID", required = true)
@@ -113,11 +104,9 @@ public class MomentController {
     // ── 发布 / 更新 / 删除 ─────────────────────────────────────
 
     @Operation(summary = "发布动态")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "发布成功，返回动态ID"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未登录")
-    })
+    @ApiResponse(responseCode = "200", description = "发布成功，返回动态ID")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未登录")
     @LoginCheck(1)
     @PostMapping("/publish")
     public R<Long> publish(
@@ -127,11 +116,9 @@ public class MomentController {
     }
 
     @Operation(summary = "更新动态（仅本人）")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "更新成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误或无权操作"),
-            @ApiResponse(responseCode = "401", description = "未登录")
-    })
+    @ApiResponse(responseCode = "200", description = "更新成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误或无权操作")
+    @ApiResponse(responseCode = "401", description = "未登录")
     @LoginCheck(1)
     @PutMapping("/{id}")
     public R<Void> update(
@@ -144,11 +131,9 @@ public class MomentController {
     }
 
     @Operation(summary = "删除动态（仅本人）")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "删除成功"),
-            @ApiResponse(responseCode = "401", description = "未登录"),
-            @ApiResponse(responseCode = "403", description = "无权删除")
-    })
+    @ApiResponse(responseCode = "200", description = "删除成功")
+    @ApiResponse(responseCode = "401", description = "未登录")
+    @ApiResponse(responseCode = "403", description = "无权删除")
     @LoginCheck(1)
     @DeleteMapping("/{id}")
     public R<Void> delete(
@@ -161,10 +146,8 @@ public class MomentController {
     // ── 点赞 ────────────────────────────────────────────────────
 
     @Operation(summary = "点赞动态")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "点赞成功"),
-            @ApiResponse(responseCode = "401", description = "未登录")
-    })
+    @ApiResponse(responseCode = "200", description = "点赞成功")
+    @ApiResponse(responseCode = "401", description = "未登录")
     @LoginCheck(1)
     @PostMapping("/{id}/like")
     public R<Void> like(
@@ -178,10 +161,8 @@ public class MomentController {
     }
 
     @Operation(summary = "取消点赞动态")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "取消成功"),
-            @ApiResponse(responseCode = "401", description = "未登录")
-    })
+    @ApiResponse(responseCode = "200", description = "取消成功")
+    @ApiResponse(responseCode = "401", description = "未登录")
     @LoginCheck(1)
     @DeleteMapping("/{id}/like")
     public R<Void> unlike(
@@ -195,9 +176,7 @@ public class MomentController {
     }
 
     @Operation(summary = "获取点赞该动态的用户列表")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "成功返回点赞用户列表")
-    })
+    @ApiResponse(responseCode = "200", description = "成功返回点赞用户列表")
     @GetMapping("/{id}/likes")
     public R<List<MomentLikeUserVO>> listLikes(
             @Parameter(name = "id", description = "动态ID", required = true)
@@ -208,11 +187,9 @@ public class MomentController {
     // ── 评论 ────────────────────────────────────────────────────
 
     @Operation(summary = "发表评论")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "评论成功"),
-            @ApiResponse(responseCode = "400", description = "评论内容不合法"),
-            @ApiResponse(responseCode = "401", description = "未登录")
-    })
+    @ApiResponse(responseCode = "200", description = "评论成功")
+    @ApiResponse(responseCode = "400", description = "评论内容不合法")
+    @ApiResponse(responseCode = "401", description = "未登录")
     @LoginCheck(1)
     @PostMapping("/{id}/comment")
     public R<Void> comment(
@@ -231,9 +208,7 @@ public class MomentController {
     }
 
     @Operation(summary = "获取动态评论列表")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "成功返回评论列表")
-    })
+    @ApiResponse(responseCode = "200", description = "成功返回评论列表")
     @GetMapping("/{id}/comments")
     public R<List<CommentVO>> listComments(
             @Parameter(name = "id", description = "动态ID", required = true)
@@ -242,10 +217,8 @@ public class MomentController {
     }
 
     @Operation(summary = "删除评论")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "删除成功"),
-            @ApiResponse(responseCode = "401", description = "未登录")
-    })
+    @ApiResponse(responseCode = "200", description = "删除成功")
+    @ApiResponse(responseCode = "401", description = "未登录")
     @LoginCheck(1)
     @DeleteMapping("/comment/{commentId}")
     public R<Void> deleteComment(
@@ -255,10 +228,8 @@ public class MomentController {
     }
 
     @Operation(summary = "点赞评论")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "点赞成功"),
-            @ApiResponse(responseCode = "401", description = "未登录")
-    })
+    @ApiResponse(responseCode = "200", description = "点赞成功")
+    @ApiResponse(responseCode = "401", description = "未登录")
     @LoginCheck(1)
     @PostMapping("/comment/{commentId}/like")
     public R<Void> likeComment(
@@ -272,10 +243,8 @@ public class MomentController {
     }
 
     @Operation(summary = "取消点赞评论")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "取消成功"),
-            @ApiResponse(responseCode = "401", description = "未登录")
-    })
+    @ApiResponse(responseCode = "200", description = "取消成功")
+    @ApiResponse(responseCode = "401", description = "未登录")
     @LoginCheck(1)
     @DeleteMapping("/comment/{commentId}/like")
     public R<Void> unlikeComment(
@@ -289,9 +258,7 @@ public class MomentController {
     }
 
     @Operation(summary = "获取评论点赞用户列表")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "成功返回点赞用户列表")
-    })
+    @ApiResponse(responseCode = "200", description = "成功返回点赞用户列表")
     @GetMapping("/comment/{commentId}/likes")
     public R<List<MomentLikeUserVO>> listCommentLikes(
             @Parameter(name = "commentId", description = "评论ID", required = true)
@@ -302,10 +269,8 @@ public class MomentController {
     // ── 浏览 ────────────────────────────────────────────────────
 
     @Operation(summary = "记录浏览（幂等）")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "记录成功"),
-            @ApiResponse(responseCode = "401", description = "未登录")
-    })
+    @ApiResponse(responseCode = "200", description = "记录成功")
+    @ApiResponse(responseCode = "401", description = "未登录")
     @LoginCheck(1)
     @PostMapping("/{id}/view")
     public R<Void> view(
@@ -325,10 +290,8 @@ public class MomentController {
     // ── 同步 ────────────────────────────────────────────────────
 
     @Operation(summary = "同步到多平台")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "同步结果"),
-            @ApiResponse(responseCode = "401", description = "未登录")
-    })
+    @ApiResponse(responseCode = "200", description = "同步结果")
+    @ApiResponse(responseCode = "401", description = "未登录")
     @LoginCheck(1)
     @PostMapping("/sync")
     public R<MomentSyncVO> sync(
@@ -338,9 +301,7 @@ public class MomentController {
     }
 
     @Operation(summary = "获取同步记录列表")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "成功返回同步记录")
-    })
+    @ApiResponse(responseCode = "200", description = "成功返回同步记录")
     @GetMapping("/sync/records")
     public R<List<MomentSyncRecordVO>> listSyncRecords(
             @Parameter(name = "momentId", description = "动态ID", required = true)

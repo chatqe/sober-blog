@@ -6,7 +6,6 @@ import io.charqe.qs.modules.category.controller.admin.dto.CategorySaveReqDTO;
 import io.charqe.qs.modules.category.controller.admin.vo.CategoryDetailVO;
 import io.charqe.qs.modules.category.controller.admin.vo.CategoryListVO;
 import io.charqe.qs.modules.category.controller.web.vo.CategoryWebVO;
-import io.charqe.qs.modules.category.controller.web.vo.HomeStatsVO;
 import io.charqe.qs.modules.sysdict.controller.web.vo.DictVO;
 import io.charqe.qs.modules.category.domain.pojo.Category;
 import io.charqe.qs.common.model.mp.CoreService;
@@ -57,12 +56,19 @@ public interface CategoryService extends CoreService<Category> {
     List<CategoryWebVO> listNavBar();
 
     /**
-     * 获取首页分类统计（含每类文章计数、文章总数）
+     * 获取公开分类列表（Web，启用且展示，含导航栏与普通分类）
      */
-    HomeStatsVO getHomeStats();
+    List<CategoryWebVO> listWebCategories();
 
     /**
      * 获取分类下拉字典列表
      */
     List<DictVO> getDictList();
+
+    /**
+     * 统计可见分类总数（启用且展示）
+     *
+     * @return 可见分类数量
+     */
+    long countVisible();
 }

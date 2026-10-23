@@ -15,7 +15,6 @@ import io.charqe.qs.utils.StrUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -37,10 +36,8 @@ public class AdminMessageController {
     private MessageReplyService messageReplyService;
 
     @Operation(summary = "管理员查询留言列表")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/list")
     @LoginCheck(0)
     public R<PageResult<AdminMessageVO>> list(
@@ -50,11 +47,9 @@ public class AdminMessageController {
     }
 
     @Operation(summary = "通过留言（审核通过）")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "操作成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "操作成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/audit/pass")
     @LoginCheck(0)
     public R<Void> auditPass(
@@ -65,11 +60,9 @@ public class AdminMessageController {
     }
 
     @Operation(summary = "拒绝留言（审核拒绝）")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "操作成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "操作成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/audit/reject")
     @LoginCheck(0)
     public R<Void> auditReject(
@@ -80,11 +73,9 @@ public class AdminMessageController {
     }
 
     @Operation(summary = "置顶/取消置顶留言")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "操作成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "操作成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/top")
     @LoginCheck(0)
     public R<Void> toggleTop(
@@ -95,11 +86,9 @@ public class AdminMessageController {
     }
 
     @Operation(summary = "管理员删除留言")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "删除成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "删除成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/delete")
     @LoginCheck(0)
     public R<Void> delete(
@@ -110,11 +99,9 @@ public class AdminMessageController {
     }
 
     @Operation(summary = "查询留言回复列表（管理后台）")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "查询成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/{id}/replies")
     @LoginCheck(0)
     public R<List<MessageReplyVO>> getReplies(
@@ -124,11 +111,9 @@ public class AdminMessageController {
     }
 
     @Operation(summary = "管理员回复留言")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "回复成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "回复成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/reply")
     @LoginCheck(0)
     public R<Void> reply(
@@ -143,11 +128,9 @@ public class AdminMessageController {
     }
 
     @Operation(summary = "管理员删除回复")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "删除成功"),
-            @ApiResponse(responseCode = "400", description = "请求参数错误"),
-            @ApiResponse(responseCode = "401", description = "未授权")
-    })
+    @ApiResponse(responseCode = "200", description = "删除成功")
+    @ApiResponse(responseCode = "400", description = "请求参数错误")
+    @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/reply/delete")
     @LoginCheck(0)
     public R<Void> deleteReply(

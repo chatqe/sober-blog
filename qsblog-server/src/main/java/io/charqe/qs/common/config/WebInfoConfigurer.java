@@ -29,7 +29,8 @@ public class WebInfoConfigurer implements WebMvcConfigurer {
                         "/danmaku/latest",
                         "/comment/list",
                         "/comment/getCount",
-                        "/category/listNavBar"
+                        "/category/listNavBar",
+                        "/portal/overview"
                         );
 
 
