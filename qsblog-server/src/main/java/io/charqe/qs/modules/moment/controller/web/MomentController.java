@@ -3,6 +3,7 @@ package io.charqe.qs.modules.moment.controller.web;
 import io.charqe.qs.modules.user.auth.SessionScope;
 
 import io.charqe.qs.aop.LoginCheck;
+import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
@@ -24,6 +25,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -198,7 +200,11 @@ public class MomentController {
             @Parameter(name = "id", description = "动态ID", required = true)
             @PathVariable("id") Long id,
             @Parameter(name = "content", description = "评论内容", required = true)
-            @RequestBody @Validated CommentVO commentVO) {
+            @RequestBody CommentVO commentVO) {
+        // bizId/bizType 由服务端根据路径补全，不能交给 @Validated 先行校验
+        if (!StringUtils.hasText(commentVO.getContent())) {
+            throw new BizException("评论内容不能为空");
+        }
         commentVO.setBizId(id);
         commentVO.setBizType(BizTypeEnum.MOMENT.getCode());
         commentService.saveComment(commentVO);

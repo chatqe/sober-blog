@@ -92,6 +92,6 @@ public class MomentBehHandler implements BehEntityHandler {
     private void decrementMomentCount(Long momentId, String column) {
         momentMapper.update(null, new LambdaUpdateWrapper<Moment>()
                 .eq(Moment::getId, momentId)
-                .setSql("GREATEST(" + column + " - 1, 0)"));
+                .setSql(column + " = GREATEST(" + column + " - 1, 0)"));
     }
 }

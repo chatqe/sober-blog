@@ -2,19 +2,16 @@ package io.charqe.qs.modules.behavior.handler;
 
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.modules.comment.domain.dao.CommentMapper;
-import io.charqe.qs.modules.comment.enums.CommentTypeEnum;
 import io.charqe.qs.modules.file.enums.BizTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
  * 评论实体行为处理器
- * 支持 BizTypeEnum.COMMENT 和 CommentTypeEnum 各类型
+ * 仅支持 BizTypeEnum.COMMENT
  *
  * @author Joy
  * @since 2026-06-12
@@ -26,13 +23,9 @@ public class CommentBehHandler implements BehEntityHandler {
     @Resource
     private CommentMapper commentMapper;
 
-    // 注意：BizTypeEnum.COMMENT(2) 和 CommentTypeEnum.MESSAGE(2) 值相同，用 HashSet 避免 Set.of() 去重报错
-    private static final Set<Integer> SUPPORTED_TYPES = new HashSet<>(Arrays.asList(
-            BizTypeEnum.COMMENT.getCode(),
-            CommentTypeEnum.ARTICLE.getCode(),
-            CommentTypeEnum.MESSAGE.getCode(),
-            CommentTypeEnum.LOVE.getCode()
-    ));
+    // 只接管「评论实体」：BizTypeEnum.ARTICLE(1)/MOMENT(2) 已分别由 Article/Moment 处理器负责，
+    // 若在此重复声明会因工厂按 bean 名顺序取首个命中者，导致给文章/动态点赞时误用评论表校验。
+    private static final Set<Integer> SUPPORTED_TYPES = Set.of(BizTypeEnum.COMMENT.getCode());
 
     @Override
     public boolean supports(Integer bizType) {
