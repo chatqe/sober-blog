@@ -89,7 +89,7 @@
 - 旧表 L0/L1/L2 口径建立在上代 token 与 `value` 语义上，Sa-Token 改造后已不适用，不能与新表混算；旧报告 62/26 的扫描遗漏 Patch 与无括号 Mapping 的问题同样作废。
 - 本表不覆盖其他目录中带管理语义的接口；数值由本轮源码扫描得出，未经运行时 OpenAPI 复核。
 
-### S1｜建议 P1：动态写接口要求管理员角色，与 C 端前端契约错配｜源码确认（存量为主）
+### S1｜动态写接口要求管理员角色，与 C 端前端契约错配｜`FIXED(STATIC)`（fix 分支，待运行时回归）
 
 - **Evidence**：[MomentController.java:69](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L69)、[:112](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L112)、[:124](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L124)、[:139](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L139)、[:153](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L153)、[:168](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L168)、[:195](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L195)、[:224](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L224)、[:235](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L235)、[:250](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L250)、[:276](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L276)、[:297](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L297) 均为 `@LoginCheck(value = 1, scope = SessionScope.ADMIN)`；[LoginCheckAspect.java:23-31](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/aop/LoginCheckAspect.java#L23-L31) 以 `userType > value` 拒绝；`UserTypeEnum` 为 ADMIN(0)/DEV(1)/USER(2)；前端 [weiYan.ts:98-139](file:///E:/web/qs-web/src/api/modules/weiYan.ts#L98-L139) 全部 `authScope: 'web'`。
 - **Current Fact（源码）**：存在**两道**拦截。① `value = 1` 拒绝 userType=2 的普通用户；② `scope = ADMIN` 拒绝 WEB 会话。已验证 `d96e823`（改造前）这些方法就是 `@LoginCheck(1)`，因此①是长期存在的前后端契约错配，②是 `3bd2670` 新增的限制。
@@ -97,8 +97,9 @@
 - **Root Cause**：`@LoginCheck` 的 `value`（角色上限）被当成“仅需登录”误用为 1；改造时只补 `scope`，没有复核 `value` 是否与 C 端调用方匹配。
 - **Impact**：普通用户在动态页的 12 个写操作全部 403；改造前提示“权限不足/请输入管理员账号”，改造后提示“当前会话不能用于此入口”。UI 仍对任意登录用户展示发布按钮与“我的动态”Tab。
 - **最小修复/验收**：改为 `@LoginCheck(scope = SessionScope.WEB)`，让 `value` 取默认 2；**不能只改 scope 而保留 value = 1**，否则普通用户仍被角色门槛拒绝。以匿名/普通用户/管理员三身份回归发布→点赞→评论→删除。
+- **本轮处置**：已在 `fix/sa-token-scope-regression` 分支将 12 处统一改为 `@LoginCheck(scope = SessionScope.WEB)`，后端编译通过；服务层 `updateWeb`/`deleteWeb` 已有 `userId` 归属校验，放开角色后不会产生跨账号写入。运行时回归仍待执行。
 
-### S2｜建议 P1：公开时间线被前端声明为匿名，登录用户丢失 `liked`｜源码确认
+### S2｜公开时间线被前端声明为匿名，登录用户丢失 `liked`｜`FIXED(STATIC)`（fix 分支，待运行时回归）
 
 - **Evidence**：[MomentController.java:59-64](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L59-L64) 用 `BlogUtil.getUserId()` 计算用户视角；[weiYan.ts:92-95](file:///E:/web/qs-web/src/api/modules/weiYan.ts#L92-L95) 声明 `authScope: 'anonymous'`。
 - **Current Fact（源码）**：`installSessionPolicy` 对匿名请求强制删除 `Authorization`，因此 `getUserId()` 恒为 null，`liked` 恒 false，可见性也按匿名视角裁剪。
@@ -106,6 +107,7 @@
 - **Root Cause**：把「接口可匿名」误当成「请求必须匿名」。`authScope` 表达的是「该请求需要哪一域的凭据」，而不是「禁止携带凭据」。
 - **Impact**：修复 S1 后紧接着出现的交互错误：赞过的动态仍显示未赞，重复点赞；`liked` 字段实际不可用。
 - **最小修复**：改为 `authScope: 'web'`。未登录时快照无 token，拦截器不会注入 Authorization，实际仍是匿名请求；该接口本身不鉴权，也不会触发 401 清理分支。
+- **本轮处置**：已在 `fix/sa-token-scope-regression` 分支修改 `getTimeline` 的 `authScope`，前端 `type-check` 与 43 个单测通过；运行时点赞态仍待回归。
 
 ### S3｜建议 P1：上传过滤器先解析会话再判空，匿名请求直接 401｜源码确认
 
