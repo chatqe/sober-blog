@@ -183,9 +183,9 @@ public class CommonConst {
     public static final String ARTICLE_LIST = "article_list";
 
     /**
-     * 文章缓存，用于首页
+     * 文章缓存，用于首页（v3：包含私密文章，正文按列表投影摘要化）
      */
-    public static final String CATEGORY_ARTICLE_LIST = "category_article_list_v2";
+    public static final String CATEGORY_ARTICLE_LIST = "category_article_list_v3";
 
     /**
      * 用户点赞缓存

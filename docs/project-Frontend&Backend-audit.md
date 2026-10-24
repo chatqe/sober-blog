@@ -1,25 +1,27 @@
 # 前后端联合审计报告
 
-更新日期：2026-10-24（第四轮：业务契约更正，动态写权限收敛为站长专属）。本文前半部分为当前结论；末尾折叠附录保留旧运行时审计记录，不代表当前版本的运行结果。
+更新日期：2026-10-25（第八轮：首页分类区块放开私密文章并修复解包）。本文前半部分为当前结论；末尾折叠附录保留旧运行时审计记录，不代表当前版本的运行结果。
 
 ## Result
 
-**PARTIAL：Sa-Token 双会话改造已完成源码复审、构建/单测与 fix 分支运行时回归。动态模块的鉴权链路（S1/S2）、回归中暴露的三处存量缺陷（S9–S11）以及第四轮按业务更正落地的站长专属写权限，均已在真实 MySQL/Redis + 浏览器环境中验证通过；A1/A2/B1/B2 等存量项仍未在运行时复核，项目整体不判定为通过。**
+**PARTIAL：Sa-Token 双会话改造已完成源码复审、构建/单测与运行时回归。动态模块的鉴权链路（S1/S2）、回归中暴露的三处存量缺陷（S9–S11）、第四轮按业务更正落地的站长专属写权限、第五轮的后台登录门槛与菜单全量开放，第七轮按业务口径修复的 A2（私密文章列表正文暴露），以及第八轮的首页分类放开私密文章 + 分类区块解包修复，均已在真实 MySQL/Redis + 浏览器环境中验证通过；第五轮改动已提交并快进合并至两仓库 `main`（未推送远程，第七、八轮改动尚未提交）。A1/B1/B2 等存量项仍未在运行时复核，项目整体不判定为通过。**
 
 - 本轮最高优先级（S1）：动态模块 12 个写接口原为 `value=1` + `scope=ADMIN`，既拒绝普通用户又以 WEB 会话拦截所有人。第四轮按业务方更正后的口径重定契约：**新增/修改/删除仅站长（`userType=0`）**，其余人（含匿名）可读动态、点赞数、评论内容与作者信息，点赞/评论需登录；后台 `/admin/moment/*` 保留给站长(0)与管理员(1)。
 - 双会话设计在源码层成立：WEB/ADMIN 各自独立的 `StpLogic`、revision 版本撤销、跨域调用显式拒绝、401/403 以真实 HTTP 状态返回、前端按域存储并按 generation 丢弃过期响应。
 - 上轮 P0 的「普通用户可调管理接口」在源码层已收敛：`controller/admin` 下 69 个方法级操作中 61 个 ADMIN、5 个 EITHER、仅 3 个认证入口无注解；全仓 134 处 `@LoginCheck` 为 88 ADMIN / 11 EITHER / 35 默认 WEB。
-- 存量未修：family 归属与审核（A1）、公开文章分页可见性（A2）、文章编辑双解包与旧字段（B1/B2）、标签缓存与字典（B4/B5）、友链（C1/D4）、活跃旧路径（D1）、关于页分页（D2）。
+- 存量未修：family 归属与审核（A1）、文章编辑双解包与旧字段（B1/B2）、标签缓存与字典（B4/B5）、友链（C1/D4）、活跃旧路径（D1）、关于页分页（D2）。
 - 第二轮只更新本文件、不改业务代码；第三轮（fix 分支运行时回归）在本文件中回填运行时证据，并在 `fix/sa-token-scope-regression` 分支提交了 3 处后端缺陷修复（S9–S11），回归产生的临时账号/动态/行为/评论数据已全部清理（验证 SQL 计数归零）。
 
 ### 当前基线与证据口径
 
 | 项目 | 本次实际基线 | 任务开始工作树 |
 | --- | --- | --- |
-| 后端 `E:\idea\qs-blog` | `main@3bd2670` | 仅本报告已修改，无业务改动 |
-| 前端 `E:\web\qs-web` | `main@4f4fed9` | 干净（另有未跟踪 `scripts/auth-browser-harness.cjs`、`temp/`） |
+| 后端 `E:\idea\qs-blog` | `main@a59b9e9` | 干净 |
+| 前端 `E:\web\qs-web` | `main@244ebe3` | 干净（另有未跟踪 `scripts/auth-browser-harness.cjs`、`temp/`） |
 
 本轮基线前进到两次鉴权专项提交：后端 `3bd2670 feat(auth): 前后台独立双会话改造（Sa-Token + Redis 双域）`（61 文件 +2559/−455）、前端 `4f4fed9 feat(auth): 前后台独立双会话与分域请求鉴权`（69 文件 +1968/−1345）。上一轮基线为后端 `d96e823`、前端 `05697b4`，本文中标注「上轮」的结论均指该基线。旧报告后端 `89e2a1c` 在当前仓库无法解析，且旧基线带有未提交改动，不能用提交差分完整重建当时工作树。
+
+第六轮把基线推进到合并后的 `main`：后端 `a59b9e9`、前端 `244ebe3`（均由 `git merge --ff-only` 快进，内容与第五轮验证快照一致，见「第六轮：提交与合并」）。两仓库 `main` 尚未推送远程。
 
 状态定义：
 - `FIXED(STATIC)`：当前源码已体现指定修复，不代表本轮重新跑过该业务流程。
@@ -29,7 +31,7 @@
 - `CONFIRMED(BUILD)`：本轮命令实际观察到的构建结果/警告，不代表相关 UI 故障已复现。
 - `CONFIRMED(TEST)`：本轮单元测试覆盖到的行为，不等价于运行时的端到端验收。
 
-范围：单次联合代码复审覆盖旧发现及相关活跃调用链，结合 Git 状态与修复历史；未进行云扫描、全量依赖安全扫描或当前 OpenAPI 双向全量统计。S2–S4 可归因到本轮两次鉴权改造提交，S1 的角色门槛与 S5–S8 为存量/设计风险，其余编号仍为存量；S1/S2/S9–S12 已做真实后端 + 数据库 + 浏览器验收，其余未跑。
+范围：单次联合代码复审覆盖旧发现及相关活跃调用链，结合 Git 状态与修复历史；未进行云扫描、全量依赖安全扫描或当前 OpenAPI 双向全量统计。S2–S4 可归因到本轮两次鉴权改造提交，S1 的角色门槛与 S5–S8 为存量/设计风险，其余编号仍为存量；S1/S2/S9–S12 与 A2 已做真实后端 + 数据库 + 浏览器验收，其余未跑。
 
 ## Findings
 
@@ -205,15 +207,14 @@
 - **Impact**：他人卡片被修改/删除、归属被替换或审核状态被绕过的风险；未实际执行跨账号写入。
 - **最小修复/验收**：服务层限定 `id + 当前用户ID`，明确管理例外；审核单独鉴权；保存统一走授权后的专用方法并失效缓存。不能把全部 family 操作直接收紧为 ADMIN 而破坏 C 端。
 
-### A2｜建议 P0：公开文章分页仍缺可见性过滤｜UNVERIFIED
+### A2｜私密文章在公开列表返回整篇正文｜`FIXED(VERIFIED)`
 
-- **Evidence**：[ArticleController.java:139-143](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/article/controller/web/ArticleController.java#L139-L143)、[ArticleServiceImpl.java:595-618](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/article/service/ArticleServiceImpl.java#L595-L618)、[article.ts:42-49](file:///E:/web/qs-web/src/api/modules/article.ts#L42-L49)、[sort/index.vue:156-162](file:///E:/web/qs-web/src/views/front/sort/index.vue#L156-L162)、[MyAside.vue:281-285](file:///E:/web/qs-web/src/components/business/friend/MyAside.vue#L281-L285)。
-- **Current Fact（源码）**：匿名 POST `/article/listPage` 的查询没有固定 `viewStatus=true`，随后构造正文摘要；分类页和侧栏推荐实际调用它。清掉 password 不等于清掉已返回的内容。
-- **Expected**：公开分页和推荐列表仅包含可公开文章，管理查询另行授权。
-- **Reproduction（待执行）**：隔离库准备符合分类/推荐筛选条件的私密文章，匿名分页，断言其 ID、标题、摘要不出现在响应中。
-- **Root Cause**：原修复覆盖分类聚合，但未覆盖另一公开分页查询的服务端可见性谓词。
-- **Impact**：符合筛选条件的私密文章摘要仍可能经公开页面返回；本轮未抽查真实数据量。
-- **最小修复/验收**：公开查询固定添加 `.eq(Article::getViewStatus, true)`，不由客户端决定；同时回归分类聚合和详情密码检查。
+- **Evidence**：[ArticleServiceImpl.java](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/article/service/ArticleServiceImpl.java)、[ArticleList.vue](file:///E:/web/qs-web/src/components/business/article/ArticleList.vue)。
+- **Current Fact（业务口径更正，2026-10-24）**：产品口径为「私密文章可以出现在列表，展示封面、标题与开头摘要」，不要求在公开分页过滤私密文章。原实现在 `listArticle` 中仅当正文超过 `SUMMARY=80` 才截断，长度不超过 80 的私密文章会把**整篇正文**返回给匿名列表；`listCategoryArticle` 原只查 `viewStatus=true`，第八轮已按业务放开。
+- **Root Cause**：截断条件只覆盖超长正文，且列表直接复用实体字段，缺少按可见性分层的投影；“给摘要”与“给全文”在短文本上没有分界。
+- **修复**：新增 `projectForPublicList` / `toListSummary` 统一列表投影——`password`、`videoUrl` 置空（`hasVideo` 先计算再清空）；正文 >80 字截断为 80 字 + `…`；**私密文章正文 ≤80 字直接返回 `null`**（给摘要等于给全文，故不返回）；公开短文保持原样。`listCategoryArticle` 复用同一投影。前端 `ArticleList` 对空摘要兜底显示「该文章已加密，输入密码后查看」。
+- **验证（2026-10-24，真实 MySQL + 后端 18081 + 浏览器）**：插入 4 条探针后，匿名 `POST /article/listPage` 返回——私密长文 81 字（80+`…`）、私密短文 `articleContent=null`、公开长文 81 字、公开短文原样；`password`/`videoUrl` 均为空。`/sort?sortId=1` 页面 4 张卡片渲染与接口一致（私密短文显示加密提示）。详情 `GET /article/getArticleById` 回归：私密无密码返回「密码错误+提示」、带密码返回全文 120 字、公开正常。探针已删除（探针 0 条、存活 2 条），并清理 Redis `category_article_list_v2` 缓存。
+- **未覆盖/后续**：`articleCategoryList` 已于第八轮放开私密文章并修复首页解包；遗留差异是首页卡片组件 `SortArticle.vue` 不渲染摘要区，私密文章在首页只出现标题/封面/分类/时间，摘要仅在 `/sort` 展示。
 
 ### B1｜建议 P1：文章回显仍双重解包｜UNVERIFIED
 
@@ -386,6 +387,9 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 - 仅更新 `docs/project-Frontend&Backend-audit.md`（第二轮）：新增 Sa-Token 改造的设计落地表与 S1–S8，重写鉴权量化口径，刷新旧发现状态、构建与测试结果、回归计划及证据限制。
 - 第三轮在本分支提交 3 处后端修复：`CommentBehHandler`（S9）、`MomentController#comment`（S10）、`MomentBehHandler#decrementMomentCount`（S11）；前端本轮无业务代码改动。回归脚本与临时工具均在未跟踪的 `temp/regress/`，不进入提交。
 - 第四轮按业务更正落地站长专属写权限：后端 `MomentController` 写接口改 `value=0, scope=EITHER`、`/view` 公开；新增 `GET /portal/owner`（`UserService.getOwner` + `PortalOwnerVO` + `portal:owner` 300s 缓存）；`AdminMomentController#save` 补缺省作者；`MomentServiceImpl#pageList` 回填作者（S12）。前端新增 `request.put`、后台动态管理页 `/admin/moment/list`（路由、`ADMIN_ROLES`、侧边栏菜单），`/moment` 头部改读站长公开信息、发布 FAB/删除按钮/「我的动态」Tab 按 `userType=0` 显隐，未登录点赞/评论弹 `uiStore.openAuthModal()`，评论列表对匿名开放。前端本轮新增 1 个页面与 4 个 API 封装。
+- 第六轮只做 Git 收口：后端 `a59b9e9 feat(admin): 后台仅放行站长与管理员并开放全量菜单`（15 文件，14 个控制器 + 本报告）、前端 `244ebe3 feat(admin): 后台菜单对站长与管理员全量开放`（4 文件）。两仓库均以 `git merge --ff-only` 合并到 `main`，无冲突、无合并提交；`fix/sa-token-scope-regression` 与 `fix/admin-login-role-menu` 分支保留在本地。未推送：后端 `main` 相对 `github/main` ahead 6，前端 `main` 相对 `origin/main` ahead 4。未跟踪的 `temp/` 与 `scripts/auth-browser-harness.cjs` 仍未入库。
+- 第七轮修复 A2：`ArticleServiceImpl` 新增 `projectForPublicList`/`toListSummary`，`listArticle` 与 `listCategoryArticle` 统一列表投影——`password`/`videoUrl` 置空，私密文章正文 >80 字截断为 80+`…`、≤80 字返回 `null`；前端 `ArticleList.vue` 对空摘要显示加密提示。探针文章与 Redis `category_article_list_v2` 缓存已清理。
+- 第八轮按产品决定放开首页分类：`listCategoryArticle` 去掉 `viewStatus=true` 过滤，`CommonConst.CATEGORY_ARTICLE_LIST` 由 `v2` 升为 `v3`（语义已变，避免旧快照命中）；前端 `index.vue#getSortArticles` 去掉多余的 `.data` 解包。验证时清理了无 TTL 的陈旧 `category:public`/`category:navbar_`（缺 `TestCategory01`，导致首页分类区块无法渲染）。
 - 保留旧原文为折叠历史附录；其测试数据操作、运行状态及清理披露均属于过去，不作为本轮行为。
 - 第二轮业务源代码、配置、数据库和缓存未修改，也未提交/合并/推送 Git；第三轮只改上述 3 个后端文件并提交到 fix 分支，回归数据已清理。编译/构建/测试只更新本地生成产物（`target/`、`dist/`、`logs/audit-build-1024.log`）。
 
@@ -413,6 +417,23 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 第五轮：`npx vue-tsc --noEmit` + `npx vitest run` | 类型检查通过；**43/43 通过** | 角色首页/白名单/安全回跳断言已同步新规则 |
 | 第五轮：ADMIN 域登录角色门槛 API 探针（`temp/regress/role-login-check.cjs`） | `userType=0/1` 登录 200 且会话 `userType` 正确；`userType=2` **403「该账号没有后台访问权限」且不落 token** | 登录门槛符合“仅 0/1 可进后台” |
 | 第五轮：Playwright MCP 逐页回归（role=0 与 role=1） | 两者登录后均落 `/admin/main`，侧边栏 **15 项全展示**；role=1 逐页访问 12 个页面接口全 200；role=1 用户类型标签 `cursor=not-allowed` 且不弹窗 | 菜单全量开放与提权入口收口 |
+| 第六轮：两仓库 `git add` + `git commit -F` | 后端 `a59b9e9`（15 文件）、前端 `244ebe3`（4 文件）；提交后工作区干净（前端仅剩未跟踪 `temp/`、`scripts/`） | 第五轮改动已固化到版本库 |
+| 第六轮：`git merge-base --is-ancestor main fix/admin-login-role-menu` + `git merge --ff-only` | 两仓库均可快进；后端 `main` `59ffed0`→`a59b9e9`（27 文件 +307/−99），前端 `4f4fed9`→`244ebe3`（12 文件 +440/−47），无冲突 | 合并未引入内容变化，第五轮运行时结论对 `main` 同样成立 |
+| 第六轮：合并后 `git status -sb` | 后端 `main...github/main [ahead 6]`、前端 `main...origin/main [ahead 4]`，均未 push | 远程与本地 `main` 的差异范围 |
+| 第六轮：合并后进程与端口核查 | 18081（`spring-boot:run`）与 5173（`vite --strictPort`）已退出；18082（旧 jar，2026-10-23）与 5175（旧 vite，2026-10-16）仍在监听 | 当前无最新代码实例在跑；残留实例不可作为本轮证据 |
+| 第七轮：`mvn -o -B -pl qsblog-server -DskipTests compile` | `BUILD SUCCESS` | 列表投影改动编译通过 |
+| 第七轮：匿名 `POST /article/listPage` 四类探针（`temp/regress/a2-seed.sql`） | 私密长文 81 字（80+`…`）、私密短文 `articleContent=null`、公开长文 81 字、公开短文原样；`password`/`videoUrl` 恒空 | 私密文章不再返回整篇正文 |
+| 第七轮：详情 `GET /article/getArticleById` 回归 | 私密无密码返回「密码错误+A2 提示」；带密码返回全文 120 字；公开文章全文 120 字 | 详情密码链路未被列表改动影响 |
+| 第七轮：Playwright `/sort?sortId=1` | 4 张探针卡片摘要与接口一致，私密短文显示「该文章已加密，输入密码后查看」；控制台无 JS 运行时错误（仅外部封面图 404） | 列表页实际渲染 |
+| 第七轮：`npx vue-tsc --noEmit` | 通过 | 前端兜底文案类型安全 |
+| 第七轮：数据清理 | 探针 0 条、存活文章 2 条；Redis `category_article_list_v2` 已删除 | 未污染 dev 数据与缓存 |
+| 第八轮：`mvn -o -B -pl qsblog-server -DskipTests compile` + `npx vue-tsc --noEmit` | `BUILD SUCCESS`、exit 0 | 后端放开过滤与前端解包修复可编译、类型安全 |
+| 第八轮：重启后端 18081、前端 5173 | 后端 `Started QsBlogApplication in 9.299 seconds`（PID 27348）、前端 `VITE v7.3.0 ready` | 新代码在运行实例中 |
+| 第八轮：匿名 `GET /article/articleCategoryList`（4 条探针） | 6 条，含 2 条私密；私密长 81 字（80+`…`）、私密短 `null`、公开长 81、公开短原样；`password`/`videoUrl` 恒空 | 首页分类已放开私密且沿用列表投影 |
+| 第八轮：匿名 `POST /article/listPage` | 6 条，探针摘要与分类接口一致 | 两个列表入口规则一致 |
+| 第八轮：Playwright 首页 `/` | `.sort-article-first=1`，4 个 A2PROBE 标题全部渲染；区块内 `.recent-post-desc=0`（`SortArticle.vue` 不渲染摘要）；控制台无 JS 错误 | 解包修复生效、私密文进入首页分类区块 |
+| 第八轮：Playwright `/sort?sortId=1` | 6 张卡片；私密短显示加密提示（14 字）、私密长 81 字、公开长 81、公开短 4 | 分类列表口径未回退 |
+| 第八轮：清理 | 探针 0 条、存活 2 条；`category_article_list_v3` 已删并重建；`category:public` 已重建为 5 个分类 | 数据与缓存未污染 |
 
 ### 第三轮运行时回归（2026-10-24，fix/sa-token-scope-regression）
 
@@ -448,6 +469,31 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 - 遗留（既有缺陷，非本轮引入）：`/admin/resourcePathList` 仍 404 — 前端 `resource.ts` 调 `/file/list|save|delete|update`，而后端只有 `/file/admin/*`，且该页业务实体实为 `weblinks`（`/weblinks/listWeblinks` 用 query 参数、`/resAgg/*` 用 body），需单独做一次端点与字段适配后才能使用。
 - 未覆盖：role=1 在各页的写操作（新增/编辑/删除）仅按注解静态判定，未逐页执行；`changeUserType` 的 403 未做浏览器验收。
 
+### 第六轮：提交与合并（2026-10-24）
+
+- 提交：后端 `a59b9e9`（14 个控制器 + 本报告，15 文件 +67/−46）、前端 `244ebe3`（4 文件 +35/−26）。两个 fix 分支此前分别停在 `7b75dc0` / `93606a5`，本轮补齐第五轮改动。
+- 合并：两仓库 `main` 均满足快进条件，执行 `git merge --ff-only fix/admin-login-role-menu`；后端 `59ffed0→a59b9e9`、前端 `4f4fed9→244ebe3`。无冲突、无合并提交，代码内容与第五轮验证快照一致。
+- 推送：未执行。后端 `main` 相对 `github/main` ahead 6，前端 `main` 相对 `origin/main` ahead 4。
+- 服务状态（合并后核查）：第五轮验收用的后端 18081（`spring-boot:run`，运行 `target/classes`）与前端 5173（`vite --port 5173 --strictPort`）进程已退出；仍有两条**更早的残留实例**在监听：18082（`java -jar docker/qsblog-server.jar --spring.profiles.active=dev`，2026-10-23 18:19 启动，`/portal/owner` 返回 404）与 5175（`vite`，2026-10-16 22:02 启动，返回 200）。两者均不是当前 HEAD 构建，排查时不得当作最新实例。
+
+### 第七轮：A2 修复（2026-10-24，私密文章列表正文暴露）
+
+- 业务口径更正：私密文章允许出现在列表（封面、标题、开头摘要），不再按“公开分页必须过滤私密文章”处置；真正的缺陷是正文不足 80 字的私密文章会整篇返回。
+- 后端：`ArticleServiceImpl` 新增 `projectForPublicList` / `toListSummary`；`listArticle` 与 `listCategoryArticle` 统一投影，`password`/`videoUrl` 恒空，私密文 ≤80 字返回 `null`。
+- 前端：`ArticleList.vue` 对空摘要兜底「该文章已加密，输入密码后查看」。
+- 验证：见 Verification 表第七轮 6 行；`/sort?sortId=1` 截图 `.playwright-mcp/a2probe-sort-desktop.png`。
+- 发现但未修（既有）：首页 `index.vue#getSortArticles` 读 `response.data`，而 `listCategoryArticle` 返回值在 `handleResponse` 已剥掉 `R` 信封，导致 `sortArticles` 恒为空、分类区块不渲染；`articleCategoryList` 本身只返回公开文章，修好后也不会出现私密文。
+
+### 第八轮：首页分类放开私密文章 + 解包修复（2026-10-25）
+
+- 产品决定：首页 `articleCategoryList` 与 `/sort` 口径统一，私密文章也进入分类区块（展示封面、标题；正文沿用第七轮列表投影）。
+- 后端：`ArticleServiceImpl#listCategoryArticle` 去掉 `viewStatus=true` 过滤；`CommonConst.CATEGORY_ARTICLE_LIST` 由 `v2` 升为 `v3`，使旧快照不再命中。
+- 前端：`index.vue#getSortArticles` 改为直接使用 `response`（`handleResponse` 已剥 `R` 信封），分类区块恢复渲染。
+- 验证链路：重启后接口返回 6 条（含 2 条私密，摘要分级正确）；首页分类区块渲染 1 个区块、4 张探针卡片；`/sort?sortId=1` 摘要与第七轮一致。
+- 验证中发现的环境问题：`category:public` / `category:navbar_` 是无 TTL 旧快照，缺 `TestCategory01`（id=1），导致首页即使数据正确也只有 4 个分类、无对应区块；清除后由 DB 重建为 5 个分类。该缓存策略属既有 B4 类风险，本轮只做一次性清理，未改策略。
+- 已知差异：首页卡片组件 `SortArticle.vue` 不渲染摘要区，私密文章在首页仅显示标题/封面/分类/时间；如需首页也展示摘要，需改该组件。
+- 未提交：后端 3 文件（`ArticleServiceImpl`、`CommonConst`、本报告）、前端 2 文件（`ArticleList.vue`、`index.vue`）仍在 `main` 工作区。
+
 ### CONFIRMED(BUILD) / CONFIRMED(TEST)：本轮实际观察
 
 1. **Rollup 分包循环依赖警告已消失**：上轮 `categoryInfo.ts → stores/index.ts` 的跨 chunk 循环本轮未再出现。属构建结果变化，未在浏览器验证是否影响执行顺序。
@@ -459,21 +505,28 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 
 1. ~~**S1 优先**：匿名/普通用户/管理员三身份回归动态页写路径~~ → 已在第三、四轮完成：匿名/普通用户/管理员/站长四身份全部回归。
 2. ~~**S2**：登录后加载公开时间线确认 `liked`，登出后仍可匿名浏览~~ → 已由 API 断言与浏览器刷新双重验证。
-3. **S3/S4**：匿名与过期 token 访问 `/file/admin/upload`，确认响应统一、限流重新生效；用旧契约调用 `/user/token`，确认错误码明确。
-4. **双域并行**：同一账号同时登录前后台，验证登出前台不影响后台、改密后两域旧会话均失效、跨标签页（storage 事件）与 `pageshow` 复核正常；同步核对 Redis 中两域的键名与 TTL（S5/S6）。
-5. 旧发现：A1 跨账号读写与审核、A2 私密文章分页/推荐过滤、B1/B2 文章编辑与保存、B4/B5 标签缓存与字典、C1/D4 友链、D1 各活跃旧入口、D2 关于页分页。
-6. 用邮件替身验证限流与找回成功反馈；最后对生产构建做路由切换/刷新与注册样式验收。
+3. **后台 role=1 写操作验收（第五轮遗留）**：以管理员身份逐页执行新增/编辑/删除/上传，重点 `article` 保存与删除、`file/admin/upload`、`webInfo/update`、`sysconfig`、`danmaku/del`；确认 `changeUserType` 对 role=1 仍返回 403。
+4. **推送前复核**：两仓库 `git fetch` 后确认 `main` 仍可快进再推送；不要先往 fix 分支追加提交，否则本地 `main` 与远程的关系需要重新判断。
+5. **S3/S4**：匿名与过期 token 访问 `/file/admin/upload`，确认响应统一、限流重新生效；用旧契约调用 `/user/token`，确认错误码明确。
+6. **双域并行**：同一账号同时登录前后台，验证登出前台不影响后台、改密后两域旧会话均失效、跨标签页（storage 事件）与 `pageshow` 复核正常；同步核对 Redis 中两域的键名与 TTL（S5/S6）。
+7. 旧发现：A1 跨账号读写与审核、B1/B2 文章编辑与保存、B4/B5 标签缓存与字典（含 `category:public` 无 TTL 旧快照）、C1/D4 友链、D1 各活跃旧入口、D2 关于页分页。
+8. 用邮件替身验证限流与找回成功反馈；最后对生产构建做路由切换/刷新与注册样式验收。
 
 ## Remaining Uncertainty
 
-- 第二轮没有 HTTP/浏览器/DB/Redis 复测，S1–S8 当时均为源码结论；第三、四轮已补齐 S1/S2、S9–S12 与站长专属写权限的运行时证据，但 S3–S8 仍为源码结论。
+- 第二轮没有 HTTP/浏览器/DB/Redis 复测，S1–S8 当时均为源码结论；第三、四轮已补齐 S1/S2、S9–S12 与站长专属写权限的运行时证据，第七轮补齐 A2；S3–S8 仍为源码结论。
+- A2 的修复把「私密短文不返回正文」定为规则：列表对 ≤80 字的私密文章返回 `articleContent=null`，前端显示加密提示；若产品希望短私密文也展示开头，需要改为固定长度截断并接受“摘要即全文”的残留风险。
+- 首页分类区块解包缺陷已于第八轮修复并经浏览器验证；遗留差异是 `SortArticle.vue` 不渲染摘要，首页只有标题/封面。
+- `category:public` / `category:navbar_` 无 TTL，仅分类写操作才失效；第八轮遇到一次陈旧快照导致首页分类区块缺项，已手工清除，但缓存策略本身未改，换环境或长期运行后仍可能复现。
 - 第四轮只验证了「站长可写 + 其他角色不可写」的主链路；「站长只能管理自己发布的动态」这类对象授权（若后续要求）尚未定义，当前删除按钮对 `userType=0` 全量可见。
 - 第五轮把后台管理端大量 `value = 0` 放宽为 `value = 1`，属权限模型收紧口径的放宽：`changeUserType` 是唯一保留站长专属的写接口，其余管理操作现由 0/1 共同掌握，是否符合最终产品授权需要产品方确认。
 - 第五轮只逐页验证了读接口；role=1 的写接口（保存/删除/审核）未逐项执行，仅依据注解与前端调用链判定。
 - `/admin/resourcePathList`（资源聚合）仍是既有 404 页面，前端端点与后端模块不匹配，未在本轮修复。
 - 未在真实 Redis 上执行 Lua 脚本与 Sa-Token 1.46.0 的键格式契约测试（集成测试被 system property 门控）；S5 的`login:session` 键共享与 S6 的日志/存储增长因此只能定性不能定量。
 - 不执行有状态探针：即使 GET 也可能回填缓存/记录访问/增加计数，认证切面会续期；不能将“GET”自动当作零副作用。
-- 未确认运行 JVM 是否等于当前 HEAD、网关兼容路由、生产 CORS/限流及真实数据分布；不沿用上次 PID、端口或“实例必然旧”的说法。
+- 未确认运行 JVM 是否等于当前 HEAD、网关兼容路由、生产 CORS/限流及真实数据分布；不沿用上次 PID、端口或“实例必然旧”的说法。第六轮核查到两个更早的残留实例（18082 旧 jar，2026-10-23 启动；5175 旧 vite，2026-10-16 启动），均非当前 HEAD 构建。
+- 两仓库 `main` 已完成本地快进合并但未推送（后端 ahead `github/main` 6、前端 ahead `origin/main` 4）；推送前需 `git fetch` 复核远程无新提交，否则本地领先关系可能变为分叉。
+- 第五轮放宽的权限面尚未经产品方逐模块确认，role=1 的写操作未执行；`/admin/resourcePathList` 仍 404，三者共同决定后台是否已“可用”。
 - 未完成当前 OpenAPI 与全部生成/手写调用的双向全量核对；本地忽略的生成物可用不等于干净克隆的构建流程已验证。
 - 旧 token 到 Sa-Token 的切换对已登录用户是硬切换：本轮未验证上线时的强制重新登录规模、前端旧 localStorage 键清理是否完全。
 - 评论初始列表分支、MdEditor 上传回调、Graffiti/免密登录组件的完整可达性未全部闭环，不加入已确认故障数量。

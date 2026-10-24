@@ -371,9 +371,9 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             if (result == null) {
                 Map<Long, List<ArticleVO>> map = new HashMap<>();
 
+                // 与 /sort 列表保持一致：私密文章也进入首页分类区块，正文由 projectForPublicList 摘要化
                 List<Article> articles = list(Wrappers.<Article>lambdaQuery()
-                        .eq(Article::getIsDel, 0)
-                        .eq(Article::getViewStatus, true));
+                        .eq(Article::getIsDel, 0));
 
                 // stream 分组
                 Map<Long, List<Article>> sortArticleMap = articles.stream().collect(Collectors.groupingBy(Article::getCategoryId));
@@ -383,15 +383,8 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                     // 获取前6条数据
                     articleList = articleList.stream().limit(6).collect(Collectors.toList());
                     List<ArticleVO> articleVOList = articleList.stream().map(article -> {
-                        if (StringUtils.hasText(article.getArticleContent())
-                                && article.getArticleContent().length() > CommonConst.SUMMARY) {
-                            article.setArticleContent(article.getArticleContent().substring(0, CommonConst.SUMMARY).replace("`", "").replace("#", "").replace(">", ""));
-                        }
-
                         ArticleVO vo = buildArticleVO(article, false);
-                        vo.setHasVideo(StringUtils.hasText(article.getVideoUrl()));
-                        vo.setPassword(null);
-                        vo.setVideoUrl(null);
+                        projectForPublicList(vo);
                         return vo;
                     }).toList();
                     map.put(categoryId, articleVOList);
@@ -609,13 +602,8 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             // List<ArticleVO> contents = new ArrayList<>();
 
             for (Article article : records) {
-                if (article.getArticleContent().length() > CommonConst.SUMMARY) {
-                    article.setArticleContent(article.getArticleContent().substring(0, CommonConst.SUMMARY).replace("`", "").replace("#", "").replace(">", ""));
-                }
                 ArticleVO articleVO = buildArticleVO(article, false);
-                articleVO.setHasVideo(StringUtils.hasText(articleVO.getVideoUrl()));
-                articleVO.setPassword(null);
-                articleVO.setVideoUrl(null);
+                projectForPublicList(articleVO);
                 if (CollectionUtils.isEmpty(ids)) {
                     articles.add(articleVO);
                 } else if (idList.get(0).contains(articleVO.getId())) {
@@ -638,6 +626,33 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         }
 
         return articleListPage;
+    }
+
+    /**
+     * 公开列表投影：列表只承担展示职责，正文一律摘要化，解密信息不进入响应。
+     * 私密文章（viewStatus=false）不能出现整篇正文：不足一个摘要长度时直接不返回内容。
+     */
+    private void projectForPublicList(ArticleVO articleVO) {
+        boolean viewable = Boolean.TRUE.equals(articleVO.getViewStatus());
+        articleVO.setHasVideo(StringUtils.hasText(articleVO.getVideoUrl()));
+        articleVO.setPassword(null);
+        articleVO.setVideoUrl(null);
+        articleVO.setArticleContent(toListSummary(articleVO.getArticleContent(), viewable));
+    }
+
+    /**
+     * 列表摘要：公开文章保留短文本、超长截断；私密文章只给固定长度的开头。
+     */
+    private String toListSummary(String content, boolean viewable) {
+        if (!StringUtils.hasText(content)) {
+            return content;
+        }
+        if (content.length() <= CommonConst.SUMMARY) {
+            // 私密文章的完整正文不足一个摘要长度，给摘要等于给全文
+            return viewable ? content : null;
+        }
+        return content.substring(0, CommonConst.SUMMARY)
+                .replace("`", "").replace("#", "").replace(">", "") + "…";
     }
 
     private ArticleVO buildArticleVO(Article article, Boolean isAdmin) {
