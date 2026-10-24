@@ -41,7 +41,7 @@ public class AdminMessageController {
     @ApiResponse(responseCode = "200", description = "查询成功")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/list")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<PageResult<AdminMessageVO>> list(
             @Parameter(description = "分页参数")
             @RequestBody AdminMessagePageReqDTO dto) {
@@ -53,7 +53,7 @@ public class AdminMessageController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/audit/pass")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Void> auditPass(
             @Parameter(description = "留言ID", required = true)
             @RequestParam("id") Long id) {
@@ -66,7 +66,7 @@ public class AdminMessageController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/audit/reject")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Void> auditReject(
             @Parameter(description = "留言ID", required = true)
             @RequestParam("id") Long id) {
@@ -79,7 +79,7 @@ public class AdminMessageController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/top")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Void> toggleTop(
             @Parameter(description = "留言ID", required = true)
             @RequestParam("id") Long id) {
@@ -92,7 +92,7 @@ public class AdminMessageController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/delete")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Void> delete(
             @Parameter(description = "留言ID", required = true)
             @RequestParam("id") Long id) {
@@ -105,7 +105,7 @@ public class AdminMessageController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/{id}/replies")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<List<MessageReplyVO>> getReplies(
             @Parameter(description = "留言ID", required = true)
             @PathVariable("id") Long id) {
@@ -117,7 +117,7 @@ public class AdminMessageController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/reply")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Void> reply(
             @Parameter(description = "回复信息", required = true)
             @Validated @RequestBody AdminReplyDTO dto,
@@ -134,7 +134,7 @@ public class AdminMessageController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/reply/delete")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Void> deleteReply(
             @Parameter(description = "回复ID", required = true)
             @RequestParam("id") Long id) {

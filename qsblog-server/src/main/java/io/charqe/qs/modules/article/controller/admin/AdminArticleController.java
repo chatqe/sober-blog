@@ -85,7 +85,7 @@ public class AdminArticleController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/admin/list")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Page> listBossArticle(
             @Parameter(name = "baseReqVO", description = "分页查询参数", required = true, example = "{\"pageNum\":1,\"pageSize\":10}")
             @RequestBody BaseReqVO baseReqVO) {

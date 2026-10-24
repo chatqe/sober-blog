@@ -409,6 +409,10 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 第四轮：`npx vitest run --config vitest.config.ts` | **43/43 通过** | 会话快照/存储同步等前端单元行为未被破坏 |
 | 第四轮：动态契约 API 回归（`temp/regress/contract-regress.cjs`，4 身份 42 条断言） | **42/42 通过**（首轮 40/42：评论作者字段名误判、后台作者未回填；修正后全绿） | 匿名/普通用户/站长/管理员的读、写、点赞、评论、后台 CRUD 与跨域拒绝 |
 | 第四轮：Playwright MCP 四身份 UI 验收 | 匿名（头部 Joy、无发布/删除、点赞弹登录容器、评论公开可读）、普通用户（同上）、站长（FAB+删除+发布/删除回环）、管理员（前台无入口 + 后台 `/admin/moment/list` 增删改） | S1/S12 与 `/portal/owner`、后台页菜单/白名单的实际界面表现 |
+| 第五轮：`mvn -o -B -pl qsblog-server -DskipTests compile` | `BUILD SUCCESS` | 14 个控制器注解调整后编译通过 |
+| 第五轮：`npx vue-tsc --noEmit` + `npx vitest run` | 类型检查通过；**43/43 通过** | 角色首页/白名单/安全回跳断言已同步新规则 |
+| 第五轮：ADMIN 域登录角色门槛 API 探针（`temp/regress/role-login-check.cjs`） | `userType=0/1` 登录 200 且会话 `userType` 正确；`userType=2` **403「该账号没有后台访问权限」且不落 token** | 登录门槛符合“仅 0/1 可进后台” |
+| 第五轮：Playwright MCP 逐页回归（role=0 与 role=1） | 两者登录后均落 `/admin/main`，侧边栏 **15 项全展示**；role=1 逐页访问 12 个页面接口全 200；role=1 用户类型标签 `cursor=not-allowed` 且不弹窗 | 菜单全量开放与提权入口收口 |
 
 ### 第三轮运行时回归（2026-10-24，fix/sa-token-scope-regression）
 
@@ -431,6 +435,19 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 - 清理：探针账号、动态、评论及 `behavior_state/behavior_log/behavior_cnt` 对应行已删除，验证 SQL：探针用户 0、孤儿评论/行为 0、动态存活 9 条（公开时间线 4 条）。
 - 未覆盖：站长前台“仅好友/私密”动态的可见性回归、DEV 域外的第三方登录、双域并行登出互不影响。
 
+### 第五轮运行时回归（2026-10-24，后台登录门槛与菜单全量开放）
+
+环境与上一轮一致。临时账号 `qs_role0_probe`(0)、`qs_role1_probe`(1)、`qs_role2_probe`(2) 由 JDBC 写入，密码沿用同一 AES-ECB+BCrypt 契约；验证后已全部删除（探针用户 0、总用户 3、动态存活 9）。
+
+- 登录门槛：ADMIN 域 `qs_role0/1` 200，`qs_role2` 403 且前端不写 `authorization:admin:v2`；根因是 `AuthSessionService#issue` 的 `isManager`（0/1）校验，本轮未改动该逻辑，仅补运行时证据。
+- 默认首页：`adminHome` 统一为 `/admin/main`（原 role=1 落 `/admin/article/list`），守卫与 `safeAdminRedirect` 同步；role=0/1 登录后均直达报表页。
+- 菜单：`ADMIN_ROLES` 全部改为 `[0, 1]`；侧边栏 13 个一级项 + 2 个子项对两种角色完全一致，普通用户仍在路由守卫处被重定向 `/verify`。
+- 接口：管理端 `@LoginCheck(value = 0)` 批量放开为 `value = 1`（0/1 均可），覆盖 accessLog、article、category、comment、danmaku（含 `/danmaku/del`）、file、message、sysconfig、sysdict、tag、user、webInfo 与 `/webInfo/update`；**例外** `AdminUserController#changeUserType` 保持 `value = 0`，前端用户类型标签对 role=1 禁用，避免管理员自我提权为站长。
+- 兼容修正：`comment/List.vue` 的全量评论分支改判 0/1（原仅站长），否则管理员会落到“只看自己的评论”接口。
+- 逐页网络核查（role=1）：report `/admin/accessLog/getData`、article `/admin/article/pageList`、comment `/admin/comment/list`、category `/admin/category/page`、family `/admin/families/*`、danmaku `/admin/danmaku/list`、file `/file/admin/list`、tag `/admin/tag/page`、webInfo `/admin/webInfo/get`、user `/admin/user/page`、message `/admin/comment/list`、moment `/admin/moment/page` 均 200。
+- 遗留（既有缺陷，非本轮引入）：`/admin/resourcePathList` 仍 404 — 前端 `resource.ts` 调 `/file/list|save|delete|update`，而后端只有 `/file/admin/*`，且该页业务实体实为 `weblinks`（`/weblinks/listWeblinks` 用 query 参数、`/resAgg/*` 用 body），需单独做一次端点与字段适配后才能使用。
+- 未覆盖：role=1 在各页的写操作（新增/编辑/删除）仅按注解静态判定，未逐页执行；`changeUserType` 的 403 未做浏览器验收。
+
 ### CONFIRMED(BUILD) / CONFIRMED(TEST)：本轮实际观察
 
 1. **Rollup 分包循环依赖警告已消失**：上轮 `categoryInfo.ts → stores/index.ts` 的跨 chunk 循环本轮未再出现。属构建结果变化，未在浏览器验证是否影响执行顺序。
@@ -451,6 +468,9 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 
 - 第二轮没有 HTTP/浏览器/DB/Redis 复测，S1–S8 当时均为源码结论；第三、四轮已补齐 S1/S2、S9–S12 与站长专属写权限的运行时证据，但 S3–S8 仍为源码结论。
 - 第四轮只验证了「站长可写 + 其他角色不可写」的主链路；「站长只能管理自己发布的动态」这类对象授权（若后续要求）尚未定义，当前删除按钮对 `userType=0` 全量可见。
+- 第五轮把后台管理端大量 `value = 0` 放宽为 `value = 1`，属权限模型收紧口径的放宽：`changeUserType` 是唯一保留站长专属的写接口，其余管理操作现由 0/1 共同掌握，是否符合最终产品授权需要产品方确认。
+- 第五轮只逐页验证了读接口；role=1 的写接口（保存/删除/审核）未逐项执行，仅依据注解与前端调用链判定。
+- `/admin/resourcePathList`（资源聚合）仍是既有 404 页面，前端端点与后端模块不匹配，未在本轮修复。
 - 未在真实 Redis 上执行 Lua 脚本与 Sa-Token 1.46.0 的键格式契约测试（集成测试被 system property 门控）；S5 的`login:session` 键共享与 S6 的日志/存储增长因此只能定性不能定量。
 - 不执行有状态探针：即使 GET 也可能回填缓存/记录访问/增加计数，认证切面会续期；不能将“GET”自动当作零副作用。
 - 未确认运行 JVM 是否等于当前 HEAD、网关兼容路由、生产 CORS/限流及真实数据分布；不沿用上次 PID、端口或“实例必然旧”的说法。

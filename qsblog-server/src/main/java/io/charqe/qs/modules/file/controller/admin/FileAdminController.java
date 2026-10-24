@@ -45,7 +45,7 @@ public class FileAdminController {
      * 保存
      */
     @PostMapping("/save")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<FileRespVO> save(@Valid @RequestBody FileCreateReqVO vo) {
         return R.success("新增成功", fileInfoService.save(vo));
     }
@@ -54,7 +54,7 @@ public class FileAdminController {
      * 上传文件
      */
     @PostMapping("/upload")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<String> upload(@RequestParam("file") MultipartFile file, FileVO fileVO) {
 
         log.info("========================> /resource/upload 接口调用");
@@ -73,7 +73,7 @@ public class FileAdminController {
      * 删除文件
      */
     @PostMapping("/delete")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R delete(@RequestParam("id") Long id) {
         fileInfoService.removeById(id);
         return R.success();
@@ -83,7 +83,7 @@ public class FileAdminController {
      * 查询文件列表
      */
     @PostMapping("/list")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R list(@RequestBody BaseReqVO baseReqVO) {
         fileInfoService.page(baseReqVO, null);
         return R.success(baseReqVO);

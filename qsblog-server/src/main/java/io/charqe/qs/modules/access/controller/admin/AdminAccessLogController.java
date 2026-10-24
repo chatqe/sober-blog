@@ -52,7 +52,7 @@ public class AdminAccessLogController {
     /**
      * 获取网站统计信息
      */
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @GetMapping("/getData")
     public R<Map<String, Object>> getAccessLogData() {
 

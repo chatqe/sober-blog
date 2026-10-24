@@ -80,7 +80,7 @@ public class AdminUserController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/page")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Page> listUser(
             @Parameter(name = "baseReqVO", description = "查询条件", required = true, example = "{\"page\":1,\"pageSize\":10}")
             @RequestBody BaseReqVO baseReqVO) {
@@ -103,7 +103,7 @@ public class AdminUserController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/changeUserStatus")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R changeUserStatus(
             @Parameter(name = "userId", description = "用户ID", required = true, example = "1")
             @RequestParam("userId") Integer userId,
@@ -135,7 +135,7 @@ public class AdminUserController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/changeUserAdmire")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R changeUserAdmire(
             @Parameter(name = "userId", description = "用户ID", required = true, example = "1")
             @RequestParam("userId") Integer userId,
@@ -162,6 +162,7 @@ public class AdminUserController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员登录")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/changeUserType")
+    // 修改用户类型等同于授权提级，只有站长可以执行
     @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R changeUserType(
             @Parameter(name = "userId", description = "用户ID", required = true, example = "1")

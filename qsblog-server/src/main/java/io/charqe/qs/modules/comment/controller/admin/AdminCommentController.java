@@ -80,7 +80,7 @@ public class AdminCommentController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/delComment")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R adminDelComment(
         @Parameter(name = "id", description = "评论ID", required = true, example = "1")
         @RequestParam("id") Integer id) {
@@ -101,7 +101,7 @@ public class AdminCommentController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/list")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<Page> listBossComment(
         @Parameter(name = "baseReqVO", description = "查询参数", required = true, example = "{\"page\":1,\"pageSize\":10}")
         @RequestBody BaseReqVO baseReqVO) {

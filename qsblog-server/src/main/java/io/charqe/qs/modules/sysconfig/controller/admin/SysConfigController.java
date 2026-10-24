@@ -71,7 +71,7 @@ public class SysConfigController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/saveOrUpdateConfig")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R saveConfig(
         @Parameter(name = "sysConfig", description = "系统配置信息", required = true, example = "{\"configName\":\"网站名称\",\"configKey\":\"site_name\",\"configValue\":\"清思博客\",\"configType\":\"1\"}")
         @RequestBody SysConfig sysConfig) {
@@ -101,7 +101,7 @@ public class SysConfigController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/deleteConfig")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R deleteConfig(
         @Parameter(name = "id", description = "配置ID", required = true, example = "1")
         @RequestParam("id") Integer id) {
@@ -119,7 +119,7 @@ public class SysConfigController {
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/listConfig")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<List<SysConfig>> listConfig() {
         return R.success(new LambdaQueryChainWrapper<>(sysConfigService.getBaseMapper()).list());
     }

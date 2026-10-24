@@ -44,7 +44,7 @@ public class AdminSysDictController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @GetMapping("/type/list")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<PageResult<SysDictType>> listType(
             @Parameter(name = "typeName", description = "类型名称（模糊查询）") @RequestParam(required = false) String typeName,
             @Parameter(name = "status", description = "状态：0-禁用, 1-启用") @RequestParam(required = false) Integer status,
@@ -58,7 +58,7 @@ public class AdminSysDictController {
     @ApiResponse(responseCode = "400", description = "请求参数错误，如编码重复或为空")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/type/save")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R saveType(@RequestBody SysDictTypeReq req) {
         sysDictTypeService.save(req);
         return R.success();
@@ -69,7 +69,7 @@ public class AdminSysDictController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/type/update")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R updateType(@RequestBody SysDictTypeReq req) {
         sysDictTypeService.update(req);
         return R.success();
@@ -80,7 +80,7 @@ public class AdminSysDictController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @DeleteMapping("/type/batchDelete")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R batchDeleteType(@RequestBody Long[] ids) {
         sysDictTypeService.batchDelete(ids);
         return R.success();
@@ -89,7 +89,7 @@ public class AdminSysDictController {
     @Operation(summary = "获取所有启用的字典类型", description = "返回所有状态为启用的字典类型列表，按sort排序")
     @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("/type/listEnabled")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<List<SysDictType>> listEnabledType() {
         return R.success(sysDictTypeService.listEnabled());
     }
@@ -100,7 +100,7 @@ public class AdminSysDictController {
     @ApiResponse(responseCode = "200", description = "查询成功")
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @GetMapping("/data/listByTypeCode")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<List<SysDictData>> listDataByTypeCode(
             @Parameter(name = "typeCode", description = "字典类型编码", required = true, example = "gender")
             @RequestParam("typeCode") String typeCode) {
@@ -116,7 +116,7 @@ public class AdminSysDictController {
     @ApiResponse(responseCode = "400", description = "请求参数错误，如类型编码不存在或编码重复")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/data/save")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R saveData(@RequestBody SysDictDataReq req) {
         sysDictDataService.save(req);
         return R.success();
@@ -127,7 +127,7 @@ public class AdminSysDictController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @PostMapping("/data/update")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R updateData(@RequestBody SysDictDataReq req) {
         sysDictDataService.update(req);
         return R.success();
@@ -138,7 +138,7 @@ public class AdminSysDictController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未授权")
     @DeleteMapping("/data/batchDelete")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R batchDeleteData(@RequestBody Long[] ids) {
         sysDictDataService.batchDelete(ids);
         return R.success();

@@ -76,7 +76,7 @@ public class WebInfoController {
     @ApiResponse(responseCode = "200", description = "更新成功")
     @ApiResponse(responseCode = "401", description = "未授权，需要管理员权限")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     @PostMapping("/update")
     public R<WebInfo> updateWebInfo(
             @Parameter(name = "webInfo", description = "网站信息对象", required = true, example = "{\"webName\":\"清思博客\",\"webDescription\":\"一个技术博客网站\"}")

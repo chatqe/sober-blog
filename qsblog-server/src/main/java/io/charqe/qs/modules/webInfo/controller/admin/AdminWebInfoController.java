@@ -37,7 +37,7 @@ public class AdminWebInfoController {
      * 获取网站信息
      */
     @GetMapping("/get")
-    @LoginCheck(value = 0, scope = SessionScope.ADMIN)
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R<WebInfo> getWebInfo() {
         LambdaQueryChainWrapper<WebInfo> wrapper = new LambdaQueryChainWrapper<>(webInfoMapper);
         List<WebInfo> list = wrapper.list();
