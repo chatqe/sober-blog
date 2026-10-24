@@ -1,3 +1,403 @@
+# 前后端联合审计报告
+
+更新日期：2026-10-24（第二轮：Sa-Token 双会话改造复审）。本文前半部分为当前复审结论；末尾折叠附录保留旧运行时审计记录，不代表当前版本的运行结果。
+
+## Result
+
+**PARTIAL：已完成 Sa-Token 双会话改造的源码复审、构建与单元测试验证，并刷新全部旧发现状态；未完成当前版本的运行时安全/业务回归，不能判定项目整体通过。**
+
+- 本轮最高优先级（S1）：动态模块 12 个写接口同时受 `value=1`（仅站长/管理员可用）与 `scope=ADMIN` 双重限制，而 C 端前端对任意登录用户展示入口并以 WEB 会话调用。其中**角色门槛 `@LoginCheck(1)` 在改造前已存在**（`d96e823` 即如此），属存量前后端契约错配；scope 门槛与 S2–S4 可归因到本轮两次鉴权改造提交。
+- 双会话设计在源码层成立：WEB/ADMIN 各自独立的 `StpLogic`、revision 版本撤销、跨域调用显式拒绝、401/403 以真实 HTTP 状态返回、前端按域存储并按 generation 丢弃过期响应。
+- 上轮 P0 的「普通用户可调管理接口」在源码层已收敛：`controller/admin` 下 69 个方法级操作中 61 个 ADMIN、5 个 EITHER、仅 3 个认证入口无注解；全仓 134 处 `@LoginCheck` 为 88 ADMIN / 11 EITHER / 35 默认 WEB。
+- 存量未修：family 归属与审核（A1）、公开文章分页可见性（A2）、文章编辑双解包与旧字段（B1/B2）、标签缓存与字典（B4/B5）、友链（C1/D4）、活跃旧路径（D1）、关于页分页（D2）。
+- 本轮只更新本文件，不修复业务代码、不提交 Git、不修改数据库/Redis、不启动或停止服务，不发送邮件或上传文件。
+
+### 当前基线与证据口径
+
+| 项目 | 本次实际基线 | 任务开始工作树 |
+| --- | --- | --- |
+| 后端 `E:\idea\qs-blog` | `main@3bd2670` | 仅本报告已修改，无业务改动 |
+| 前端 `E:\web\qs-web` | `main@4f4fed9` | 干净（另有未跟踪 `scripts/auth-browser-harness.cjs`、`temp/`） |
+
+本轮基线前进到两次鉴权专项提交：后端 `3bd2670 feat(auth): 前后台独立双会话改造（Sa-Token + Redis 双域）`（61 文件 +2559/−455）、前端 `4f4fed9 feat(auth): 前后台独立双会话与分域请求鉴权`（69 文件 +1968/−1345）。上一轮基线为后端 `d96e823`、前端 `05697b4`，本文中标注「上轮」的结论均指该基线。旧报告后端 `89e2a1c` 在当前仓库无法解析，且旧基线带有未提交改动，不能用提交差分完整重建当时工作树。
+
+状态定义：
+- `FIXED(STATIC)`：当前源码已体现指定修复，不代表本轮重新跑过该业务流程。
+- `UNVERIFIED`：已列出源码事实和调用链，但缺少当前运行时/数据库证据；下文 P0/P1/P2 均为**建议处置优先级**，不是新增运行时确认数量。
+- `FALSE POSITIVE`：原指控被当前证据推翻；`TECH DEBT`：维护风险，不直接等同于业务故障。
+- `CONFIRMED(BUILD)`：本轮命令实际观察到的构建结果/警告，不代表相关 UI 故障已复现。
+- `CONFIRMED(TEST)`：本轮单元测试覆盖到的行为，不等价于运行时的端到端验收。
+
+范围：单次联合代码复审覆盖旧发现及相关活跃调用链，结合 Git 状态与修复历史；未进行云扫描、全量依赖安全扫描、当前 OpenAPI 双向全量统计或浏览器验收。S2–S4 可归因到本轮两次鉴权改造提交，S1 的角色门槛与 S5–S8 为存量/设计风险，其余编号仍为存量。
+
+## Findings
+
+### Sa-Token 双会话改造：设计落地与技术事实
+
+改造提交：后端 `3bd2670`、前端 `4f4fed9`。本小节先记录设计在源码中的落地点，再列本轮由此链路发现的问题（S1–S8）。
+
+| 设计目标 | 源码落地情况 |
+| --- | --- |
+| 前后台会话隔离 | [SaTokenSessionAdapter.java:38-48](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/auth/SaTokenSessionAdapter.java#L38-L48) 为 WEB/ADMIN 各建一个 `StpLogic`（loginType `web`/`admin`）；[SessionScope.java:7-9](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/auth/SessionScope.java#L7-L9) 的 `accepts()` 要求域完全相等，`EITHER` 仅用于明确共享的入口。 |
+| 双超时（空闲/绝对） | `timeout=absolute`、`activeTimeout=idle`、`autoRenew=false`；活跃时间由 [RESOLVE 脚本:53-69](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/auth/SaTokenSessionAdapter.java#L53-L69) 原子更新，写入用 `SET ... XX KEEPTTL`，只推进 last-active、不延长绝对寿命。 |
+| 撤销 | `auth:v2:revision:<userId>` 版本号参与 Lua 校验；改密/重置/冻结/改角色后 [revokeAll:130-131](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/auth/SaTokenSessionAdapter.java#L130-L131) 递增版本，旧会话在下一次访问时失效。 |
+| 请求级去重 | [AuthSessionService.current:80-98](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/auth/AuthSessionService.java#L80-L98) 以 request attribute 缓存 `Resolved` 并按 token 比较，避免同一请求重复校验。 |
+| 被动请求不续期 | `X-Session-Activity: passive` 可跳过 touch，前端会话初始化校验使用该头。 |
+| 错误语义 | [GlobalExceptionHandler.java:29-32](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/common/exception/handle/GlobalExceptionHandler.java#L29-L32) 将 `AuthAccessException` 转为真实 HTTP 401/403 + `R.fail(status,msg)`。 |
+| 前端凭据隔离 | localStorage 只存 64 位 token；[requestPolicy.ts:30-42](file:///E:/web/qs-web/src/auth/requestPolicy.ts#L30-L42) 默认 `anonymous`，强制删除外部 `Authorization` 后按域注入，并写入会话快照。 |
+| 过期响应/跨标签页 | `generation` 快照 + `matches()` 丢弃旧会话响应；401/300 只清理发起端；storage 事件按域同步；`pageshow` 强制复核。 |
+
+判定：改造方向正确，上述机制均有对应实现与单测（见 Verification）。但 scope 的取值没有与既有控制器的语义逐个对齐，由此引出 S1 这个强回归。
+
+### 旧报告逐项复核
+
+| 旧编号 | 当前状态 | 当前结论/跟踪项 |
+| --- | --- | --- |
+| P0-1 管理纵向越权 | `FIXED(STATIC)`（改造后重新收敛） | `@LoginCheck` 改为 Sa-Token 双域后，管理端入口必须持 ADMIN 会话：`controller/admin` 下 69 个方法级操作中 61 个 `ADMIN`、5 个 `EITHER`、3 个认证入口（login/session/logout）无注解；全仓 134 处注解为 88 ADMIN / 11 EITHER / 35 默认 WEB。family 的 C 端复用设计见 A1，不能沿用“25 个端点都仍可越权”。 |
+| P0-2 分类私密摘要泄露 | 指定路径 `FIXED(STATIC)` | `/article/articleCategoryList` 已加公开过滤、空正文保护、v2 缓存键；另一公开分页路径见 A2。 |
+| P0-3 邮箱注册双阻断 | `FIXED(STATIC)` | 注册读/删 REGISTER=1 验证码；两个可见入口发送 `email+bizType`。未重新发码/注册。 |
+| P1-1 CORS | 配置保留，利用链 `UNVERIFIED` | 通配源与允许凭据仍在；不能推导为第三方页面自动获得 localStorage token，见 D3。 |
+| P1-2 编辑与上传 | 部分改善，`UNVERIFIED` | B3 的 `$common.saveResource` 缺失与上传路由已迁移（`UploadPicture.vue` 改调 `uploadApi.uploadMedia` 并按快照回填）；B1 双解包、B2 旧字段仍在。 |
+| P1-3 友链 SQL | 映射未修，当前 SQL `UNVERIFIED` | `desc` 仍未显式转义；页面另有分组对象误判，见 C1、D4。 |
+| P1-4 20 条契约错误 | 部分迁移，旧数量作废 | 必须区分活跃调用、生成残留和无引用封装，见 D1。 |
+| P1-5 点赞 | 部分原解释错误，`UNVERIFIED` | 旧入口与新行为模型仍混用；`checkHasLike` 已查询行为状态，不再写“恒 false”，见 B6。 |
+| P1-6 关于页分页 | 源码错配保留，`UNVERIFIED` | `pageNum/pageSize` 与 MP Page 的 `current/size` 不同，见 D2。 |
+| P1-7 异常契约 | 部分改善 | `AuthAccessException` 现以真实 HTTP 401/403 + `R.fail` 返回，校验异常已 `setStatus(400)`；其余 `Exception` 兜底仍为 HTTP 200，404/405 未统一，见 D5。 |
+| P2-1 旧找回密码 | 部分死路径 | `getCode1` 无模板引用；可见面板走新接口，成功反馈另有 C3。旧提交分支并未全部证明不可达。 |
+| P2-2 非法 bizType | 原影响需纠正 | 未知值仍映射为 0，但新重置接口也使用客户端 bizType 计算键，不能称“没有任何读取方”。 |
+| P2-3 密码提示拼接 | 不单列安全缺陷 | 已有空值回退；仅拼接提示文本不足以认定安全漏洞。 |
+| P2-4 重复常量/AES | `TECH DEBT` | 枚举重复及前端静态密钥不能替代服务端安全；本报告不记录密钥值。 |
+| P2-5 分类摘要 NPE/TTL | `FIXED(STATIC)` | 原分类聚合路径已保护空正文并设置 TTL，不能用另一函数推翻该修复。 |
+| P2-6 上传声明签名 | 并入 B3 | 真正阻断是注入对象缺少实际方法，不重复计数。 |
+| P2-7 delete/patch wrapper | 部分修复 | `delete` 已在 [request.ts:40-44](file:///E:/web/qs-web/src/utils/request.ts#L40-L44) 补齐，`patch` 仍缺；裸 Axios 的 C2 已随之关闭。 |
+| 后续：标签云数据错位 | `FIXED(STATIC)` | `MyAside → listTagCloud → GET /tag/cloud`，返回未删除标签名称；不再调用分类字典构造标签云。 |
+| 后续：标签缓存/字典 ID | 源码问题保留，`UNVERIFIED` | 分别见 B4、B5，与新标签云接口区分。 |
+
+本轮状态变化汇总：C2（动态删除/取消点赞裸 Axios）与 D1 的「后台用户状态路径」已随前端改造关闭；P2-7 的 delete 已补齐；B3 部分关闭；其余编号结论不变。
+
+### 管理端鉴权量化（Sa-Token 改造后）
+
+口径：按 `controller/admin` 内已核验的方法级 HTTP 映射统计（含 `PatchMapping` 与无括号 Mapping，不含类级路径）；scope 取自 `@LoginCheck` 的 `scope` 属性，缺省为 `WEB`。
+
+| 目录 | ADMIN | EITHER | 无注解 | 合计 |
+| --- | ---: | ---: | ---: | ---: |
+| `controller/admin` | 61 | 5 | 3 | 69 |
+
+- 3 个无注解入口均为认证入口：`/admin/user/login`、`/admin/user/session`、`/admin/user/logout`，它们在方法体内部自行解析会话，不是漏鉴权。
+- 5 个 `EITHER` 全部是 family 管理控制器：C 端用户也要能维护自己的卡片，因此不能计为弱鉴权；真正的缺口是对象授权，见 A1。
+- 全仓 `@LoginCheck` 共 134 处：88 `ADMIN`、11 `EITHER`（family 5 + `UserController` 5 + Qiniu 1）、35 使用默认参数（`value=2, scope=WEB`）。
+- 旧表 L0/L1/L2 口径建立在上代 token 与 `value` 语义上，Sa-Token 改造后已不适用，不能与新表混算；旧报告 62/26 的扫描遗漏 Patch 与无括号 Mapping 的问题同样作废。
+- 本表不覆盖其他目录中带管理语义的接口；数值由本轮源码扫描得出，未经运行时 OpenAPI 复核。
+
+### S1｜建议 P1：动态写接口要求管理员角色，与 C 端前端契约错配｜源码确认（存量为主）
+
+- **Evidence**：[MomentController.java:69](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L69)、[:112](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L112)、[:124](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L124)、[:139](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L139)、[:153](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L153)、[:168](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L168)、[:195](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L195)、[:224](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L224)、[:235](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L235)、[:250](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L250)、[:276](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L276)、[:297](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L297) 均为 `@LoginCheck(value = 1, scope = SessionScope.ADMIN)`；[LoginCheckAspect.java:23-31](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/aop/LoginCheckAspect.java#L23-L31) 以 `userType > value` 拒绝；`UserTypeEnum` 为 ADMIN(0)/DEV(1)/USER(2)；前端 [weiYan.ts:98-139](file:///E:/web/qs-web/src/api/modules/weiYan.ts#L98-L139) 全部 `authScope: 'web'`。
+- **Current Fact（源码）**：存在**两道**拦截。① `value = 1` 拒绝 userType=2 的普通用户；② `scope = ADMIN` 拒绝 WEB 会话。已验证 `d96e823`（改造前）这些方法就是 `@LoginCheck(1)`，因此①是长期存在的前后端契约错配，②是 `3bd2670` 新增的限制。
+- **Expected**：按业务确认结果，动态属 C 端功能，所有登录用户应可发布/点赞/评论/删除本人内容。
+- **Root Cause**：`@LoginCheck` 的 `value`（角色上限）被当成“仅需登录”误用为 1；改造时只补 `scope`，没有复核 `value` 是否与 C 端调用方匹配。
+- **Impact**：普通用户在动态页的 12 个写操作全部 403；改造前提示“权限不足/请输入管理员账号”，改造后提示“当前会话不能用于此入口”。UI 仍对任意登录用户展示发布按钮与“我的动态”Tab。
+- **最小修复/验收**：改为 `@LoginCheck(scope = SessionScope.WEB)`，让 `value` 取默认 2；**不能只改 scope 而保留 value = 1**，否则普通用户仍被角色门槛拒绝。以匿名/普通用户/管理员三身份回归发布→点赞→评论→删除。
+
+### S2｜建议 P1：公开时间线被前端声明为匿名，登录用户丢失 `liked`｜源码确认
+
+- **Evidence**：[MomentController.java:59-64](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L59-L64) 用 `BlogUtil.getUserId()` 计算用户视角；[weiYan.ts:92-95](file:///E:/web/qs-web/src/api/modules/weiYan.ts#L92-L95) 声明 `authScope: 'anonymous'`。
+- **Current Fact（源码）**：`installSessionPolicy` 对匿名请求强制删除 `Authorization`，因此 `getUserId()` 恒为 null，`liked` 恒 false，可见性也按匿名视角裁剪。
+- **Expected**：已登录用户看到自己的点赞态；未登录用户仍能匿名浏览。
+- **Root Cause**：把「接口可匿名」误当成「请求必须匿名」。`authScope` 表达的是「该请求需要哪一域的凭据」，而不是「禁止携带凭据」。
+- **Impact**：修复 S1 后紧接着出现的交互错误：赞过的动态仍显示未赞，重复点赞；`liked` 字段实际不可用。
+- **最小修复**：改为 `authScope: 'web'`。未登录时快照无 token，拦截器不会注入 Authorization，实际仍是匿名请求；该接口本身不鉴权，也不会触发 401 清理分支。
+
+### S3｜建议 P1：上传过滤器先解析会话再判空，匿名请求直接 401｜源码确认
+
+- **Evidence**：[FileFilter.java:45-47](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/infra/storage/FileFilter.java#L45-L47)：`sessions.resolve(token, SessionScope.ADMIN, false)` 在第 46 行，`StringUtils.hasText(token)` 在第 47 行。
+- **Current Fact（源码）**：`resolve(null, ...)` 必抛 `AuthAccessException(401)`，第 48 行起的「按用户/IP 计数限流」永远不会执行；`return true/false` 的「未登录交回注解链路」原设计也失效。
+- **Expected**：先判断 token 是否存在；不存在时交回注解链路，存在时再解析并计入限流。
+- **Root Cause**：改造时直接在原 `hasText` 分支前插入会话解析，没有调整语句顺序。
+- **Impact**：`/file/admin/upload` 的匿名/过期访问从统一鉴权响应变成过滤器内抛异常；限流对所有请求都不再生效。另：该计数器仍沿用旧缺陷——`AtomicInteger` 反序列化后 `getAndIncrement` 不回写 Redis，实际永远达不到阈值（同 C4 类型）。
+- **最小修复**：`hasText(token)` 前置，`identity` 及其后逻辑一起下移；计数改为 `Redis INCR + EXPIRE`。
+
+### S4｜建议 P1：`POST /user/token` 语义被替换但契约未标注失效｜源码确认
+
+- **Evidence**：[UserController.java:112-118](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/controller/web/UserController.java#L112-L118) 仅加 `@Deprecated`；[UserServiceImpl.java:515-519](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/service/UserServiceImpl.java#L515-L519) 返回 `AuthSessionVO.from(..., null)`。
+- **Current Fact（源码）**：入参只接受 64 位新格式 token，出参 `accessToken` 恒为 null。
+- **Expected**：要么按旧契约返回可用凭据，要么以明确的错误码宣告该入口下线。
+- **Root Cause**：会话存储从「自定义 token→用户映射」迁到 Sa-Token 后，旧接口被就地改写而非删除。
+- **Impact**：任何按旧契约调用的外部/App 客户端会得到 401；若前端把它接到 `authStore.accept()`，会因 `accessToken` 未通过 64 位正则而抛「登录响应无效」。当前前端已无活跃调用，风险限于外部调用方。
+- **最小修复**：返回同一会话的新 token（续签语义），或返回 410 并在接口文档标注移除版本。
+
+### S5｜建议 P2：两域共用 `tokenName`，Sa-Token 内部会话键跨域共享｜源码确认，运行时未验证
+
+- **Evidence**：[SaTokenSessionAdapter.java:40-46](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/auth/SaTokenSessionAdapter.java#L40-L46)：两个 `StpLogic` 均 `setTokenName("auth:v2")`。
+- **Current Fact（源码）**：同一账号同时持有 WEB 与 ADMIN 会话时，Sa-Token 的 token 值键、`login:session:<loginId>` 等簿记键在两域之间使用相同命名空间，`isConcurrent(true)` 下的多端登录列表也存在混装可能。
+- **Expected**：两域在存储层完全隔离，登出/踢出/在线列表互不影响。
+- **Root Cause**：只按 loginType 区分了 `StpLogic`，没有同时区分 `tokenName`。
+- **Impact**：无法从源码断言会造成越权（业务校验仍走 revision 与 scope），但登出、踢出、在线设备列表等依赖框架内部键的能力可能互相干扰；需在隔离 Redis 中核对真实键名后再定性。
+- **最小修复**：改为 `auth:web:v2` / `auth:admin:v2`；若确认共用是有意设计，则补一条契约测试并在注释中写明理由。
+
+### S6｜建议 P2：撤销只递增版本，原生会话记录驻留到绝对过期｜源码确认
+
+- **Evidence**：[SaTokenSessionAdapter.java:126-131](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/auth/SaTokenSessionAdapter.java#L126-L131)、[:72-75](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/auth/SaTokenSessionAdapter.java#L72-L75)。
+- **Current Fact（源码）**：`revokeAll` 仅 `INCR auth:v2:revision:<userId>`，不枚举、不删除该用户的 token 映射与 Token-Session；被撤销的会话在下一次访问时因版本不匹配才失效。`revision` 键本身无 TTL。
+- **Expected**：撤销后资源应尽快回收，且撤销状态本身不应永久增长。
+- **Root Cause**：「版本失效」被当作完整的撤销机制，没有配套的存储清理。
+- **Impact**：WEB 绝对 TTL 为 30 天时，被撤销 token 的记录最多再驻留 30 天；revision 键随改密/冻结次数单调增长（单键单值，量级有限但无清理策略）。安全上不构成越权，属存储与可观测性风险。
+- **最小修复**：撤销时按 `loginId` 枚举并删除原生记录（注意时间窗口，避免误删撤销后新登录的会话），或给 revision 键设置与最长绝对 TTL 对齐的过期时间。
+
+### S7｜建议 P2：`getAdminUser()` 启动缓存依赖仍在关键写链路｜源码确认
+
+- **Evidence**：[UserServiceImpl.java:210](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/service/UserServiceImpl.java#L210) 与 [:216](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/service/UserServiceImpl.java#L216)（注册写 IM 双向好友）、[FileFilter.java:53](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/infra/storage/FileFilter.java#L53)、`SaveCheckAspect`、`AdminFamilyController` 仍调用 `BlogUtil.getAdminUser()`。
+- **Current Fact（源码）**：该方法读取启动时写入的 `CommonConst.ADMIN` 缓存；未命中时 `JSON.parseObject(null, User.class)` 返回 null，随后 `.getId()` 触发 NPE。
+- **Expected**：身份应从数据库或当前会话解析，而不是依赖进程启动期的缓存快照。
+- **Root Cause**：改造把「当前登录用户」迁到了 `AuthSessionService`，但「站长」这一特殊身份没有一起迁移。
+- **Impact**：缓存缺失/被清空时，注册会在写 IM 好友这一步整体失败（事务回滚），文件上传与 family 状态接口同样受影响。
+- **最小修复**：改为按 `userType=0` 查库并做空值兜底，或把站长 ID 定义为配置项。
+
+### S8｜建议 P2：`auth.session` 未外部化配置｜源码确认
+
+- **Evidence**：`AuthSessionProperties` 默认 WEB idle 7d / absolute 30d、ADMIN idle 2h / absolute 12h；`application.yml`、`application-dev.yml`、`application-prod.yml` 中均检索不到 `auth.session`。
+- **Current Fact**：四个超时值只能在代码里改；`@PostConstruct validate()` 只校验正整数与 `idle <= absolute`。
+- **Impact**：不同环境无法通过配置调整后台空闲时长；压测与灰度需要改代码重新打包。
+- **最小修复**：在 `application.yml` 显式写出默认值，便于运维覆盖与配置审计。
+
+### A1｜建议 P0：family 缺少对象归属与审核权限控制｜UNVERIFIED
+
+- **Evidence**：[AdminFamilyController.java:66-99](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/family/controller/admin/AdminFamilyController.java#L66-L99)、[FamilyServiceImpl.java:40-93](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/family/service/FamilyServiceImpl.java#L40-L93)、[family.ts:91-151](file:///E:/web/qs-web/src/api/modules/family.ts#L91-L151)。
+- **Current Fact（源码，2026-10-24 复核）**：5 个操作均为 `@LoginCheck(scope = SessionScope.EITHER)`，即 WEB 或 ADMIN 任一域登录即可调用；删除和切换状态按客户端 id 操作。保存覆盖 userId 为当前用户，但保留传入 id 并调用通用 `saveOrUpdate`。分页/管理详情未限制当前用户，前端才自行匹配 userId。Sa-Token 改造没有改变这一语义，只是把「仅要求登录」显式化为 EITHER。
+- **Expected**：普通用户仅维护自己的卡片；审核状态仅由有审核权限的角色修改；新建不得利用客户端 id 更新他人记录。
+- **Reproduction（待执行）**：隔离环境中由账号 A 建卡，账号 B 请求其详情、带该 id 保存/删除/切换状态；核对拒绝结果与记录未改变。
+- **Root Cause**：登录校验没有补充对象授权，保存也绕过了专用服务中的每用户一条及缓存处理。
+- **Impact**：他人卡片被修改/删除、归属被替换或审核状态被绕过的风险；未实际执行跨账号写入。
+- **最小修复/验收**：服务层限定 `id + 当前用户ID`，明确管理例外；审核单独鉴权；保存统一走授权后的专用方法并失效缓存。不能把全部 family 操作直接收紧为 ADMIN 而破坏 C 端。
+
+### A2｜建议 P0：公开文章分页仍缺可见性过滤｜UNVERIFIED
+
+- **Evidence**：[ArticleController.java:139-143](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/article/controller/web/ArticleController.java#L139-L143)、[ArticleServiceImpl.java:595-618](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/article/service/ArticleServiceImpl.java#L595-L618)、[article.ts:42-49](file:///E:/web/qs-web/src/api/modules/article.ts#L42-L49)、[sort/index.vue:156-162](file:///E:/web/qs-web/src/views/front/sort/index.vue#L156-L162)、[MyAside.vue:281-285](file:///E:/web/qs-web/src/components/business/friend/MyAside.vue#L281-L285)。
+- **Current Fact（源码）**：匿名 POST `/article/listPage` 的查询没有固定 `viewStatus=true`，随后构造正文摘要；分类页和侧栏推荐实际调用它。清掉 password 不等于清掉已返回的内容。
+- **Expected**：公开分页和推荐列表仅包含可公开文章，管理查询另行授权。
+- **Reproduction（待执行）**：隔离库准备符合分类/推荐筛选条件的私密文章，匿名分页，断言其 ID、标题、摘要不出现在响应中。
+- **Root Cause**：原修复覆盖分类聚合，但未覆盖另一公开分页查询的服务端可见性谓词。
+- **Impact**：符合筛选条件的私密文章摘要仍可能经公开页面返回；本轮未抽查真实数据量。
+- **最小修复/验收**：公开查询固定添加 `.eq(Article::getViewStatus, true)`，不由客户端决定；同时回归分类聚合和详情密码检查。
+
+### B1｜建议 P1：文章回显仍双重解包｜UNVERIFIED
+
+- **Evidence**：[article.ts:31-34](file:///E:/web/qs-web/src/api/modules/article.ts#L31-L34)、[Edit.vue:218-224](file:///E:/web/qs-web/src/views/admin/article/Edit.vue#L218-L224)。
+- **Current Fact（源码，2026-10-24 复核）**：`articleApi.getArticleById` 已返回业务对象，`Edit.vue` 仍写 `if (res.data)` 并 `Object.assign(article, res.data)`，即多解一层；上传侧的同类问题已在 B3 修复。
+- **Expected**：组件消费模块声明的实际返回值，成功响应后填充表单或 URL。
+- **Reproduction（待执行）**：返回合法文章对象，打开编辑页，检查表单是否回填。
+- **Root Cause**：未统一“HTTP 响应、R 信封、业务数据”三层边界。
+- **Impact**：成功响应不能正确回填；编译通过不能覆盖此数据形状问题。
+- **最小修复**：直接使用模块返回值，并以真实响应契约补消费层测试；不要盲目给所有接口统一增删 `.data`。
+
+### B2｜建议 P1：文章保存字段仍用旧分类/标签命名｜UNVERIFIED
+
+- **Evidence**：[Edit.vue:123-134](file:///E:/web/qs-web/src/views/admin/article/Edit.vue#L123-L134)、[Edit.vue:319-350](file:///E:/web/qs-web/src/views/admin/article/Edit.vue#L319-L350)、[article.ts:92-104](file:///E:/web/qs-web/src/api/modules/article.ts#L92-L104)、[ArticleVO.java:109-121](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/article/controller/web/vo/ArticleVO.java#L109-L121)。
+- **Current Fact（源码）**：表单使用 `sortId/labelId`，保存直接发送对象；后端校验必填的是 `categoryId/tagId`。选项名称也需与适配器输出的 `name` 对齐。
+- **Expected**：回显、选择器、保存 DTO 的字段和类型一致。
+- **Reproduction（待执行）**：新建文章选好分类/标签后提交，检查请求载荷及后端校验；编辑已存文章再次提交。
+- **Root Cause**：查询适配已局部迁移，保存边界仍残留旧字段。
+- **Impact**：修复 B1 后仍可能无法完成创建/编辑，不应把回显修复视为整个编辑链路闭环。
+- **最小修复**：统一表单为 `categoryId/tagId`，或显式双向转换；与 B5 的字典 ID 一并回归。
+
+### B3｜上传回调和资源 API 迁移未完成｜部分 `FIXED(STATIC)`
+
+- **Evidence**：[UploadPicture.vue:116-124](file:///E:/web/qs-web/src/components/media/UploadPicture.vue#L116-L124)、[upload.ts](file:///E:/web/qs-web/src/api/modules/upload.ts)、[resource.ts:18-64](file:///E:/web/qs-web/src/api/modules/resource.ts#L18-L64)、[FileAdminController.java:43-68](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/file/controller/admin/FileAdminController.java#L43-L68)。
+- **Current Fact（源码，2026-10-24 复核）**：`UploadPicture.vue` 已改调 `uploadApi.uploadMedia(...)`，`handleSuccess` 校验会话快照后 `emit('addPicture', response.url)`；原先不存在的 `$common.saveResource` 调用已移除。剩余问题转移到 D1：`resource.ts` 仍保留 `/file/list`、`/file/save`、`/file/update` 与 `changeResourceStatus` 空实现。
+- **Expected**：上传、资源登记、URL 回填依次成功，调用角色满足权限要求。
+- **Reproduction（待执行）**：分别走本地/七牛上传，捕获实际路由、资源登记请求、异常及回填事件；使用隔离存储并回收测试文件。
+- **Root Cause**：工具导出、文件模型和路由演进后消费者未整体迁移。
+- **Impact**：上传回填链路已恢复；后台资源管理页的列表/保存/状态仍可能失败或假成功，见 D1。
+- **最小修复**：按 D1 逐条迁移资源管理入口；C 端权限需单独设计，不能把普通用户上传一律迁往 ADMIN 接口。
+
+### B4｜建议 P1：分类标签列表永久缓存未失效｜UNVERIFIED
+
+- **Evidence**：[TagServiceImpl.java:116-153](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/tag/service/TagServiceImpl.java#L116-L153)、[QingSiCache.java:111-117](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/utils/cache/QingSiCache.java#L111-L117)、[sort/index.vue:125-138](file:///E:/web/qs-web/src/views/front/sort/index.vue#L125-L138)。
+- **Current Fact（源码）**：`tag:public:cat_*` 无 TTL 写入，增删改仅删除其他缓存键。
+- **Expected**：标签改名、移分类、软删除后列表及时反映变化。
+- **Reproduction（待执行）**：先填充标签列表缓存，再改名/移分类/删除，复查新旧分类及不带分类条件的响应。
+- **Root Cause**：缓存读写与失效键集合不一致。
+- **Impact**：分类页长期展示旧标签甚至已删除标签；重启应用本身不能保证清掉 Redis 旧键。新 `/tag/cloud` 不使用该缓存，不受此问题影响。
+- **最小修复**：提交成功后失效相关列表键，设置 TTL 兜底，并制定已有永久键的迁移/清理方案。
+
+### B5｜建议 P1：标签字典将描述当作 ID｜UNVERIFIED
+
+- **Evidence**：[TagServiceImpl.java:162-168](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/tag/service/TagServiceImpl.java#L162-L168)、[category.ts:28-42](file:///E:/web/qs-web/src/api/modules/category.ts#L28-L42)、[Edit.vue:240-246](file:///E:/web/qs-web/src/views/admin/article/Edit.vue#L240-L246)。
+- **Current Fact（源码）**：后端 `value=tagDesc`，前端 `id=Number(value)`；描述不等于标签主键。
+- **Expected**：字典 value 是真实标签 ID，label 是名称。
+- **Reproduction（待执行）**：使用非数字描述的标签，查看字典、选择器模型和提交载荷，确认 ID 为真实主键。
+- **Root Cause**：字典 value 的前后端语义不同。
+- **Impact**：数字描述会被误当主键，非数字描述会转为 `NaN`；未查询当前库中实际描述值。
+- **最小修复**：返回 `String.valueOf(t.getId())` 并失效旧字典缓存；不改变标签云纯名称接口。
+
+### B6｜建议 P1：旧文章点赞入口与行为模型混用｜UNVERIFIED
+
+- **Evidence**：[ArticleController.java:204-210](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/article/controller/web/ArticleController.java#L204-L210)、[ArticleServiceImpl.java:415-479](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/article/service/ArticleServiceImpl.java#L415-L479)、[article/index.vue:753-765](file:///E:/web/qs-web/src/views/front/article/index.vue#L753-L765)、[AbstractBehService.java:54-89](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/behavior/service/AbstractBehService.java#L54-L89)。
+- **Current Fact（源码）**：旧入口无登录检查，接受客户端 userId；前端固定 `operation:0` 却提示点赞成功。旧服务另行改文章计数，状态查询已使用行为表。
+- **Expected**：身份由服务端取得，点赞/取消的状态和计数使用一致模型，并保持幂等。
+- **Reproduction（待执行）**：隔离文章分别测试匿名、伪造 userId、重复点赞、取消及并发，核对行为状态与计数一致。
+- **Root Cause**：旧计数入口没有完整迁移到统一行为服务。
+- **Impact**：身份、反馈与计数不一致的风险；本轮未刷赞或验证并发计数。
+- **最小修复**：按钮接统一行为 API（文章类型 `ARTICLE=1`），旧入口删除或受控兼容。统一行为层已有幂等检查，不能继续写“所有点赞都无幂等/hasLike 恒 false”。
+
+### C1｜建议 P1：友链分组对象被当成数组判空｜UNVERIFIED
+
+- **Evidence**：[friend/index.vue:201-206](file:///E:/web/qs-web/src/views/front/friend/index.vue#L201-L206)、[WeblinksController.java:58-60](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/weblinks/controller/web/WeblinksController.java#L58-L60)；实际调用链是 `web.ts → generated/weblinks → mutator`。
+- **Current Fact（源码）**：返回值是 `Map<string, WeblinksVO[]>`，页面却 `if (!res.length) return`。
+- **Expected**：按分组对象读取和渲染友链。
+- **Reproduction（待执行）**：用非空分组响应加载友链页，确认各组进入页面状态。
+- **Root Cause**：对象响应仍沿用数组判空逻辑。
+- **Impact**：即使修复 SQL 查询，非空正常响应仍可能不回填；这是独立于 D4 的第二个阻断。
+- **最小修复**：按对象消费（例如 `friendList.value = res ?? {}`），同时覆盖空分组响应。
+
+### C2｜动态删除/取消点赞绕过统一请求客户端｜`FIXED(STATIC)`（本轮关闭）
+
+- **Evidence**：[weiYan.ts:109-122](file:///E:/web/qs-web/src/api/modules/weiYan.ts#L109-L122)、[requestPolicy.ts:29-53](file:///E:/web/qs-web/src/auth/requestPolicy.ts#L29-L53)。
+- **Current Fact（源码，2026-10-24 复核）**：`deleteMoment` 与 `unlikeMoment` 已改为 `request.delete(..., { authScope: 'web' })`，裸 `axios.delete` 已不存在；业务码校验与会话快照由统一拦截器完成。本节保留为历史记录。
+- **Expected**：带有效身份请求，仅在业务成功后移除卡片/更新点赞状态。
+- **Reproduction（待执行）**：分别返回有效成功及 HTTP 200/业务失败信封，验证请求头和页面行为。
+- **Root Cause（历史）**：裸 Axios 绕过认证及业务错误拒绝逻辑。
+- **Impact**：原假成功风险已消除；这两个调用目前仍会返回 403，原因见 S1，与本条无关。
+- **最小修复**：无需再改客户端；随 S1 修复后一并回归。
+
+### C3｜建议 P2：找回密码成功后缺少成功反馈｜UNVERIFIED
+
+- **Evidence**：[user.ts:40-43](file:///E:/web/qs-web/src/api/modules/user.ts#L40-L43)、[user/index.vue:951-960](file:///E:/web/qs-web/src/views/front/user/index.vue#L951-L960)、[AuthModal.vue:348-357](file:///E:/web/qs-web/src/components/business/auth/AuthModal.vue#L348-L357)。
+- **Current Fact（源码）**：模块返回 `Promise<void>`，两个消费者却检查返回值非空才提示成功并关闭面板。
+- **Expected**：请求正常完成即可提示成功，业务失败由统一错误链处理。
+- **Reproduction（待执行）**：隔离账号成功重置密码，检查提示与面板关闭；失败时不得关闭或提示成功。
+- **Root Cause**：无返回值方法被按有业务对象的方法消费。
+- **Impact**：密码可能已修改，但 UI 无成功反馈并诱发重复提交；不能写成“后端密码未修改”。
+- **最小修复**：await 成功后直接反馈，不用返回对象判空；不实际修改任何用户密码来补本轮证据。
+
+### C4｜建议 P1：邮件限流计数只在本地对象自增｜UNVERIFIED
+
+- **Evidence**：[UserServiceImpl.java:726-739](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/service/UserServiceImpl.java#L726-L739)、[CommonConst.java:119-121](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/common/constants/CommonConst.java#L119-L121)。
+- **Current Fact（源码）**：首次将计数 1 写 Redis，后续反序列化本地 `AtomicInteger` 自增，却未写回；限制值为 3。
+- **Expected**：多次请求共享并原子累积配额，到达阈值后拒绝发送。
+- **Reproduction（待执行）**：在邮件发送替身/隔离 Redis 下连续请求超过阈值，验证计数、TTL 和发送调用次数，不向真实邮箱压测。
+- **Root Cause**：误把反序列化对象的自增当作 Redis 原子计数。
+- **Impact**：本方法的次数限制不能按预期累计；外围网关/供应商是否另有限流未验证，不能断言系统完全无限流。
+- **最小修复**：使用原子计数和到期策略，在发送前检查配额，并明确发送失败的计数处理。
+
+### D1｜建议 P1：活跃旧调用和假成功操作清单｜UNVERIFIED
+
+以下是当前实际调用链，不是把搜索命中的旧 URL 一律算作线上故障。表中无当前 HTTP 状态断言。
+
+| 页面/操作 | 源码证据 | 当前事实与预期差异 |
+| --- | --- | --- |
+| 后台用户状态 | [user.ts:74-79](file:///E:/web/qs-web/src/api/modules/user.ts#L74-L79)、[AdminUserController.java](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/user/controller/admin/AdminUserController.java) | **本轮关闭**：实际请求 `/admin/user/changeUserStatus`（不再有 `Status1` 后缀），并携带 `authScope: 'admin'`。 |
+| 旅行资源 | [travel/index.vue:144](file:///E:/web/qs-web/src/views/front/travel/index.vue#L144)、[webInfo.ts:56](file:///E:/web/qs-web/src/api/modules/webInfo.ts#L56) | 仍请求旧 `/webInfo/listResourcePath`；需对齐当前资源聚合契约。 |
+| 后台资源路径 | [PathList.vue:245](file:///E:/web/qs-web/src/views/admin/resource/PathList.vue#L245)、[resource.ts:18-64](file:///E:/web/qs-web/src/api/modules/resource.ts#L18-L64) | 仍请求旧 `/file/list`，不能用日志里的旧请求证明当前有映射。 |
+| 文章附属动态 | [article/index.vue:533-540](file:///E:/web/qs-web/src/views/front/article/index.vue#L533-L540)、[article/index.vue:614-617](file:///E:/web/qs-web/src/views/front/article/index.vue#L614-L617) | `getNews → listWeiYan` 实际请求旧 POST `/moment/list`。 |
+| 后台文件删除 | [resource/List.vue:199](file:///E:/web/qs-web/src/views/admin/resource/List.vue#L199)、[resource.ts:46](file:///E:/web/qs-web/src/api/modules/resource.ts#L46)、[FileAdminController.java:74-88](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/file/controller/admin/FileAdminController.java#L74-L88) | JSON 请求体与 `@RequestParam id` 不匹配。 |
+| 后台资源状态 | [resource/List.vue:225](file:///E:/web/qs-web/src/views/admin/resource/List.vue#L225)、[resource.ts:63](file:///E:/web/qs-web/src/api/modules/resource.ts#L63) | 方法直接 `Promise.resolve(null)`，不发请求，页面仍可提示成功。 |
+
+- **Expected**：路径、HTTP 方法、参数位置和 DTO 与当前后端一致；无服务端变更时不得提示保存成功。
+- **Reproduction（待执行）**：逐个从页面触发并记录 Network、业务码、页面状态和持久化结果；禁止仅用直接请求旧 URL 代替页面可达性证明。
+- **Root Cause**：重构后的手写模块迁移不完整，部分保留空实现。
+- **Impact**：上表对应功能失败或假成功，不推导为整个用户/动态/资源模块全部不可用。
+- **最小修复**：按活跃入口逐条迁移；不全局字符串替换路径，不把 Orval 方法数字后缀当成后端 URL。
+- **排除重复/误报**：后台用户列表已走 `/admin/user/page`；新动态页使用 `getTimeline/publishMoment`；旧 `getUserList`、友链 GET 删除封装及 `getCode1` 未建立当前活跃页面引用，不计为已确认页面故障。
+
+### D2｜建议 P1：关于页分页模型错配｜UNVERIFIED
+
+- **Evidence**：[about.ts:54-60](file:///E:/web/qs-web/src/api/modules/about.ts#L54-L60)、[ResourceAggregationController.java](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/file/controller/web/ResourceAggregationController.java)。
+- **Current Fact（源码）**：前端使用 `pageNum/pageSize`，后端接收 MP Page 派生请求，绑定字段是 `current/size`。
+- **Expected**：请求页码/页大小决定响应分页。
+- **Reproduction（待执行）**：隔离数据超过一页，对比两组参数及第 1/2 页内容；旧响应样例仅见历史附录。
+- **Root Cause**：多套分页 DTO 混用，边界没有转换。
+- **Impact**：分页意图被忽略，可能持续停在默认页而漏展示后续项目。
+- **最小修复**：调用边界转换为 `current/size`，同时核验响应的 `records/total` 消费层。
+
+### D3–D5｜保留的安全配置和异常契约事项｜UNVERIFIED
+
+| 编号/建议级别 | Evidence / Current Fact（源码） | Expected / Reproduction（待执行） | Root Cause / Impact / 建议 |
+| --- | --- | --- | --- |
+| D3 / P1 | [CorsConfig.java:21-24](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/common/config/CorsConfig.java#L21-L24)：通配 Origin + 允许凭据。 | 仅放行受信域；在匹配生产配置的隔离环境检查跨域预检和实际凭据类型。 | 开发便利配置未收敛；是否能跨域利用认证取决于凭据/网关，不能据此推导可读取 localStorage token。建议环境化白名单。 |
+| D4 / P1 | [Weblinks.java:39-42](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/weblinks/domain/pojo/Weblinks.java#L39-L42)：`desc` 未显式转义，仍走通用 Mapper 查询。 | 生成合法 SQL；在隔离 MySQL 下执行该查询并核对生成 SQL。 | SQL 保留字映射未修，历史已出现语法异常，本轮未执行 SQL。建议显式转义映射后复测，再处理 C1；不写“本次 100% 报错”。 |
+| D5 / P1 | [GlobalExceptionHandler.java](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/common/exception/handle/GlobalExceptionHandler.java)、[request.ts](file:///E:/web/qs-web/src/utils/request.ts)、[responseHandler.ts](file:///E:/web/qs-web/src/api/client/responseHandler.ts)：HTTP 状态与 R 业务码分离，统一封装会拒绝业务失败。 | 统一 404/405/校验异常表达；对照两套客户端的处理。 | 鉴权错误已返回真实 401/403，但兜底 `Exception` 仍为 HTTP 200；空实现导致的假成功见 D1，不是“HTTP 200 自动成功”问题。 |
+
+### 本次排除/收窄的指控
+
+- `FALSE POSITIVE`：由列表摘要问题推导“私密详情绕过密码”。详情仍走 `getArticleWithPwd`，与 A2 分开评估。
+- `FALSE POSITIVE`：PUBLIC sysConfig 必然泄露私密配置；当前有 PUBLIC 类型过滤。未验证部署环境实际配置分类是否正确。
+- `FALSE POSITIVE`：访问日志管理无鉴权；当前有 L0。后台默认 userToken 也不必然失败，后台登录会设置两种 token。
+- `FALSE POSITIVE`：返回 User 类型必然泄露敏感字段；[CommonQuery.java:220-237](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/utils/CommonQuery.java#L220-L237) 使用有限字段投影，需看实际查询而非类名。
+- 标签云已改为未删除名称列表并销毁实例，门户已接 `/portal/overview`；门户包含私密文章的统计总数不等于正文泄露。
+- 当前本地 Orval 生成文件仍存在；停止 Git 跟踪不等于本机缺文件。干净克隆如何生成、是否可重复构建另需验收。
+- 旧 `/resource/upload`“存在”的 HTTP 证据属于旧运行基线，不能证明当前源码有该路由；相反，仅看当前源码也不能声称已实测部署实例 404。
+
+Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
+
+- `FALSE POSITIVE`：“`SET ... XX KEEPTTL` 使闲置期无法续期”。原生键 TTL 绑定的是绝对超时，空闲超时由 Lua 内的 `last + idle <= now` 判定；KEEPTTL 正是“刷新活跃时间但不延长绝对寿命”的正确写法，单测也断言了这一点。
+- `FALSE POSITIVE`：“两域共用 `tokenName` 必然导致越权”。业务校验仍由 loginType + revision + scope 三重把关；共用键名影响的是会话簿记与运营能力，已降为 S5（P2，需运行时验证）。
+- 不把“注册接口返回 `AuthSessionVO`”当作契约破坏：注册即登录是本次改造的显式设计，前端 `accept()` 也能按 64 位 token + `sessionType='WEB'` 正常消费；真正异常的是旧 `/user/token`（S4）。
+
+## Evidence
+
+本轮证据来自：Sa-Token 双会话改造的逐文件核对（`modules/user/auth` 下 `AuthSessionService`/`SaTokenSessionAdapter`/`AuthSessionProperties`/`UserCredentialService`/`AuthSessionVO`/`SessionScope`，`aop/LoginCheck` + `LoginCheckAspect`，`GlobalExceptionHandler`，前端 `src/auth/*`、`stores/modules/auth.ts`、`router/index.ts`、`utils/request.ts`、`api/client/responseHandler.ts`），以及下列本地命令。当前条目链接对应本轮工作树；历史附录链接仍是旧报告记录的行号，不保证与当前文件对齐。
+
+量化口径：
+
+- `@LoginCheck` 134 处：88 `scope=ADMIN`、11 `scope=EITHER`、35 默认（`value=2, scope=WEB`）。
+- `controller/admin` 方法级 HTTP 映射 69 个：61 ADMIN、5 EITHER、3 无注解（均为认证入口）。
+- 扫描方式：逐文件匹配注解行与相邻 Mapping，排除类级 `@RequestMapping`；注解与 Mapping 的书写顺序不一致，窗口过窄会误报。
+
+不重复沿用旧 `187` 个操作、`65` 个手写调用、`20` 条错配、Orval `187/187` 数字。本轮未重新生成 OpenAPI 或扫描出一份当前全量双向契约表，不能称“全接口已无遗漏”。
+
+## Changes
+
+- 仅更新 `docs/project-Frontend&Backend-audit.md`（第二轮）：新增 Sa-Token 改造的设计落地表与 S1–S8，重写鉴权量化口径，刷新旧发现状态、构建与测试结果、回归计划及证据限制。
+- 保留旧原文为折叠历史附录；其测试数据操作、运行状态及清理披露均属于过去，不作为本轮行为。
+- 业务源代码、配置、数据库和缓存未修改；未提交、合并或推送 Git。编译/构建/测试只更新本地生成产物（`target/`、`dist/`、`logs/audit-build-1024.log`）；受版本控制的业务文件无改动。
+
+## Verification
+
+| 本轮实际执行 | 结果 | 证明范围 |
+| --- | --- | --- |
+| 两仓库 `git log -3`、`git status --short` | 后端 `main@3bd2670`（仅本报告 M）、前端 `main@4f4fed9`（干净，另有未跟踪 `scripts/auth-browser-harness.cjs`） | 固定本次源码快照 |
+| `mvn -B -f E:\idea\qs-blog\qsblog-server\pom.xml -DskipTests compile` | `BUILD SUCCESS` | 改造后的主源码可编译 |
+| `mvn -B -f ... test "-DskipTests=false"` | 两批共 **67 个用例全部通过**（13 AuthSessionService + 10 SaTokenSessionAdapter〔1 skipped〕+ 5 UserCredentialService；39 含 IM 会话契约等） | 双会话签发/解析/撤销、凭据升级、IM 断连的代码级行为；**仍未覆盖真实 Redis 与 HTTP 链路** |
+| 同上，`SaTokenRedisIntegrationTest` | **未执行**，被 `@EnabledIfSystemProperty(named="auth.redis.integration")` 门控 | Lua 脚本与真实 Redis 键格式的兼容性仍待验证 |
+| `pnpm -C E:\web\qs-web type-check` | 通过（`vue-tsc --noEmit`） | 当前依赖与生成客户端下的类型检查 |
+| `pnpm -C E:\web\qs-web exec vitest run` | **43/43 通过** | 会话策略、快照丢弃、storage 同步等前端单元行为 |
+| `pnpm -C E:\web\qs-web build` | 通过；Vite 7.3.0，20.52s | 可生成生产产物，不是生产页面运行验收 |
+| 构建/测试后 `git status --short`、`git diff --check` | 无业务文件改动、无空白错误 | 编译与测试未改动受版本控制的业务文件 |
+
+### CONFIRMED(BUILD) / CONFIRMED(TEST)：本轮实际观察
+
+1. **Rollup 分包循环依赖警告已消失**：上轮 `categoryInfo.ts → stores/index.ts` 的跨 chunk 循环本轮未再出现。属构建结果变化，未在浏览器验证是否影响执行顺序。
+2. **CSS 语法/弃用警告仍在**：生成 CSS 中 `&--register[data-v-*]` 不符合原生 CSS nesting 规则；多处 `>>>`、`/deep/` 已弃用。未推断为注册功能失效。
+3. **大包警告仍在**：最大 JS chunk 约 866.52 kB（gzip 约 299.5 kB），超过 500 kB 阈值。属加载性能治理项。
+4. **Java 编译警告仍在**：Lombok 父类 equals/hashCode、MapStruct 未映射字段、隐式注解处理、弃用及未检查操作。未因警告修改映射或认定业务丢字段。
+
+### 推荐回归顺序（尚未执行）
+
+1. **S1 优先**：以匿名、普通用户、管理员三种身份在隔离环境回归动态页的发布 → 我的动态 → 点赞/取消 → 评论 → 删除 → 浏览计数 → 同步；确认普通用户不再 403、管理员两种入口行为符合预期。
+2. **S2**：同一账号先登录再加载公开时间线，确认 `liked` 与可见性按用户视角返回；登出后仍可匿名浏览。
+3. **S3/S4**：匿名与过期 token 访问 `/file/admin/upload`，确认响应统一、限流重新生效；用旧契约调用 `/user/token`，确认错误码明确。
+4. **双域并行**：同一账号同时登录前后台，验证登出前台不影响后台、改密后两域旧会话均失效、跨标签页（storage 事件）与 `pageshow` 复核正常；同步核对 Redis 中两域的键名与 TTL（S5/S6）。
+5. 旧发现：A1 跨账号读写与审核、A2 私密文章分页/推荐过滤、B1/B2 文章编辑与保存、B4/B5 标签缓存与字典、C1/D4 友链、D1 各活跃旧入口、D2 关于页分页。
+6. 用邮件替身验证限流与找回成功反馈；最后对生产构建做路由切换/刷新与注册样式验收。
+
+## Remaining Uncertainty
+
+- 本轮没有 HTTP/浏览器/DB/Redis 复测，S1–S8 均为源码结论；S1 的 403 未在真实请求中录得响应体，也未知生产环境是否已部署这两个提交。
+- 未在真实 Redis 上执行 Lua 脚本与 Sa-Token 1.46.0 的键格式契约测试（集成测试被 system property 门控）；S5 的`login:session` 键共享与 S6 的日志/存储增长因此只能定性不能定量。
+- 不执行有状态探针：即使 GET 也可能回填缓存/记录访问/增加计数，认证切面会续期；不能将“GET”自动当作零副作用。
+- 未确认运行 JVM 是否等于当前 HEAD、网关兼容路由、生产 CORS/限流及真实数据分布；不沿用上次 PID、端口或“实例必然旧”的说法。
+- 未完成当前 OpenAPI 与全部生成/手写调用的双向全量核对；本地忽略的生成物可用不等于干净克隆的构建流程已验证。
+- 旧 token 到 Sa-Token 的切换对已登录用户是硬切换：本轮未验证上线时的强制重新登录规模、前端旧 localStorage 键清理是否完全。
+- 评论初始列表分支、MdEditor 上传回调、Graffiti/免密登录组件的完整可达性未全部闭环，不加入已确认故障数量。
+- 构建与单测通过不证明权限、响应契约、缓存一致性或页面交互正确；建议下一轮在明确授权的隔离环境复现，再决定修复范围。
+
+## 历史附录：首次运行时审计原文（已被上文复审状态覆盖）
+
+> 下列内容保留用于追溯。其 62/26 鉴权统计、20 条接口数量、已修复项以及部分原因判断均有过时/错误之处，以上文逐项对照为准。原文中的“当前”“已实测”“已清理”“全部 P0/P1 已复现”仅是旧报告陈述，不是本轮确认；日志和辅助脚本是否仍存在也未重新核验。
+
+<details>
+<summary>展开旧版运行时报告与当时的副作用披露</summary>
+
 已在**真实运行的后端实例**上完成契约复现与清理，审计结论从"静态推断"升级为"运行时取证"。基线：后端 `prod@89e2a1c`（51 个未提交改动，重新 `mvn clean package` 后以 `dev` profile 启动于 `18081`，依赖 MySQL `192.168.30.100:3309` / Redis `db=8`）；前端 `refactor/navbar-capsule-transition@1a8eebe`（59 个未提交改动）。
 
 核心量化结果：
@@ -257,3 +657,5 @@
 5. **前端未提交改动**：59 个未提交文件可能包含未审计的临时代码，本报告仅覆盖当前工作区快照。
 6. **运行环境差异**：本次为 `dev` profile + 本机 `18081`，生产 CORS 白名单、前端域名与网关策略可能不同（`application-prod.yml` 未逐一比对）。
 7. **管理员会话副作用**：`admin_token_1` 被覆写后删除，若之前存在有效管理员登录态，需要重新登录恢复。
+
+</details>
