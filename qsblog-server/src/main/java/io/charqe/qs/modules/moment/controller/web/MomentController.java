@@ -107,11 +107,12 @@ public class MomentController {
 
     // ── 发布 / 更新 / 删除 ─────────────────────────────────────
 
-    @Operation(summary = "发布动态")
+    @Operation(summary = "发布动态（仅站长）")
     @ApiResponse(responseCode = "200", description = "发布成功，返回动态ID")
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(scope = SessionScope.WEB)
+    @ApiResponse(responseCode = "403", description = "仅站长可操作")
+    @LoginCheck(value = 0, scope = SessionScope.EITHER)
     @PostMapping("/publish")
     public R<Long> publish(
             @Parameter(name = "dto", description = "动态内容", required = true)
@@ -119,11 +120,12 @@ public class MomentController {
         return R.success(momentService.publish(BlogUtil.getUserId(), dto));
     }
 
-    @Operation(summary = "更新动态（仅本人）")
+    @Operation(summary = "更新动态（仅站长）")
     @ApiResponse(responseCode = "200", description = "更新成功")
     @ApiResponse(responseCode = "400", description = "请求参数错误或无权操作")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(scope = SessionScope.WEB)
+    @ApiResponse(responseCode = "403", description = "仅站长可操作")
+    @LoginCheck(value = 0, scope = SessionScope.EITHER)
     @PutMapping("/{id}")
     public R<Void> update(
             @Parameter(name = "id", description = "动态ID", required = true)
@@ -134,11 +136,11 @@ public class MomentController {
         return R.success(null);
     }
 
-    @Operation(summary = "删除动态（仅本人）")
+    @Operation(summary = "删除动态（仅站长）")
     @ApiResponse(responseCode = "200", description = "删除成功")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @ApiResponse(responseCode = "403", description = "无权删除")
-    @LoginCheck(scope = SessionScope.WEB)
+    @ApiResponse(responseCode = "403", description = "仅站长可操作")
+    @LoginCheck(value = 0, scope = SessionScope.EITHER)
     @DeleteMapping("/{id}")
     public R<Void> delete(
             @Parameter(name = "id", description = "动态ID", required = true)
@@ -276,10 +278,8 @@ public class MomentController {
 
     // ── 浏览 ────────────────────────────────────────────────────
 
-    @Operation(summary = "记录浏览（幂等）")
+    @Operation(summary = "记录浏览（幂等，匿名直接忽略）")
     @ApiResponse(responseCode = "200", description = "记录成功")
-    @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(scope = SessionScope.WEB)
     @PostMapping("/{id}/view")
     public R<Void> view(
             @Parameter(name = "id", description = "动态ID", required = true)
@@ -297,10 +297,11 @@ public class MomentController {
 
     // ── 同步 ────────────────────────────────────────────────────
 
-    @Operation(summary = "同步到多平台")
+    @Operation(summary = "同步到多平台（仅站长）")
     @ApiResponse(responseCode = "200", description = "同步结果")
     @ApiResponse(responseCode = "401", description = "未登录")
-    @LoginCheck(scope = SessionScope.WEB)
+    @ApiResponse(responseCode = "403", description = "仅站长可操作")
+    @LoginCheck(value = 0, scope = SessionScope.EITHER)
     @PostMapping("/sync")
     public R<MomentSyncVO> sync(
             @Parameter(name = "dto", description = "同步请求", required = true)

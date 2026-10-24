@@ -771,6 +771,13 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         return credentials.matches(rawPassword, storedHash);
     }
 
+    @Override
+    public User getOwner() {
+        return getOne(Wrappers.<User>lambdaQuery()
+                .eq(User::getUserType, UserTypeEnum.ADMIN.getCode())
+                .orderByAsc(User::getId)
+                .last("limit 1"));
+    }
 
 }
 

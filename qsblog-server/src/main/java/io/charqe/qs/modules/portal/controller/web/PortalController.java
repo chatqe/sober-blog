@@ -2,6 +2,7 @@ package io.charqe.qs.modules.portal.controller.web;
 
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.portal.controller.web.vo.PortalOverviewVO;
+import io.charqe.qs.modules.portal.controller.web.vo.PortalOwnerVO;
 import io.charqe.qs.modules.portal.service.PortalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,5 +34,13 @@ public class PortalController {
     @GetMapping("/overview")
     public R<PortalOverviewVO> overview() {
         return R.success(portalService.getOverview());
+    }
+
+    @Operation(summary = "获取站长信息", description = "返回站长（userType=0）的用户名与头像，供前台匿名展示作者信息")
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    @GetMapping("/owner")
+    public R<PortalOwnerVO> owner() {
+        return R.success(portalService.getOwner());
     }
 }

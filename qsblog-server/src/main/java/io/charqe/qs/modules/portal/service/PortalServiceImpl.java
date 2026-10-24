@@ -7,6 +7,9 @@ import io.charqe.qs.modules.article.service.ArticleService;
 import io.charqe.qs.modules.category.service.CategoryService;
 import io.charqe.qs.modules.portal.constant.PortalConstant;
 import io.charqe.qs.modules.portal.controller.web.vo.PortalOverviewVO;
+import io.charqe.qs.modules.portal.controller.web.vo.PortalOwnerVO;
+import io.charqe.qs.modules.user.domain.pojo.User;
+import io.charqe.qs.modules.user.service.UserService;
 import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.modules.webInfo.service.WebInfoService;
 import io.charqe.qs.utils.cache.QingSiCache;
@@ -41,6 +44,9 @@ public class PortalServiceImpl implements PortalService {
 
     @Resource
     private QingSiCache qingSiCache;
+
+    @Resource
+    private UserService userService;
 
     @Override
     public PortalOverviewVO getOverview() {
@@ -84,5 +90,30 @@ public class PortalServiceImpl implements PortalService {
 
     private long defaultZero(Long value) {
         return value != null ? value : 0L;
+    }
+
+    @Override
+    public PortalOwnerVO getOwner() {
+        String cached = qingSiCache.get(PortalConstant.OWNER_CACHE);
+        if (StringUtils.hasText(cached)) {
+            try {
+                return JSON.parseObject(cached, PortalOwnerVO.class);
+            } catch (Exception e) {
+                log.warn("站长信息缓存解析失败，回源重建：{}", e.getMessage());
+                qingSiCache.del(PortalConstant.OWNER_CACHE);
+            }
+        }
+
+        User owner = userService.getOwner();
+        if (owner == null) {
+            return null;
+        }
+        PortalOwnerVO vo = new PortalOwnerVO();
+        vo.setUserId(owner.getId());
+        vo.setUsername(owner.getUsername());
+        vo.setAvatar(owner.getAvatar());
+        vo.setIntroduction(owner.getIntroduction());
+        qingSiCache.put(PortalConstant.OWNER_CACHE, vo, PortalConstant.OWNER_CACHE_SECONDS);
+        return vo;
     }
 }

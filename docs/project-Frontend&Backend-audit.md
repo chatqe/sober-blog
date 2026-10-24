@@ -1,12 +1,12 @@
 # 前后端联合审计报告
 
-更新日期：2026-10-24（第三轮：fix 分支运行时回归）。本文前半部分为当前结论；末尾折叠附录保留旧运行时审计记录，不代表当前版本的运行结果。
+更新日期：2026-10-24（第四轮：业务契约更正，动态写权限收敛为站长专属）。本文前半部分为当前结论；末尾折叠附录保留旧运行时审计记录，不代表当前版本的运行结果。
 
 ## Result
 
-**PARTIAL：Sa-Token 双会话改造已完成源码复审、构建/单测与 fix 分支运行时回归。动态模块的鉴权链路（S1/S2）与回归中暴露的三处存量缺陷（S9–S11）已在真实 MySQL/Redis + 浏览器环境中验证通过；A1/A2/B1/B2 等存量项仍未在运行时复核，项目整体不判定为通过。**
+**PARTIAL：Sa-Token 双会话改造已完成源码复审、构建/单测与 fix 分支运行时回归。动态模块的鉴权链路（S1/S2）、回归中暴露的三处存量缺陷（S9–S11）以及第四轮按业务更正落地的站长专属写权限，均已在真实 MySQL/Redis + 浏览器环境中验证通过；A1/A2/B1/B2 等存量项仍未在运行时复核，项目整体不判定为通过。**
 
-- 本轮最高优先级（S1）：动态模块 12 个写接口同时受 `value=1`（仅站长/管理员可用）与 `scope=ADMIN` 双重限制，而 C 端前端对任意登录用户展示入口并以 WEB 会话调用。其中**角色门槛 `@LoginCheck(1)` 在改造前已存在**（`d96e823` 即如此），属存量前后端契约错配；scope 门槛与 S2–S4 可归因到本轮两次鉴权改造提交。
+- 本轮最高优先级（S1）：动态模块 12 个写接口原为 `value=1` + `scope=ADMIN`，既拒绝普通用户又以 WEB 会话拦截所有人。第四轮按业务方更正后的口径重定契约：**新增/修改/删除仅站长（`userType=0`）**，其余人（含匿名）可读动态、点赞数、评论内容与作者信息，点赞/评论需登录；后台 `/admin/moment/*` 保留给站长(0)与管理员(1)。
 - 双会话设计在源码层成立：WEB/ADMIN 各自独立的 `StpLogic`、revision 版本撤销、跨域调用显式拒绝、401/403 以真实 HTTP 状态返回、前端按域存储并按 generation 丢弃过期响应。
 - 上轮 P0 的「普通用户可调管理接口」在源码层已收敛：`controller/admin` 下 69 个方法级操作中 61 个 ADMIN、5 个 EITHER、仅 3 个认证入口无注解；全仓 134 处 `@LoginCheck` 为 88 ADMIN / 11 EITHER / 35 默认 WEB。
 - 存量未修：family 归属与审核（A1）、公开文章分页可见性（A2）、文章编辑双解包与旧字段（B1/B2）、标签缓存与字典（B4/B5）、友链（C1/D4）、活跃旧路径（D1）、关于页分页（D2）。
@@ -29,7 +29,7 @@
 - `CONFIRMED(BUILD)`：本轮命令实际观察到的构建结果/警告，不代表相关 UI 故障已复现。
 - `CONFIRMED(TEST)`：本轮单元测试覆盖到的行为，不等价于运行时的端到端验收。
 
-范围：单次联合代码复审覆盖旧发现及相关活跃调用链，结合 Git 状态与修复历史；未进行云扫描、全量依赖安全扫描、当前 OpenAPI 双向全量统计或浏览器验收。S2–S4 可归因到本轮两次鉴权改造提交，S1 的角色门槛与 S5–S8 为存量/设计风险，其余编号仍为存量。
+范围：单次联合代码复审覆盖旧发现及相关活跃调用链，结合 Git 状态与修复历史；未进行云扫描、全量依赖安全扫描或当前 OpenAPI 双向全量统计。S2–S4 可归因到本轮两次鉴权改造提交，S1 的角色门槛与 S5–S8 为存量/设计风险，其余编号仍为存量；S1/S2/S9–S12 已做真实后端 + 数据库 + 浏览器验收，其余未跑。
 
 ## Findings
 
@@ -48,7 +48,7 @@
 | 前端凭据隔离 | localStorage 只存 64 位 token；[requestPolicy.ts:30-42](file:///E:/web/qs-web/src/auth/requestPolicy.ts#L30-L42) 默认 `anonymous`，强制删除外部 `Authorization` 后按域注入，并写入会话快照。 |
 | 过期响应/跨标签页 | `generation` 快照 + `matches()` 丢弃旧会话响应；401/300 只清理发起端；storage 事件按域同步；`pageshow` 强制复核。 |
 
-判定：改造方向正确，上述机制均有对应实现与单测（见 Verification）。但 scope 的取值没有与既有控制器的语义逐个对齐，由此引出 S1 这个强回归。
+判定：改造方向正确，上述机制均有对应实现与单测（见 Verification）。但 scope 的取值没有与既有控制器的语义逐个对齐，由此引出 S1；S1 的期望值又在第四轮按业务更正重定。
 
 ### 旧报告逐项复核
 
@@ -90,16 +90,15 @@
 - 旧表 L0/L1/L2 口径建立在上代 token 与 `value` 语义上，Sa-Token 改造后已不适用，不能与新表混算；旧报告 62/26 的扫描遗漏 Patch 与无括号 Mapping 的问题同样作废。
 - 本表不覆盖其他目录中带管理语义的接口；数值由本轮源码扫描得出，未经运行时 OpenAPI 复核。
 
-### S1｜动态写接口要求管理员角色，与 C 端前端契约错配｜`FIXED(VERIFIED)`
+### S1｜动态写接口的角色/域门槛与业务契约错配｜`FIXED(VERIFIED)`
 
-- **Evidence**：[MomentController.java:69](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L69)、[:112](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L112)、[:124](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L124)、[:139](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L139)、[:153](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L153)、[:168](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L168)、[:195](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L195)、[:224](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L224)、[:235](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L235)、[:250](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L250)、[:276](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L276)、[:297](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java#L297) 均为 `@LoginCheck(value = 1, scope = SessionScope.ADMIN)`；[LoginCheckAspect.java:23-31](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/aop/LoginCheckAspect.java#L23-L31) 以 `userType > value` 拒绝；`UserTypeEnum` 为 ADMIN(0)/DEV(1)/USER(2)；前端 [weiYan.ts:98-139](file:///E:/web/qs-web/src/api/modules/weiYan.ts#L98-L139) 全部 `authScope: 'web'`。
-- **Current Fact（源码）**：存在**两道**拦截。① `value = 1` 拒绝 userType=2 的普通用户；② `scope = ADMIN` 拒绝 WEB 会话。已验证 `d96e823`（改造前）这些方法就是 `@LoginCheck(1)`，因此①是长期存在的前后端契约错配，②是 `3bd2670` 新增的限制。
-- **Expected**：按业务确认结果，动态属 C 端功能，所有登录用户应可发布/点赞/评论/删除本人内容。
-- **Root Cause**：`@LoginCheck` 的 `value`（角色上限）被当成“仅需登录”误用为 1；改造时只补 `scope`，没有复核 `value` 是否与 C 端调用方匹配。
-- **Impact**：普通用户在动态页的 12 个写操作全部 403；改造前提示“权限不足/请输入管理员账号”，改造后提示“当前会话不能用于此入口”。UI 仍对任意登录用户展示发布按钮与“我的动态”Tab。
-- **最小修复/验收**：改为 `@LoginCheck(scope = SessionScope.WEB)`，让 `value` 取默认 2；**不能只改 scope 而保留 value = 1**，否则普通用户仍被角色门槛拒绝。以匿名/普通用户/管理员三身份回归发布→点赞→评论→删除。
-- **本轮处置**：已在 `fix/sa-token-scope-regression` 分支将 12 处统一改为 `@LoginCheck(scope = SessionScope.WEB)`，后端编译通过；服务层 `updateWeb`/`deleteWeb` 已有 `userId` 归属校验，放开角色后不会产生跨账号写入。
-- **运行时验证（2026-10-24）**：`userType=2` 普通用户 WEB 会话下，`POST /moment` 200、`PUT /moment/{id}` 200、`DELETE /moment/{id}` 200、`POST /moment/{id}/comment` 200、`POST|DELETE /moment/{id}/like` 200、`POST /moment/my/timeline` 200、`POST /moment/{id}/view` 200；匿名发布 401；用 WEB token 调 `/admin/user/session` 返回 403「当前会话不能用于此入口」；用其 token 删除他人动态被拒。浏览器侧普通用户可正常点赞/评论，无 403 提示。
+- **Evidence**：[MomentController.java](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/controller/web/MomentController.java) 的 publish/update/delete/sync 原为 `@LoginCheck(value = 1, scope = SessionScope.ADMIN)`；[LoginCheckAspect.java:23-31](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/aop/LoginCheckAspect.java#L23-L31) 以 `userType > value` 拒绝；`UserTypeEnum` 为 ADMIN(0)/DEV(1)/USER(2)；前端 [weiYan.ts](file:///E:/web/qs-web/src/api/modules/weiYan.ts) 以 `authScope: 'web'` 调用。
+- **Current Fact（源码，改造前）**：存在**两道**拦截。① `value = 1` 拒绝 userType=2 的普通用户；② `scope = ADMIN` 拒绝 WEB 会话。`d96e823` 时这些方法已是 `@LoginCheck(1)`，①属存量契约错配，②为 `3bd2670` 新增限制。
+- **Expected（2026-10-24 业务更正）**：动态的新增/修改/删除**仅站长**（`user.userType = 0`）；其余人不论登录与否均可查看动态、点赞数与评论内容，`/moment` 首行头像与作者名公开；只有点赞/评论需要登录，未登录直接弹登录/注册容器；后台动态管理 `/admin/moment/*` 允许站长(0)与管理员(1)。
+- **Root Cause**：`@LoginCheck` 的 `value`（角色上限）被当成“仅需登录”误用为 1；第三轮曾按“C 端所有登录用户可写”放开为 `value` 默认 2，与业务口径不符。
+- **Impact**：原状态下普通用户在动态页的写操作全部 403；误放开后普通用户可发布动态，超出站长专属写权限。
+- **本轮处置（第四轮）**：publish/update/delete/sync 统一为 `@LoginCheck(value = 0, scope = SessionScope.EITHER)`；`/{id}/view` 去掉注解改为公开幂等；`/my/timeline`、like/unlike、comment 及其点赞仍为 `scope = WEB`；后台 `/admin/moment/*` 保持 `value = 1, scope = ADMIN`，并在 save 缺省作者为当前后台账号。
+- **运行时验证（2026-10-24，42 项断言全过）**：匿名 publish/update/delete/like/comment 均 401，`/moment/{id}/view` 200；普通用户(userType=2) publish/update/delete/sync 均 403「权限不足」，like/unlike/comment/deleteComment 200；站长(userType=0) publish→update→匿名详情读到新内容→delete 全 200；管理员(userType=1) WEB 会话 publish 403、ADMIN 会话 `/admin/moment/page|save|update|delete` 全 200；WEB token 与 ADMIN token 交叉调用分别被 403 拒绝。浏览器侧：匿名与普通用户无发布 FAB/删除按钮/「我的动态」Tab，管理员前台同样无入口，站长三者齐全并可发布/删除。
 
 ### S2｜公开时间线被前端声明为匿名，登录用户丢失 `liked`｜`FIXED(VERIFIED)`
 
@@ -187,6 +186,14 @@
 - **Root Cause**：MyBatis-Plus `setSql` 拼接的是完整 SET 子句片段，必须自带 `column =`，不能只写表达式。
 - **最小修复**：`"GREATEST(...)"` → `column + " = GREATEST(...)"`。
 - **运行时验证（2026-10-24）**：`unlike-probe` 六步（发布→点赞→取消→再点赞→再取消→删除）全 200；全量回归中取消点赞后 `liked=false`、`likesCount` 回到 0。
+
+### S12｜建议 P2：后台动态列表的 `authorName/authorAvatar` 从未回填｜`FIXED(VERIFIED)`（第四轮新发现）
+
+- **Evidence**：[MomentServiceImpl.java](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/moment/service/MomentServiceImpl.java) 的 `pageList` 直接用 `this::toListVO` 映射，而 `toListVO` 只拷实体字段，没有查 `user`；同一文件的 `toWebListVO` 却已通过 `buildUserMap` 回填作者。
+- **Current Fact（运行时）**：`POST /admin/moment/page` 返回的 `authorName` 恒为 `null`，新建后台动态管理页的「作者」列为空。
+- **Root Cause**：管理端列表 VO 与 C 端列表 VO 走了两套映射，作者信息只在 C 端那套补齐。
+- **最小修复**：`pageList` 先按页内 `userId` 集合调 `buildUserMap`，再交给 `toListVO(entity, userMap)` 回填 `authorName/authorAvatar`。
+- **运行时验证（2026-10-24）**：`POST /admin/moment/page` 返回 `author=qs_admin_probe` 等真实用户名；后台页面表格作者列正常显示 `Joy`/`regularuser`/`qs_admin_probe`。
 
 ### A1｜建议 P0：family 缺少对象归属与审核权限控制｜UNVERIFIED
 
@@ -378,6 +385,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 
 - 仅更新 `docs/project-Frontend&Backend-audit.md`（第二轮）：新增 Sa-Token 改造的设计落地表与 S1–S8，重写鉴权量化口径，刷新旧发现状态、构建与测试结果、回归计划及证据限制。
 - 第三轮在本分支提交 3 处后端修复：`CommentBehHandler`（S9）、`MomentController#comment`（S10）、`MomentBehHandler#decrementMomentCount`（S11）；前端本轮无业务代码改动。回归脚本与临时工具均在未跟踪的 `temp/regress/`，不进入提交。
+- 第四轮按业务更正落地站长专属写权限：后端 `MomentController` 写接口改 `value=0, scope=EITHER`、`/view` 公开；新增 `GET /portal/owner`（`UserService.getOwner` + `PortalOwnerVO` + `portal:owner` 300s 缓存）；`AdminMomentController#save` 补缺省作者；`MomentServiceImpl#pageList` 回填作者（S12）。前端新增 `request.put`、后台动态管理页 `/admin/moment/list`（路由、`ADMIN_ROLES`、侧边栏菜单），`/moment` 头部改读站长公开信息、发布 FAB/删除按钮/「我的动态」Tab 按 `userType=0` 显隐，未登录点赞/评论弹 `uiStore.openAuthModal()`，评论列表对匿名开放。前端本轮新增 1 个页面与 4 个 API 封装。
 - 保留旧原文为折叠历史附录；其测试数据操作、运行状态及清理披露均属于过去，不作为本轮行为。
 - 第二轮业务源代码、配置、数据库和缓存未修改，也未提交/合并/推送 Git；第三轮只改上述 3 个后端文件并提交到 fix 分支，回归数据已清理。编译/构建/测试只更新本地生成产物（`target/`、`dist/`、`logs/audit-build-1024.log`）。
 
@@ -396,6 +404,11 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 第三轮：10 个写接口 + 12 个读接口的 API 回归脚本（`temp/regress/moment-regress.cjs`，23 条断言） | **23/23 通过**（首轮 14/23 → 修复后 22/23 → 修 S11 后 23/23） | 真实后端 18081 + dev MySQL/Redis 下的动态写路径、跨域拒绝与身份隔离 |
 | 第三轮：Playwright MCP 浏览器验收（`http://localhost:5173/moment`） | 登录→点赞→刷新保持→取消→发评论→刷新落库→退出，全链路 200 且无控制台报错 | S1/S2/S9/S10/S11 的 UI 侧表现 |
 | 第三轮：`mvn -o -B test`（修复后全量单测） | **80 用例：0 failure / 3 error**，错误均在 `DatabaseTests`（`saveDanmakuList` DuplicateKey、`updateArticleCoverUrl` NPE、`updateDanmakuUrl` IllegalArgument），均为依赖真实库既有数据的存量集成用例 | auth/behavior 相关单测全绿；`DatabaseTests` 的 3 个错误与本轮修复无关 |
+| 第四轮：`mvn -o -B -pl qsblog-server -DskipTests compile` | `BUILD SUCCESS` | 站长专属写权限、`/portal/owner`、后台作者回填均编译通过 |
+| 第四轮：`npx vue-tsc --noEmit` | 通过（修掉 `portalApi.getOwner` 与 `isMine` 两处类型错误后清零） | 新增后台页与 `/moment` 改动的类型安全 |
+| 第四轮：`npx vitest run --config vitest.config.ts` | **43/43 通过** | 会话快照/存储同步等前端单元行为未被破坏 |
+| 第四轮：动态契约 API 回归（`temp/regress/contract-regress.cjs`，4 身份 42 条断言） | **42/42 通过**（首轮 40/42：评论作者字段名误判、后台作者未回填；修正后全绿） | 匿名/普通用户/站长/管理员的读、写、点赞、评论、后台 CRUD 与跨域拒绝 |
+| 第四轮：Playwright MCP 四身份 UI 验收 | 匿名（头部 Joy、无发布/删除、点赞弹登录容器、评论公开可读）、普通用户（同上）、站长（FAB+删除+发布/删除回环）、管理员（前台无入口 + 后台 `/admin/moment/list` 增删改） | S1/S12 与 `/portal/owner`、后台页菜单/白名单的实际界面表现 |
 
 ### 第三轮运行时回归（2026-10-24，fix/sa-token-scope-regression）
 
@@ -406,6 +419,18 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 - 清理：回归账号、探测动态、`behavior_state/behavior_log/behavior_cnt/comment` 对应行按 id 删除，验证 SQL 六项计数均为 0。
 - 未覆盖：管理员/DEV 角色在动态页的行为、S3/S4、双域并行（同账号前后台同时在线）、A1/A2/B1/B2 等存量项。
 
+### 第四轮运行时回归（2026-10-24，业务契约更正）
+
+环境与上一轮一致（后端 18081、MySQL/Redis dev、前端 5173）。临时账号 `qs_user_probe`(userType=2)、`qs_owner_probe`(userType=0)、`qs_admin_probe`(userType=1) 由 JDBC 写入，密码用前端同款 AES-ECB 加密后交后端校验。
+
+- 匿名：`/moment/timeline`、`/moment/{id}`、`/moment/{id}/comments`、`/portal/owner` 均 200 且包含作者名/点赞数/评论内容；写接口一律 401。
+- 普通用户：写接口 403「权限不足」；点赞/取消点赞/评论/删评论 200；评论列表公开可见且带 `username`；本人 `liked=true`、匿名视角不泄露。
+- 站长：发布→修改→匿名详情读到新内容→删除全 200；`/portal/owner` 仍返回最小 ID 站长（id=1 Joy），不受探测账号影响。
+- 管理员：WEB 会话发布 403；ADMIN 会话 `/admin/moment/page|save|update|delete` 全 200，新建动态作者缺省为当前后台账号；ADMIN token 调前台写接口同样 403。
+- 浏览器：匿名点赞触发 `.backdrop-overlay > .auth-container` 登录/注册容器且不发网络请求；匿名可展开评论并读到他人评论；普通用户/管理员前台无发布 FAB、无删除按钮、无「我的动态」；站长发布→首条卡片带删除→确认删除回环成功；管理员侧边栏只显示有权限的 3 个菜单，「动态管理」可增删改。
+- 清理：探针账号、动态、评论及 `behavior_state/behavior_log/behavior_cnt` 对应行已删除，验证 SQL：探针用户 0、孤儿评论/行为 0、动态存活 9 条（公开时间线 4 条）。
+- 未覆盖：站长前台“仅好友/私密”动态的可见性回归、DEV 域外的第三方登录、双域并行登出互不影响。
+
 ### CONFIRMED(BUILD) / CONFIRMED(TEST)：本轮实际观察
 
 1. **Rollup 分包循环依赖警告已消失**：上轮 `categoryInfo.ts → stores/index.ts` 的跨 chunk 循环本轮未再出现。属构建结果变化，未在浏览器验证是否影响执行顺序。
@@ -415,7 +440,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 
 ### 推荐回归顺序
 
-1. ~~**S1 优先**：匿名/普通用户/管理员三身份回归动态页写路径~~ → 已在第三轮完成匿名与普通用户；管理员身份未回归。
+1. ~~**S1 优先**：匿名/普通用户/管理员三身份回归动态页写路径~~ → 已在第三、四轮完成：匿名/普通用户/管理员/站长四身份全部回归。
 2. ~~**S2**：登录后加载公开时间线确认 `liked`，登出后仍可匿名浏览~~ → 已由 API 断言与浏览器刷新双重验证。
 3. **S3/S4**：匿名与过期 token 访问 `/file/admin/upload`，确认响应统一、限流重新生效；用旧契约调用 `/user/token`，确认错误码明确。
 4. **双域并行**：同一账号同时登录前后台，验证登出前台不影响后台、改密后两域旧会话均失效、跨标签页（storage 事件）与 `pageshow` 复核正常；同步核对 Redis 中两域的键名与 TTL（S5/S6）。
@@ -424,7 +449,8 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 
 ## Remaining Uncertainty
 
-- 第二轮没有 HTTP/浏览器/DB/Redis 复测，S1–S8 当时均为源码结论；第三轮已补齐 S1/S2 与 S9–S11 的运行时证据，但 S3–S8 仍为源码结论，管理员/DEV 角色与双域并行场景未跑。
+- 第二轮没有 HTTP/浏览器/DB/Redis 复测，S1–S8 当时均为源码结论；第三、四轮已补齐 S1/S2、S9–S12 与站长专属写权限的运行时证据，但 S3–S8 仍为源码结论。
+- 第四轮只验证了「站长可写 + 其他角色不可写」的主链路；「站长只能管理自己发布的动态」这类对象授权（若后续要求）尚未定义，当前删除按钮对 `userType=0` 全量可见。
 - 未在真实 Redis 上执行 Lua 脚本与 Sa-Token 1.46.0 的键格式契约测试（集成测试被 system property 门控）；S5 的`login:session` 键共享与 S6 的日志/存储增长因此只能定性不能定量。
 - 不执行有状态探针：即使 GET 也可能回填缓存/记录访问/增加计数，认证切面会续期；不能将“GET”自动当作零副作用。
 - 未确认运行 JVM 是否等于当前 HEAD、网关兼容路由、生产 CORS/限流及真实数据分布；不沿用上次 PID、端口或“实例必然旧”的说法。

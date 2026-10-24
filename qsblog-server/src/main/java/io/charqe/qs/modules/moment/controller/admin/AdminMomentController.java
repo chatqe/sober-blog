@@ -11,6 +11,7 @@ import io.charqe.qs.modules.moment.controller.admin.vo.MomentDetailVO;
 import io.charqe.qs.modules.moment.controller.admin.vo.MomentListVO;
 import io.charqe.qs.modules.moment.controller.web.vo.MomentSyncRecordVO;
 import io.charqe.qs.modules.moment.service.MomentService;
+import io.charqe.qs.utils.BlogUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -73,6 +74,10 @@ public class AdminMomentController {
     public R<Void> save(
             @Parameter(name = "dto", description = "动态数据", required = true)
             @RequestBody MomentSaveReqDTO dto) {
+        // 作者缺省为当前登录的后台账号，避免客户端伪造 userId
+        if (dto.getUserId() == null) {
+            dto.setUserId(BlogUtil.getUserId());
+        }
         momentService.save(dto);
         return R.success(null);
     }

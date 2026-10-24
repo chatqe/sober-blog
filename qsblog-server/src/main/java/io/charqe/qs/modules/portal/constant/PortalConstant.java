@@ -19,6 +19,16 @@ public final class PortalConstant {
      */
     public static final long OVERVIEW_CACHE_SECONDS = 60L;
 
+    /**
+     * 站长信息缓存 key
+     */
+    public static final String OWNER_CACHE = "portal:owner";
+
+    /**
+     * 站长信息缓存时长（秒）
+     */
+    public static final long OWNER_CACHE_SECONDS = 300L;
+
     private PortalConstant() {
     }
 }

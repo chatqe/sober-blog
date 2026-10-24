@@ -80,6 +80,13 @@ public interface UserService extends CoreService<User> {
      * @return
      */
     R resetPwdForFgtPwd(String email, String bizType, String code, String password);
+
+    /**
+     * 获取站长（userType=0）账号，供前台公开展示作者信息
+     *
+     * @return 站长账号，缺失时返回 null
+     */
+    User getOwner();
 }
 
 

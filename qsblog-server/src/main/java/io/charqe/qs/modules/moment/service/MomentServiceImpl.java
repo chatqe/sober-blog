@@ -79,7 +79,16 @@ public class MomentServiceImpl extends CoreServiceImpl<MomentMapper, Moment> imp
                 .orderByDesc(Moment::getCreateTime);
 
         Page<Moment> mpPage = page(new Page<>(query.getPageNum(), query.getPageSize()), wrapper);
-        return PageResult.fromMpPage(mpPage, this::toListVO);
+        List<Moment> records = mpPage.getRecords();
+        if (records.isEmpty()) {
+            return PageResult.empty();
+        }
+
+        Map<Long, User> userMap = buildUserMap(records.stream()
+                .map(Moment::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet()));
+        return PageResult.fromMpPage(mpPage, m -> toListVO(m, userMap));
     }
 
     @Override
@@ -204,10 +213,15 @@ public class MomentServiceImpl extends CoreServiceImpl<MomentMapper, Moment> imp
         return vo;
     }
 
-    private MomentListVO toListVO(Moment entity) {
+    private MomentListVO toListVO(Moment entity, Map<Long, User> userMap) {
         MomentListVO vo = new MomentListVO();
         vo.setId(entity.getId());
         vo.setUserId(entity.getUserId());
+        User author = userMap.get(entity.getUserId());
+        if (author != null) {
+            vo.setAuthorName(author.getUsername());
+            vo.setAuthorAvatar(author.getAvatar());
+        }
         String content = entity.getContent();
         vo.setContentSummary(content != null && content.length() > 50 ? content.substring(0, 50) + "..." : content);
         vo.setHasImages(entity.getHasImages());

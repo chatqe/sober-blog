@@ -1,6 +1,7 @@
 package io.charqe.qs.modules.portal.service;
 
 import io.charqe.qs.modules.portal.controller.web.vo.PortalOverviewVO;
+import io.charqe.qs.modules.portal.controller.web.vo.PortalOwnerVO;
 
 /**
  * 门户聚合服务
@@ -17,4 +18,11 @@ public interface PortalService {
      * @return 站点概览
      */
     PortalOverviewVO getOverview();
+
+    /**
+     * 获取站长公开信息（头像/用户名），供前台匿名展示
+     *
+     * @return 站长信息，未找到时返回 null
+     */
+    PortalOwnerVO getOwner();
 }
