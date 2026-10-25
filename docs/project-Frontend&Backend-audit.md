@@ -476,7 +476,33 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 
 - 当前不是「功能不全」，而是「登记链路从未成功」：`file_info` 0 行是硬证据，F1/F2 未修之前，引用、回收站、孤儿治理都没有可作用的对象。
 - F15–F17 不占接口数，但决定存储成本、首屏速度与上传安全，建议随迭代 1（F15/F16）与迭代 4（F17）落地。
-- 本小节全部结论来自源码与数据库元数据，未启动 18081/5173 跑上传链路，故统一标 `UNVERIFIED`（见 Remaining Uncertainty 8/9）。
+- 本小节 F1–F17 结论来自源码与数据库元数据；迭代 0 的登记/列表/删除链路已在 2026-10-26 补跑运行时验收（见下节），F3 的 `force`、F15–F17 仍未验证。
+
+### 迭代 0 落地与运行时验收（2026-10-26）
+
+分支 `fix/file-registration-bootstrap`（后端自 `main@67f7d68`，前端自 `main@bcd56f2`）。
+
+数据库（`192.168.30.100:3309/qingsi`，执行前已建 `file_info_bak_1026`/`file_biz_ref_bak_1026`）8 条 ALTER：`file_hash` 可空、`bucket` `varchar(63) DEFAULT ''`、`owner_id` 可空、`original_name` 255、`stored_name` 128、`storage_path` 255、新增 `scene varchar(32) DEFAULT 'unknown'`、新增 `idx_scene_owner(scene,owner_id,status)`。表仍为 0 行。
+
+代码改动：后端新增 `FileSceneEnum`（avatar/moment/comment 可 C 端上传），`FileInfoService#register(vo, ownerId, ownerType)` 统一派生 `storedName/fileExt/fileCategory/bucket/scene/status/refCount/tenantId`；`/file/register` 落 `FileController`（`scope=EITHER`，拥有者强制取自会话），`/file/admin/save` 保留 ADMIN；`list` 返回 `{list,total,page,pageSize}` 并支持 `scene/keyword` 过滤；`delete` 同时接受 JSON 体 `{id}` 与 query。前端 `upload.ts` 按会话域分流（后台 → `/file/admin/save`，C 端 → `/file/register`）并按前缀映射 scene，管理端资源列表字段改按 `file_info` 口径（ownerId/scene/storagePath/fileSize/thirdPartyName）。
+
+运行时验收（后端 `spring-boot:run` 18081，前端 `vite --port 5173`，`regularuser` userType=2、`Joy` userType=0）：
+
+| # | 操作 | 结果 |
+| --- | --- | --- |
+| 1 | C 端 `POST /file/register` scene=avatar | `code 200`；库内 `owner_id=3 owner_type=user scene=avatar status=1 ref_count=0 bucket=out-pb-bkt file_hash=null` |
+| 2 | C 端同端点 scene=article-cover | `code 500 该场景不允许当前账号上传`，未落库 |
+| 3 | C 端同端点缺 scene | 同上被拒（unknown 不在白名单） |
+| 4 | WEB token 调 `/file/admin/list` | HTTP 403 `当前会话不能用于此入口` |
+| 5 | 后台 `POST /file/admin/save` scene=article-cover | `code 200`；库内 `owner_id=1 owner_type=admin` |
+| 6 | 后台 `/file/admin/list` | `{list,total:1,page:1,pageSize:10}`，`records` 已消失 |
+| 7 | `pageNum/pageSize`+`scene` 过滤 | `total=1 page=1 pageSize=1` |
+| 8 | 后台 `/file/admin/delete` JSON 体 | `code 200`，`is_del=1`，存活行 0 |
+| 9 | 浏览器 `/admin/resourceList`（注入 admin 会话） | 表头=ID/名称/拥有者ID/场景/状态/路径/大小/MIME/存储平台/创建时间；行渲染 `2 accept-admin.png 1 article-cover 启用 ... 七牛云`；切场景=用户头像后 Total 0；点删除确认后 Total 0 |
+
+验收后已物理删除两条探针（`file_info`、`file_biz_ref` 均 0 行）。
+
+未覆盖：七牛直传（`insertOnly`/`mimeLimit`/`fsizeLimit`）与真实 `file_hash` 计算仍空；F15–F17 未实现；前端 `PathList.vue` 仍调已不存在的 `/file/list`（控制台 404，存量问题）；C 端未知前缀会因 `scene=unknown` 被拒（与改造前“不登记”一致）。
 
 ## Evidence
 
@@ -499,6 +525,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 - 第七轮修复 A2：`ArticleServiceImpl` 新增 `projectForPublicList`/`toListSummary`，`listArticle` 与 `listCategoryArticle` 统一列表投影——`password`/`videoUrl` 置空，私密文章正文 >80 字截断为 80+`…`、≤80 字返回 `null`；前端 `ArticleList.vue` 对空摘要显示加密提示。探针文章与 Redis `category_article_list_v2` 缓存已清理。
 - 第八轮按产品决定放开首页分类：`listCategoryArticle` 去掉 `viewStatus=true` 过滤，`CommonConst.CATEGORY_ARTICLE_LIST` 由 `v2` 升为 `v3`（语义已变，避免旧快照命中）；前端 `index.vue#getSortArticles` 去掉多余的 `.data` 解包。验证时清理了无 TTL 的陈旧 `category:public`/`category:navbar_`（缺 `TestCategory01`，导致首页分类区块无法渲染）。
 - 第九轮只读审计文件模块：新增「文件模块专项审计（第九轮）」F1–F17（14 条链路缺陷 + 3 项内部能力 F15 压缩 / F16 重绘 / F17 变体），并补入文章接口口径对照（11 对 17）与五迭代路线；业务代码 0 行改动，未建表、未启动服务、未产生测试数据。
+- 迭代 0（2026-10-26，`fix/file-registration-bootstrap`）：后端 8 条 ALTER + 新增 `FileSceneEnum`/`FileListReqVO`/`FileDeleteReqVO`，`FileInfoService#register` 补齐 owner/bucket/scene/status/refCount，`/file/register` 支持 C 端（EITHER），`list` 改 `{list,total,page,pageSize}`，`delete` 兼容 JSON 体；前端 `upload.ts` 按域分流登记并按前缀映射 scene，`resource/List.vue` 字段对齐 `file_info`；契约测试 31 条全绿，HTTP + DB + 浏览器验收 9 项通过，探针数据已清理。
 - 保留旧原文为折叠历史附录；其测试数据操作、运行状态及清理披露均属于过去，不作为本轮行为。
 - 第二轮业务源代码、配置、数据库和缓存未修改，也未提交/合并/推送 Git；第三轮只改上述 3 个后端文件并提交到 fix 分支，回归数据已清理。编译/构建/测试只更新本地生成产物（`target/`、`dist/`、`logs/audit-build-1024.log`）。
 
@@ -907,7 +934,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 5. **前端未提交改动**：59 个未提交文件可能包含未审计的临时代码，本报告仅覆盖当前工作区快照。
 6. **运行环境差异**：本次为 `dev` profile + 本机 `18081`，生产 CORS 白名单、前端域名与网关策略可能不同（`application-prod.yml` 未逐一比对）。
 7. **管理员会话副作用**：`admin_token_1` 被覆写后删除，若之前存在有效管理员登录态，需要重新登录恢复。
-8. **文件模块未做运行时验证**：F1–F17 均为源码 + 数据库事实核对，未启动服务走「上传→登记→列表→删除」链路；`file_info` 0 行只证明历史未成功，不证明修复后可用。
+8. **文件模块仅覆盖迭代 0**：`/file/register`、`/file/admin/save|list|delete` 已做 HTTP + DB + 浏览器验收，但七牛直传（`getUpToken` + bucket 策略）未实测，`file_hash`、引用绑定、回收站、孤儿治理与 F15–F17 仍为源码结论。
 9. **七牛直传策略未实测**：`insertOnly`/`mimeLimit`/`fsizeLimit` 的组合行为依赖 bucket 侧配置，本轮无上传凭证实测。
 
 </details>

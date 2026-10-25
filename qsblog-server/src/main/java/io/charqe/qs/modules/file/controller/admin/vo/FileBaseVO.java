@@ -43,4 +43,9 @@ public class FileBaseVO {
      * CDN 访问前缀，可包含路径；为空时使用存储路径
      */
     private String cdnDomain;
+
+    /**
+     * 业务场景：avatar/moment/comment/article-cover/article-content/system，缺省 unknown
+     */
+    private String scene;
 }

@@ -56,6 +56,9 @@ public class FileInfo extends BaseDO {
     /** 文件分类: image/video/document/audio/other */
     private String fileCategory;
 
+    /** 业务场景 avatar/article-cover/article-content/moment/comment/system */
+    private String scene;
+
     /** MIME类型（如 image/jpeg） */
     private String mimeType;
 
