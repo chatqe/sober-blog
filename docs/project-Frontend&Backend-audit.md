@@ -446,7 +446,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 孤儿扫描 | `POST /file/orphan/scan`（`dryRun`） | 已建（迭代 3） |
 | 补登记 | `POST /file/orphan/backfill` | 已建（迭代 3） |
 
-口径汇总：文章 **11**（原 15：删除与永久删除合并为 `force`、批量删除与孤儿清理合并、重复检测并入登记、派生改 URL 变体）→ 本项目 **17**（5 现有 + 12 新增）。已落地 17 个（5 现有 + 迭代 1 的 2 + 迭代 2 的 5 + 迭代 3 的 4 + 迭代 4 的 1），无待建项。
+口径汇总：文章 **11**（原 15：删除与永久删除合并为 `force`、批量删除与孤儿清理合并、重复检测并入登记、派生改 URL 变体）→ 本项目 **17**（5 现有 + 12 新增）。已落地 17 个（5 现有 + 迭代 1 的 2 + 迭代 2 的 5 + 迭代 3 的 4 + 迭代 4 的 1），无待建项；迭代 6 起前端已接入其中 12 个端点，后端计数不变。
 
 ### 分迭代路线
 
@@ -459,7 +459,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 4 媒体库 | `detail`（+HEAD）、异步变体（F17） | +1 |
 | 内部能力 | F15 压缩、F16 重绘、F17 变体 | 0 |
 
-落地进度：迭代 0–5 已完成（`/file` 端点仍 17 个，迭代 5 不新增接口）；F17 以七牛 URL 变体落地，F15（上传前压缩）与 F16（服务端重绘）已在迭代 5 落地。
+落地进度：迭代 0–6 已完成（`/file` 端点仍 17 个，迭代 5、6 不新增接口）；F17 以七牛 URL 变体落地，F15（上传前压缩）与 F16（服务端重绘）已在迭代 5 落地，迭代 6 把详情/引用/回收站/治理/批量接到前端页面并完成 `resource`→`file` 命名归一。
 
 ### 契约修订（不改接口数，实现时必须带上）
 
@@ -483,7 +483,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 
 - 当前不是「功能不全」，而是「登记链路从未成功」：`file_info` 0 行是硬证据，F1/F2 未修之前，引用、回收站、孤儿治理都没有可作用的对象。
 - F15–F17 不占接口数，但决定存储成本、首屏速度与上传安全；F17 已在迭代 4 以七牛 URL 变体落地，F15/F16 已在迭代 5 以「前端压缩 + 服务端重绘」落地。
-- 本小节 F1–F17 结论来自源码与数据库元数据；迭代 0–5 的登记/列表/删除/引用/回收站/治理/详情与上传压缩/重绘已在 2026-10-26 补跑运行时验收（见下节），F3 的 `force` 已在迭代 2 验证，F15/F16 在迭代 5 以本地存储中转链验证。
+- 本小节 F1–F17 结论来自源码与数据库元数据；迭代 0–5 的登记/列表/删除/引用/回收站/治理/详情与上传压缩/重绘已在 2026-10-26 补跑运行时验收（见下节），F3 的 `force` 已在迭代 2 验证，F15/F16 在迭代 5 以本地存储中转链验证；迭代 6 补跑前端页面链路（详情抽屉、回收站恢复、未引用清单、批量预演）。
 
 ### 迭代 0 落地与运行时验收（2026-10-26）
 
@@ -667,6 +667,43 @@ F16 服务端重绘：新增 [ImageSanitizer.java](file:///E:/idea/qs-blog/qsblo
 
 未覆盖：七牛直传不经过后端，F16 只覆盖 `/file/admin/upload` 中转路径，直传链仍依赖 F15 压缩与七牛侧处理；WEBP/AVIF 无 JDK 解码器，未重绘也未剥离元数据；gif 为避免丢帧保留原字节；像素级方向纠正与重绘是同步 CPU 操作，未做异步队列或超时；前端压缩只在 jsdom 中用替身验证，未在真实移动端浏览器确认 WebP 支持与方向；拒绝以既有 `code 500 + 原因` 信封返回（HTTP 200），未改为 400。
 
+### 迭代 6 落地与运行时验收（2026-10-26，前端接入 + 命名归一）
+
+接口数不变（仍 17 个），本轮只改前端：后端 0 行代码、无 DDL，故后端仓库仅本报告变更。分支 `fix/file-registration-bootstrap`（前端自 `main@bcd56f2`）。
+
+命名迁移（`resource` → `file`）。只迁「文件媒体库」链路；「资源聚合」链路对应后端 `resAgg`/`weblinks`，与 `file_info` 无关，保留原名：
+
+| 项 | 迁移前 | 迁移后 |
+| --- | --- | --- |
+| 页面 | `views/admin/resource/List.vue` | [views/admin/file/List.vue](file:///E:/web/qs-web/src/views/admin/file/List.vue)（旧文件已删除） |
+| 路由 | `resourceList`（`/admin/resourceList`） | `fileList`（`/admin/fileList`） |
+| 菜单 | 「资源管理」 | 「文件管理」 |
+| 页签 | `adminTabs['/admin/resourceList']` | `adminTabs['/admin/fileList']` |
+| 权限白名单 | [navigation.ts](file:///E:/web/qs-web/src/auth/navigation.ts) 中 `/admin/resourceList` | `/admin/fileList` |
+| API 模块 | `resource.ts`（`/file/list\|save\|delete\|update`） | [file.ts](file:///E:/web/qs-web/src/api/modules/file.ts) 12 个封装；[resource.ts](file:///E:/web/qs-web/src/api/modules/resource.ts) 只留 `ResourcePath*` 四函数 |
+| 函数 | `listResource`/`deleteResource` | `listFiles`/`deleteFile` |
+| 上传登记 | `uploadApi.saveResource` | `uploadApi.saveFile` |
+| 类型 | `ResourceInfo`（死类型） | 删除；新增 `FileItem`/`FileDetail`/`FileVariants`/`FilePage`/引用与治理类型 |
+| 保留 | `ResourcePath*`、`/admin/resourcePathList`、`views/admin/resource/PathList.vue`、`components/business/resource/Card.vue`、前台 friend/love/travel | 同左（资源聚合语义，不随本轮改名） |
+
+前端结构：`List.vue` 为三 Tab 容器（文件库 / 回收站 / 治理），文件库侧复用 `UploadPicture`（`storeType` 取 `defaultStoreType`，默认 `qiniu`）并支持多选批量（移入回收站 / 永久删除）；新增 [FileDetailDrawer.vue](file:///E:/web/qs-web/src/views/admin/file/components/FileDetailDrawer.vue)（描述项 + 访问地址复制 + thumb/card/hero 三档变体 + 引用表）、[RecyclePanel.vue](file:///E:/web/qs-web/src/views/admin/file/components/RecyclePanel.vue)（列表 / 恢复 / 永久删除 / 分页）、[GovernancePanel.vue](file:///E:/web/qs-web/src/views/admin/file/components/GovernancePanel.vue)（孤儿扫描 / 补登记 / 未引用清单 / 批量清理）；格式化集中在 [fileFormat.ts](file:///E:/web/qs-web/src/utils/file/fileFormat.ts)。`file.ts` 的 12 个函数：`listFiles`、`getFileDetail`、`deleteFile`、`listRecycleFiles`、`restoreFile`、`scanFileOrphans`、`backfillFileOrphans`、`listUnreferencedFiles`、`batchFiles`、`listFileRefs`、`bindFileRef`、`unbindFileRef`（`uploadToken`/`config` 仍由 `upload.ts` 承担）。补登记与批量清理默认 `dryRun=true`，UI 以开关 + 动态提示区分「仅预演 / 真实执行」「移入回收站 / 永久删除」。
+
+运行时验收（后端 18081 dev + 前端 5173，`VITE_BASE_URL=http://localhost:18081`，admin `Joy`）：
+
+| # | 操作 | 结果 |
+| --- | --- | --- |
+| 1 | 登录后进入 `/admin/fileList` | 菜单「文件管理」、页签标题、三 Tab、表头（预览/名称/场景/大小/MIME/存储/引用/状态/时间/操作）正常 |
+| 2 | 登记探针 A(id=14)、B(id=15)，仅写 `file_info` 不写对象；`ref/bind` 绑定 A（`bizType=2`/`bizId=1`/`bizField=cover`） | 列表 Total 1，引用列显示 1 |
+| 3 | 打开 A 的详情抽屉 | `ETag`、`visitPath`、`variantMode=transform`、三档变体、引用表 1 行（`bizType=2`/`bizId=1`/`cover`）均渲染 |
+| 4 | B 软删（`force=false`）→ 回收站恢复 | 回收站 Total 1 → Total 0；文件库 Total 2 |
+| 5 | 治理「未引用」`days=0` | Total 1（B，`refCount=0`） |
+| 6 | 治理批量清理 `dryRun` | 逐条返回 `action=soft-delete`，数据未变 |
+| 7 | 解绑 A + 两条 `force` 永久删除 | `keyword=ui-verify` 残留 0，两表回到 0 行 |
+
+代码级验证：前端 `pnpm test:auth` → **66 条全绿**（`session.test.ts` 45 + `compressImage.test.ts` 9 + 新增 `file.test.ts` 12），`pnpm type-check` 通过。`file.test.ts` 覆盖 URL/参数透传、软删与硬删、回收站列表与恢复、扫描默认值、补登记 `dryRun` 切换、批量默认与永久、ref 查询/绑定/解绑、失败透传。
+
+未覆盖：孤儿扫描未在页面点击（仅 API 单测与后端契约测试）；补登记与「永久删除」按钮未在 UI 端到端执行（永久删除由脚本直调接口验证）；上传对话框未实跑（探针走 `/file/admin/save`，无对象存储）；`resourcePath` 仍指向不存在的后端端点，本轮明确保留；真实七牛直传链路仍未执行。验收截图仅在本地 `logs/playwright-mcp/file-list-verified.png`、`file-governance-verified.png`，不入库。
+
 ## Evidence
 
 本轮证据来自：Sa-Token 双会话改造的逐文件核对（`modules/user/auth` 下 `AuthSessionService`/`SaTokenSessionAdapter`/`AuthSessionProperties`/`UserCredentialService`/`AuthSessionVO`/`SessionScope`，`aop/LoginCheck` + `LoginCheckAspect`，`GlobalExceptionHandler`，前端 `src/auth/*`、`stores/modules/auth.ts`、`router/index.ts`、`utils/request.ts`、`api/client/responseHandler.ts`），以及下列本地命令。当前条目链接对应本轮工作树；历史附录链接仍是旧报告记录的行号，不保证与当前文件对齐。
@@ -694,6 +731,7 @@ F16 服务端重绘：新增 [ImageSanitizer.java](file:///E:/idea/qs-blog/qsblo
 - 迭代 3（2026-10-26，同分支）：新增 `QiniuUtil#listObjects`（翻页列举裸 key）与 `StorageObject`；`FileStorageMapper` 增加 `selectAnyByStoragePath`/`selectExistingPaths`，`FileInfoService` 增加 `findAnyByStoragePath`/`existingStoragePaths`；新增 `FileGovernanceService`/`Impl`、`FileGovernanceController`（`/file/orphan/scan`、`/file/orphan/backfill`、`/file/unreferenced/list`、`/file/batch`）与 7 个 VO；扫描过滤目录占位对象，补登记/批量均默认 `dryRun`，批量对引用中文件一律跳过；无 DDL；新增 `FileGovernanceHttpContractTest` 12 条与 `FileGovernanceServiceTest` 15 条，文件模块合计 107 条全绿；HTTP + DB + OpenAPI 验收 14 项通过，两表回到 0 行。
 - 迭代 4（2026-10-26，同分支）：新增 `GET /file/detail/{id}`（ADMIN，Spring 隐式响应 HEAD）与 `FileMediaService`/`Impl`、`FileDetailRespVO`/`FileVariantsVO`、`FileVariantEnum`；`visitPath` 按 `cdnDomain`→存储域顺序推导，`etag` 取小写 `file_hash` 并据此支持 `If-None-Match` 304，缓存 `public, max-age=300` 可配；F17 以七牛 `imageView2` URL 变体落地（320/800/1600），本地/gif/非图片降级 `variantMode=none`；无 DDL；新增 `FileMediaServiceTest` 10 条与 `FileDetailHttpContractTest` 9 条，文件模块合计 126 条全绿；HTTP + DB + OpenAPI 验收 11 项通过，两表回到 0 行。
 - 迭代 5（2026-10-26，双仓库）：F15 前端新增 `src/utils/image/compressImage.ts` 并接入 `uploadMedia`（凭证前压缩、哈希/登记改用压缩后文件），`UploadPicture.vue` 加体积提示与非图片拦截，`vitest.config.ts` 扩到 `src/**`，新增 `compressImage.test.ts` 9 条；F16 后端新增 `ImageSanitizer`/`SanitizedImage`/`ExifOrientation`（纯 JDK ImageIO，无新依赖）并接入 `QiniuUtil#saveFile`、`LocalUtil#saveFile`，`LocalUtil` 同时修掉尾斜杠目录不可用的问题；新增 `ImageSanitizerTest` 12 条与 `LocalUtilTest` 6 条，后端 144 条、前端 54 条全绿，`vue-tsc` 通过；无 DDL、无新增接口；运行时验收 8 项通过（方向纠正、EXIF 剥离、伪造图片/穿越/覆盖拒绝、非图片原样），本地存储探针文件仅写入未跟踪的 `temp/`。
+- 迭代 6（2026-10-26，前端仓库）：把前端「文件媒体库」链路从 `resource` 改为 `file` —— 新增 `src/api/types/file.ts`、`src/api/modules/file.ts`（12 个封装）与 `file.test.ts`（12 条）、`src/utils/file/fileFormat.ts`、`views/admin/file/List.vue` 及 `FileDetailDrawer`/`RecyclePanel`/`GovernancePanel` 三组件；`resource.ts` 只留 `ResourcePath*`，`upload.ts`/`article.ts` 的 `saveResource` 改 `saveFile`，删除死类型 `ResourceInfo` 与 `Graffiti.vue` 死声明；路由 `resourceList`→`fileList`，菜单「资源管理」→「文件管理」，`adminTabs`/`navigation.ts` 同步；删除 `views/admin/resource/List.vue`。`pnpm test:auth` 66 条全绿、`pnpm type-check` 通过；前后端联调 7 项通过，探针解绑并永久删除后 0 残留。未跟踪的 `temp/`、`scripts/auth-browser-harness.cjs` 与截图不入库。
 - 保留旧原文为折叠历史附录；其测试数据操作、运行状态及清理披露均属于过去，不作为本轮行为。
 - 第二轮业务源代码、配置、数据库和缓存未修改，也未提交/合并/推送 Git；第三轮只改上述 3 个后端文件并提交到 fix 分支，回归数据已清理。编译/构建/测试只更新本地生成产物（`target/`、`dist/`、`logs/audit-build-1024.log`）。
 
@@ -826,7 +864,7 @@ F16 服务端重绘：新增 [ImageSanitizer.java](file:///E:/idea/qs-blog/qsblo
 - 第五轮把后台管理端大量 `value = 0` 放宽为 `value = 1`，属权限模型收紧口径的放宽：`changeUserType` 是唯一保留站长专属的写接口，其余管理操作现由 0/1 共同掌握，是否符合最终产品授权需要产品方确认。
 - 第五轮只逐页验证了读接口；role=1 的写接口（保存/删除/审核）未逐项执行，仅依据注解与前端调用链判定。
 - `/admin/resourcePathList`（资源聚合）仍是既有 404 页面，前端端点与后端模块不匹配，未在本轮修复。
-- 文件模块已覆盖迭代 0–5（登记链路、服务端 Key、大小/类型/场景约束、SHA256 落库、引用绑定/解绑/查询、回收站软删与恢复、`force` 永久删除、孤儿扫描/补登记、未引用清单、批量清理、详情/ETag/派生变体、上传前压缩、服务端重绘），但真实七牛直传未执行；`file_hash` 未与对象 ETag 比对（412 未实现）；前端尚未接入引用/回收站/治理/详情接口。
+- 文件模块已覆盖迭代 0–6（登记链路、服务端 Key、大小/类型/场景约束、SHA256 落库、引用绑定/解绑/查询、回收站软删与恢复、`force` 永久删除、孤儿扫描/补登记、未引用清单、批量清理、详情/ETag/派生变体、上传前压缩、服务端重绘；迭代 6 起前端页面已接入详情/引用/回收站/治理/批量），但真实七牛直传未执行；`file_hash` 未与对象 ETag 比对（412 未实现）；前端孤儿扫描、补登记、上传对话框未做 UI 端到端验收。
 - 迭代 5 的 F16 只作用于经过服务端的 `/file/admin/upload`：七牛直传链后端拿不到字节，仍依赖 F15 前端压缩与七牛侧处理；WEBP/AVIF 无 JDK 解码器时保留原字节（元数据未剥离），gif 为保动图同样不重绘；重绘为同步 CPU 操作，4000 万像素上限下未验证大图耗时与堆压力；前端压缩的 WebP 回退与 EXIF 方向仅在 jsdom 替身中验证，未经真实移动端浏览器。
 - 迭代 3 的治理是手动触发：扫描上限 5000、无游标续扫，只检测“对象在库不在”而发现不了“库在对象不在”的反向孤儿；补登记统一归 `system` 且不计算 `file_hash`；契约修订 10 的 24h 定时清理与修订 9 的 412/429 均未实现。
 - 未在真实 Redis 上执行 Lua 脚本与 Sa-Token 1.46.0 的键格式契约测试（集成测试被 system property 门控）；S5 的`login:session` 键共享与 S6 的日志/存储增长因此只能定性不能定量。
