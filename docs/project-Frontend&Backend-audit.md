@@ -405,19 +405,21 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 
 ### F15–F17｜三项内部能力（均不新增 HTTP 接口）
 
-#### F15｜前端压缩缺失（OffscreenCanvas）｜UNVERIFIED
+#### F15｜前端压缩缺失（OffscreenCanvas）｜已落地（迭代 5，上传前压缩）
 
 - **Evidence**：[UploadPicture.vue:136-160](file:///E:/web/qs-web/src/components/media/UploadPicture.vue#L136-L160) `beforeUpload` 为空实现，只校验 `file.size`；[upload.ts:70-118](file:///E:/web/qs-web/src/api/modules/upload.ts#L70-L118) 直接 `FormData.append` 原文件。
 - **Expected**：上传前用 `OffscreenCanvas` 等比缩到长边 ≤2560、`quality=0.85` 转 WebP（不支持回退 JPEG），按 EXIF `Orientation` 归一；压缩失败降级原图并提示。
 - **Impact**：手机原图 5–15MB 直传，白耗七牛流量与存储；列表仍加载原图，首屏变慢。
 - **最小修复**：在 `beforeUpload` 返回压缩后的 `File`；提示压缩前后体积；同步收紧 `accept` 与 MIME 校验。
+- **落地**：迭代 5 新增 `src/utils/image/compressImage.ts`，在 `uploadMedia` 内先压缩再申请凭证；`UploadPicture.vue` 经 `onCompressed` 提示体积并前置拦截非图片。详见「迭代 5 落地与运行时验收」。
 
-#### F16｜后端重绘缺失（Thumbnailator / ImageIO）｜UNVERIFIED
+#### F16｜后端重绘缺失（Thumbnailator / ImageIO）｜已落地（迭代 5，JDK ImageIO 重绘）
 
 - **Evidence**：[QiniuUtil.java:147-175](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/infra/storage/QiniuUtil.java#L147-L175) `saveFile` 只做流写入；`LocalUtil` 直接落盘，无二次编码。
 - **Expected**：服务端解码→重绘→再编码（`ImageIO` 或 Thumbnailator），剥离 EXIF/GPS、纠正方向、限制像素总数（防解压炸弹）、按魔数嗅探真实类型。
 - **Impact**：前端校验可被绕过；带 GPS 原图直接公开；超大像素图可打满堆内存。
 - **最小修复**：`saveFile` 后增加仅对图片生效的 `ImageSanitizer`，失败拒绝入库；非图片只做魔数校验。
+- **落地**：迭代 5 用纯 JDK ImageIO 实现 `ImageSanitizer`（无新依赖），接入 `QiniuUtil#saveFile` 与 `LocalUtil#saveFile`：魔数嗅探 → 像素上限 → EXIF 方向纠正 → 重绘去元数据 → 再编码，失败拒绝入库。详见「迭代 5 落地与运行时验收」。
 
 #### F17｜派生变体缺失（thumb/card/hero）｜已落地（迭代 4，七牛 URL 变体）
 
@@ -457,7 +459,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 4 媒体库 | `detail`（+HEAD）、异步变体（F17） | +1 |
 | 内部能力 | F15 压缩、F16 重绘、F17 变体 | 0 |
 
-落地进度：迭代 0–4 已完成（当前 `/file` 端点 17 个）；F17 以七牛 URL 变体落地，F15（上传前压缩）与 F16（入库前重绘）未做。
+落地进度：迭代 0–5 已完成（`/file` 端点仍 17 个，迭代 5 不新增接口）；F17 以七牛 URL 变体落地，F15（上传前压缩）与 F16（服务端重绘）已在迭代 5 落地。
 
 ### 契约修订（不改接口数，实现时必须带上）
 
@@ -480,8 +482,8 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 ### 结论与限制
 
 - 当前不是「功能不全」，而是「登记链路从未成功」：`file_info` 0 行是硬证据，F1/F2 未修之前，引用、回收站、孤儿治理都没有可作用的对象。
-- F15–F17 不占接口数，但决定存储成本、首屏速度与上传安全；F17 已在迭代 4 以七牛 URL 变体落地，F15/F16 仍未做。
-- 本小节 F1–F17 结论来自源码与数据库元数据；迭代 0–4 的登记/列表/删除/引用/回收站/治理/详情链路已在 2026-10-26 补跑运行时验收（见下节），F3 的 `force` 已在迭代 2 验证，F15/F16 仍未验证。
+- F15–F17 不占接口数，但决定存储成本、首屏速度与上传安全；F17 已在迭代 4 以七牛 URL 变体落地，F15/F16 已在迭代 5 以「前端压缩 + 服务端重绘」落地。
+- 本小节 F1–F17 结论来自源码与数据库元数据；迭代 0–5 的登记/列表/删除/引用/回收站/治理/详情与上传压缩/重绘已在 2026-10-26 补跑运行时验收（见下节），F3 的 `force` 已在迭代 2 验证，F15/F16 在迭代 5 以本地存储中转链验证。
 
 ### 迭代 0 落地与运行时验收（2026-10-26）
 
@@ -640,6 +642,31 @@ Key 规则：`{scene}/{ownerId}/{yyyyMM}/{ulid}.{ext}`。ULID 为 26 位 Crockfo
 
 未覆盖：`detail` 仅对后台会话开放，C 端读详情尚未定义；变体只拼 URL，未在浏览器验证七牛 `imageView2` 的真实返回（探针 key 本身无对象，公开读策略也未校验）；本地存储的物理派生（Thumbnailator `_thumb/_card/_hero`）未实现，`variantMode=none` 是显式降级；ETag 由 `file_hash` 提供，未与七牛 ETag 比对，412 语义仍未实现。
 
+### 迭代 5 落地与运行时验收（2026-10-26，F15 上传前压缩 + F16 服务端重绘）
+
+接口数不变（仍 17 个），本轮只改上传流水线，无 DDL、无新增表字段。
+
+F15 前端压缩：新增 [compressImage.ts](file:///E:/web/qs-web/src/utils/image/compressImage.ts)，`uploadMedia` 在申请上传凭证之前调用。`createImageBitmap(file, {imageOrientation:'from-image'})` 按 EXIF 方向解码 → 长边等比缩到 ≤2560 → `OffscreenCanvas.convertToBlob` 优先 WebP（`q=0.85`），内核不支持时 PNG 源保 PNG、其余回退 JPEG → 压缩后 ≥95% 原体积则判 `no-gain` 保留原文件。gif/svg、非图片、小于 200KB、无 `createImageBitmap`/canvas 时直接跳过，任何异常都降级原图。`mimeType`/`fileSize`/`originalName`/SHA-256/`FormData`/`file_info` 登记全部改用压缩后的文件，避免哈希与对象不一致。`UploadPicture.vue` 新增 `onCompressed` 体积提示与 `beforeUpload` 非图片拦截。
+
+F16 服务端重绘：新增 [ImageSanitizer.java](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/infra/storage/ImageSanitizer.java)、`SanitizedImage` 与 `ExifOrientation`（纯 JDK ImageIO，未引入 Thumbnailator 依赖，离线可构建）。流程：魔数嗅探（JPEG/PNG/GIF/WEBP/BMP/AVIF/PDF/MP4/WEBM/OGG/WAV/MP3/ZIP）→ 声明 `image/*` 或图片扩展名但内容不是图片则拒绝 → 读尺寸校验像素上限（`upload.image.max-pixels`，默认 4000 万，不解码全图）→ 解码 → 按 EXIF Orientation 1–8 像素级纠正 → 重绘到全新 `BufferedImage`（丢弃 EXIF/GPS/ICC）→ 按原格式再编码（JPEG 质量 `upload.image.quality`，默认 0.85）。gif 保留原字节以维持动图；WEBP/AVIF 在 JDK 无解码器时保留原字节；BMP 归一为 PNG。`QiniuUtil#saveFile` 与 `LocalUtil#saveFile` 均先净化再写存储，扩展名随真实类型重建 Key，失败直接拒绝入库；`LocalUtil` 同时修掉目录尾斜杠被误判（前端按服务端 Key 拆出的 `cover/22/202610/` 之前必抛“路径不合法”），改为目录归一后逐段校验并 `writeBytes` 落盘。
+
+运行时验收（后端 18081 dev + `SPRING_APPLICATION_JSON` 覆盖为本地存储 `temp/upload`，admin `Joy`）：
+
+| # | 操作 | 结果 |
+| --- | --- | --- |
+| 1 | 管理员登录 | OK |
+| 2 | 生成 4000×3000 JPEG 并注入 EXIF `Orientation=6` | `bytes=235998`，含 `Exif` 段 |
+| 3 | `POST /file/admin/upload`（`storeType=local`，`relativePath=m6/1/202610/`） | `code 200`，`visitPath=http://localhost:18081/files/m6/1/202610/m6-rotated.jpg` |
+| 4 | 落盘文件 | `bytes=226538`，尺寸 `3000x4000`（方向已纠正），字节中无 `Exif` |
+| 5 | 伪造 PNG（内容 `%PDF-1.4`） | `code 500 文件内容与图片类型不符，已拒绝上传`，未落盘 |
+| 6 | `relativePath=../evil/` | `code 500 文件路径不合法！` |
+| 7 | PDF 上传 | `code 200`，落盘字节与原文件一致（非图片只做魔数校验） |
+| 8 | 同 Key 重复上传 | `code 500 文件已存在！` |
+
+代码级验证：后端 `mvn -o -B -pl qsblog-server test "-DskipTests=false" -Dtest="File*,ImageSanitizerTest,LocalUtilTest"` → **144 条全绿**（文件模块 126 + `ImageSanitizerTest` 12 + `LocalUtilTest` 6）。`ImageSanitizerTest` 覆盖 JPEG 重绘去 EXIF、`Orientation=6` 宽高交换、Orientation=1 不变、伪造图片拒绝（按 MIME 与按扩展名）、非图片原样、gif 原样、像素上限、BMP→PNG、路径剥离、空内容、未知类型放行；`LocalUtilTest` 覆盖尾斜杠目录、重绘落盘、目录穿越、空目录、禁止覆盖、伪造图片。前端 `pnpm test:auth` → **54 条全绿**（`session.test.ts` 45 + `compressImage.test.ts` 9），`pnpm type-check` 通过；`vitest.config.ts` 的 `include` 由 `src/auth/**` 扩为 `src/**` 以收录新测试。
+
+未覆盖：七牛直传不经过后端，F16 只覆盖 `/file/admin/upload` 中转路径，直传链仍依赖 F15 压缩与七牛侧处理；WEBP/AVIF 无 JDK 解码器，未重绘也未剥离元数据；gif 为避免丢帧保留原字节；像素级方向纠正与重绘是同步 CPU 操作，未做异步队列或超时；前端压缩只在 jsdom 中用替身验证，未在真实移动端浏览器确认 WebP 支持与方向；拒绝以既有 `code 500 + 原因` 信封返回（HTTP 200），未改为 400。
+
 ## Evidence
 
 本轮证据来自：Sa-Token 双会话改造的逐文件核对（`modules/user/auth` 下 `AuthSessionService`/`SaTokenSessionAdapter`/`AuthSessionProperties`/`UserCredentialService`/`AuthSessionVO`/`SessionScope`，`aop/LoginCheck` + `LoginCheckAspect`，`GlobalExceptionHandler`，前端 `src/auth/*`、`stores/modules/auth.ts`、`router/index.ts`、`utils/request.ts`、`api/client/responseHandler.ts`），以及下列本地命令。当前条目链接对应本轮工作树；历史附录链接仍是旧报告记录的行号，不保证与当前文件对齐。
@@ -666,6 +693,7 @@ Key 规则：`{scene}/{ownerId}/{yyyyMM}/{ulid}.{ext}`。ULID 为 26 位 Crockfo
 - 迭代 2（2026-10-26，同分支）：`file_biz_ref` 增加 `biz_field` 并调整唯一键、`file_info` 增加 `deleted_at` 与回收站索引；后端新增 `FileBizRefService#bind/unbind/pageRefs`、`FileInfoService#findAny/softDelete/restore/purge/pageDeleted`、`FileRecycleController`、`/file/ref/*`；`FileAdminController#delete` 支持 `force`（引用中 409，永久删先清存储对象）；`FileInfoStoragePurgeTest`/`FileRefHttpContractTest`/`FileRecycleHttpContractTest` 新增 23 条，文件模块合计 80 条全绿；HTTP + DB + OpenAPI 验收 13 项通过，探针永久删除后 0 残留。
 - 迭代 3（2026-10-26，同分支）：新增 `QiniuUtil#listObjects`（翻页列举裸 key）与 `StorageObject`；`FileStorageMapper` 增加 `selectAnyByStoragePath`/`selectExistingPaths`，`FileInfoService` 增加 `findAnyByStoragePath`/`existingStoragePaths`；新增 `FileGovernanceService`/`Impl`、`FileGovernanceController`（`/file/orphan/scan`、`/file/orphan/backfill`、`/file/unreferenced/list`、`/file/batch`）与 7 个 VO；扫描过滤目录占位对象，补登记/批量均默认 `dryRun`，批量对引用中文件一律跳过；无 DDL；新增 `FileGovernanceHttpContractTest` 12 条与 `FileGovernanceServiceTest` 15 条，文件模块合计 107 条全绿；HTTP + DB + OpenAPI 验收 14 项通过，两表回到 0 行。
 - 迭代 4（2026-10-26，同分支）：新增 `GET /file/detail/{id}`（ADMIN，Spring 隐式响应 HEAD）与 `FileMediaService`/`Impl`、`FileDetailRespVO`/`FileVariantsVO`、`FileVariantEnum`；`visitPath` 按 `cdnDomain`→存储域顺序推导，`etag` 取小写 `file_hash` 并据此支持 `If-None-Match` 304，缓存 `public, max-age=300` 可配；F17 以七牛 `imageView2` URL 变体落地（320/800/1600），本地/gif/非图片降级 `variantMode=none`；无 DDL；新增 `FileMediaServiceTest` 10 条与 `FileDetailHttpContractTest` 9 条，文件模块合计 126 条全绿；HTTP + DB + OpenAPI 验收 11 项通过，两表回到 0 行。
+- 迭代 5（2026-10-26，双仓库）：F15 前端新增 `src/utils/image/compressImage.ts` 并接入 `uploadMedia`（凭证前压缩、哈希/登记改用压缩后文件），`UploadPicture.vue` 加体积提示与非图片拦截，`vitest.config.ts` 扩到 `src/**`，新增 `compressImage.test.ts` 9 条；F16 后端新增 `ImageSanitizer`/`SanitizedImage`/`ExifOrientation`（纯 JDK ImageIO，无新依赖）并接入 `QiniuUtil#saveFile`、`LocalUtil#saveFile`，`LocalUtil` 同时修掉尾斜杠目录不可用的问题；新增 `ImageSanitizerTest` 12 条与 `LocalUtilTest` 6 条，后端 144 条、前端 54 条全绿，`vue-tsc` 通过；无 DDL、无新增接口；运行时验收 8 项通过（方向纠正、EXIF 剥离、伪造图片/穿越/覆盖拒绝、非图片原样），本地存储探针文件仅写入未跟踪的 `temp/`。
 - 保留旧原文为折叠历史附录；其测试数据操作、运行状态及清理披露均属于过去，不作为本轮行为。
 - 第二轮业务源代码、配置、数据库和缓存未修改，也未提交/合并/推送 Git；第三轮只改上述 3 个后端文件并提交到 fix 分支，回归数据已清理。编译/构建/测试只更新本地生成产物（`target/`、`dist/`、`logs/audit-build-1024.log`）。
 
@@ -798,8 +826,8 @@ Key 规则：`{scene}/{ownerId}/{yyyyMM}/{ulid}.{ext}`。ULID 为 26 位 Crockfo
 - 第五轮把后台管理端大量 `value = 0` 放宽为 `value = 1`，属权限模型收紧口径的放宽：`changeUserType` 是唯一保留站长专属的写接口，其余管理操作现由 0/1 共同掌握，是否符合最终产品授权需要产品方确认。
 - 第五轮只逐页验证了读接口；role=1 的写接口（保存/删除/审核）未逐项执行，仅依据注解与前端调用链判定。
 - `/admin/resourcePathList`（资源聚合）仍是既有 404 页面，前端端点与后端模块不匹配，未在本轮修复。
-- 文件模块已覆盖迭代 0–4（登记链路、服务端 Key、大小/类型/场景约束、SHA256 落库、引用绑定/解绑/查询、回收站软删与恢复、`force` 永久删除、孤儿扫描/补登记、未引用清单、批量清理、详情/ETag/派生变体），但真实七牛直传未执行；`file_hash` 未与对象 ETag 比对（412 未实现）；前端尚未接入引用/回收站/治理/详情接口；F15/F16 仍为源码结论。
-- 迭代 4 的 `detail` 只对后台会话开放，变体为 CDN URL 拼接，未验证七牛 `imageView2` 对真实对象的返回与公开读策略；本地存储的物理派生（Thumbnailator）未实现，`variantMode=none` 是显式降级。
+- 文件模块已覆盖迭代 0–5（登记链路、服务端 Key、大小/类型/场景约束、SHA256 落库、引用绑定/解绑/查询、回收站软删与恢复、`force` 永久删除、孤儿扫描/补登记、未引用清单、批量清理、详情/ETag/派生变体、上传前压缩、服务端重绘），但真实七牛直传未执行；`file_hash` 未与对象 ETag 比对（412 未实现）；前端尚未接入引用/回收站/治理/详情接口。
+- 迭代 5 的 F16 只作用于经过服务端的 `/file/admin/upload`：七牛直传链后端拿不到字节，仍依赖 F15 前端压缩与七牛侧处理；WEBP/AVIF 无 JDK 解码器时保留原字节（元数据未剥离），gif 为保动图同样不重绘；重绘为同步 CPU 操作，4000 万像素上限下未验证大图耗时与堆压力；前端压缩的 WebP 回退与 EXIF 方向仅在 jsdom 替身中验证，未经真实移动端浏览器。
 - 迭代 3 的治理是手动触发：扫描上限 5000、无游标续扫，只检测“对象在库不在”而发现不了“库在对象不在”的反向孤儿；补登记统一归 `system` 且不计算 `file_hash`；契约修订 10 的 24h 定时清理与修订 9 的 412/429 均未实现。
 - 未在真实 Redis 上执行 Lua 脚本与 Sa-Token 1.46.0 的键格式契约测试（集成测试被 system property 门控）；S5 的`login:session` 键共享与 S6 的日志/存储增长因此只能定性不能定量。
 - 不执行有状态探针：即使 GET 也可能回填缓存/记录访问/增加计数，认证切面会续期；不能将“GET”自动当作零副作用。
