@@ -438,12 +438,12 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 删除（force） | `POST /file/admin/delete?force=` | 已建（迭代 2） |
 | 回收站列表 | `POST /file/recycle/list` | 已建（迭代 2） |
 | 恢复 | `POST /file/recycle/restore` | 已建（迭代 2） |
-| 未引用清单 | `POST /file/unreferenced/list` | 待建 |
-| 批量清理 | `POST /file/batch`（≤100，`dryRun`） | 待建 |
-| 孤儿扫描 | `POST /file/orphan/scan`（`dryRun`） | 待建 |
-| 补登记 | `POST /file/orphan/backfill` | 待建 |
+| 未引用清单 | `POST /file/unreferenced/list` | 已建（迭代 3） |
+| 批量清理 | `POST /file/batch`（≤100，`dryRun`） | 已建（迭代 3） |
+| 孤儿扫描 | `POST /file/orphan/scan`（`dryRun`） | 已建（迭代 3） |
+| 补登记 | `POST /file/orphan/backfill` | 已建（迭代 3） |
 
-口径汇总：文章 **11**（原 15：删除与永久删除合并为 `force`、批量删除与孤儿清理合并、重复检测并入登记、派生改 URL 变体）→ 本项目 **17**（5 现有 + 12 新增）。已落地 12 个（5 现有 + 迭代 1 的 2 + 迭代 2 的 5），治理 4 个与详情 1 个待建。
+口径汇总：文章 **11**（原 15：删除与永久删除合并为 `force`、批量删除与孤儿清理合并、重复检测并入登记、派生改 URL 变体）→ 本项目 **17**（5 现有 + 12 新增）。已落地 16 个（5 现有 + 迭代 1 的 2 + 迭代 2 的 5 + 迭代 3 的 4），详情 1 个待建。
 
 ### 分迭代路线
 
@@ -456,7 +456,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 4 媒体库 | `detail`（+HEAD）、异步变体（F17） | +1 |
 | 内部能力 | F15 压缩、F16 重绘、F17 变体 | 0 |
 
-落地进度：迭代 0–2 已完成（当前 `/file` 端点 12 个），迭代 3–4 与 F15–F17 未做。
+落地进度：迭代 0–3 已完成（当前 `/file` 端点 16 个），迭代 4 与 F15–F17 未做。
 
 ### 契约修订（不改接口数，实现时必须带上）
 
@@ -473,6 +473,8 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 9 | 错误语义：404 未登记、409 引用中禁删、412 校验和不符、429 限流 | Strapi / S3 |
 | 10 | 未登记的暂存对象 24h 定时清理（任务，非接口） | S3 multipart abort / lifecycle |
 | 11 | F15 压缩（上传前）、F16 重绘（入库前）作为流水线阶段实现，**不新增端点** | 内部能力口径 |
+
+落地状态：修订 4 已在迭代 3 落实（`batch` ≤100 + `dryRun` + 逐条 `{ok,skipped,reason}`）；修订 9 只覆盖 404/409（412 校验和、429 限流未做）；修订 10 的「未登记暂存对象 24h 定时清理」仍未实现，迭代 3 只提供手动 `orphan/scan` + `orphan/backfill`。
 
 ### 结论与限制
 
@@ -572,6 +574,41 @@ Key 规则：`{scene}/{ownerId}/{yyyyMM}/{ulid}.{ext}`。ULID 为 26 位 Crockfo
 
 未覆盖：前端媒体库/引用面板尚未接这 5 个接口，本轮只交付服务端契约；引用计数由服务层增减，若业务侧直接删文章而不调 `unbind`，会残留引用与虚高 `ref_count`，需迭代 3 的孤儿扫描兜底；未引入 `Idempotency-Key`（契约修订 2），幂等靠唯一键与状态判断；回收站无自动过期清理，`deleted_at` 只作排序与后续清理依据；真实七牛对象删除只验证了“不存在的 key 不阻断”（日志无“清理存储对象失败”），未验证已存在对象的删除。
 
+### 迭代 3 落地与运行时验收（2026-10-26，治理：孤儿、未引用、批量）
+
+接口数 12 → 16：新增 `POST /file/orphan/scan`、`POST /file/orphan/backfill`、`POST /file/unreferenced/list`、`POST /file/batch`，全部 `@LoginCheck(value=1, scope=ADMIN)`。本轮无 DDL，只新增 `QiniuUtil#listObjects`（翻页列举裸 key）与 `file_info.storage_path` 的批量存在性查询。
+
+孤儿扫描：按裸 key 前缀列举七牛对象（单次上限 5000，多取 1 条判断 `truncated`），用 `storage_path IN (...)`（500 一批，含回收站行）比对登记表，返回 `{dryRun,storeType,prefix,scanned,registered,orphanCount,truncated,list[{key,size,mimeType,putTime}]}`；只读，不写库。以 `/` 结尾的目录占位对象（七牛控制台生成的 0 字节 `application/qiniu-object-manager`）不计入 scanned/orphan，也不可补登记。
+
+补登记：key 可为裸 key 或 CDN 完整地址，服务端去域名、去重、单次 ≤100；先按 `storage_path` 判重（含回收站），再批量 `stat` 取 size/mimeType；目录占位、存储中不存在、已登记均逐条 `{ok:false,skipped:true,reason}`；默认 `dryRun=true`，关闭后才以 `ownerId=null / ownerType=system / thirdPartyName=3` 落库，场景取 key 首段（未登记场景落 `unknown`），单条失败不阻断其余。
+
+未引用清单：`ref_count=0`（含 NULL）、`status=1`、`create_time <= now - days`，按 `create_time` 升序；`days` 默认 7、`0` 表示不设时间下限；返回 `{list,total,page,pageSize,days}`。
+
+批量清理：`ids` ≤100、去重保序；逐条返回 `{id,ok,skipped,reason,action}`；引用中一律跳过（`force` 也不放行），`force=false` 软删（已在回收站跳过），`force=true` 物理删（可清理回收站行）；`dryRun` 默认 true。
+
+运行时验收（后端 18081 dev，admin `Joy`、web `regularuser`；DB `192.168.30.100:3309/qingsi`，起始两表 0 行）：
+
+| # | 操作 | 结果 |
+| --- | --- | --- |
+| 1 | 双会话登录 + 起始计数 | `file_rows=0 ref_rows=0` |
+| 2 | `orphan/scan`（prefix=`qingsi/emoji/`, limit=20） | `200 scanned=20 orphan=20 truncated=true`；目标 `qingsi/emoji/q1.gif`（目录占位已过滤） |
+| 3 | 同 key `orphan/backfill` `dryRun=true` | `registered=0`，逐条 `reason=dryRun scene=unknown`，库内未新增 |
+| 4 | 同 key `dryRun=false` | `registered=1 fileId=9`；库内 `owner_id=null owner_type=system file_size=115994 mime_type=image/gif ref_count=0 is_del=0` |
+| 5 | 重复补登记 | `registered=0 reason=已登记`，未重复建行 |
+| 6 | 登记探针 B/C（avatar） | `id=10`、`id=11`，Key 均为 `avatar/3/202610/*.png` |
+| 7 | C 的 `create_time` 回拨 30 天后 `unreferenced/list` | `days=7 total=1` 含 C、不含 B；`days=0 total=3` 含 B/C/补登记行 |
+| 8 | `ref/bind` B（bizType=2,bizId=88001,bizField=cover） | `200 refId=4`；库内 `ref_count=1` |
+| 9 | `batch` `dryRun=true` ids=[B,C] | `deleted=1 skipped=1`；B `文件仍被 1 处引用`、C `soft-delete`；库内两者 `is_del=0` |
+| 10 | `batch` `dryRun=false` ids=[B,C] | `deleted=1 skipped=1`；C `is_del=1 deleted_at=2026-10-26 01:54:30.226`，B 未动 |
+| 11 | `batch` `force=true` 分别 C/B | C `deleted=1`；B `skipped=1 文件仍被 1 处引用`；库内 `c_rows=0 b_rows=1` |
+| 12 | `ref/unbind` B 后 `batch force` B | `data=true`；`deleted=1`；`b_rows=0 b_refs=0` |
+| 13 | 清理补登记行（SQL 只删元数据） | `file_rows=0 ref_rows=0`，七牛对象未删 |
+| 14 | `/v3/api-docs` | `/file/*` 共 16 条，含 `orphan/scan|backfill`、`unreferenced/list`、`batch` |
+
+代码级验证：后端 `mvn -o -B -pl qsblog-server test "-DskipTests=false" -Dtest="File*"` → **107 条全绿**（31+12+6+13+5+9+5+15+4+7）。新增 `FileGovernanceHttpContractTest` 12 条（扫描信封、补登记非空/≤100、未引用 `{list,total,page,pageSize,days}`、批量逐条结果与默认 `dryRun`、ADMIN 作用域）、`FileGovernanceServiceTest` 15 条（截断与目录占位过滤、非七牛拒绝、补登记幂等/缺对象/CDN 归一化、未引用过滤、`dryRun` 不写、引用保护与回收站跳过、ID 去重）。
+
+未覆盖：前端媒体库尚未接这 4 个接口；扫描依赖 bucket 列举，5000 条以上需按前缀分批，未做游标续扫；只比对 `storage_path`，无法发现“已登记但对象被删”的反向孤儿；补登记以 `system` 归属且不计算 `file_hash`（七牛 etag 非 SHA256）；契约修订 10 的“未登记暂存对象 24h 定时清理”仍是手动治理，未加定时任务；修订 9 的 412/429 仍未实现。
+
 ## Evidence
 
 本轮证据来自：Sa-Token 双会话改造的逐文件核对（`modules/user/auth` 下 `AuthSessionService`/`SaTokenSessionAdapter`/`AuthSessionProperties`/`UserCredentialService`/`AuthSessionVO`/`SessionScope`，`aop/LoginCheck` + `LoginCheckAspect`，`GlobalExceptionHandler`，前端 `src/auth/*`、`stores/modules/auth.ts`、`router/index.ts`、`utils/request.ts`、`api/client/responseHandler.ts`），以及下列本地命令。当前条目链接对应本轮工作树；历史附录链接仍是旧报告记录的行号，不保证与当前文件对齐。
@@ -596,6 +633,7 @@ Key 规则：`{scene}/{ownerId}/{yyyyMM}/{ulid}.{ext}`。ULID 为 26 位 Crockfo
 - 迭代 0（2026-10-26，`fix/file-registration-bootstrap`）：后端 8 条 ALTER + 新增 `FileSceneEnum`/`FileListReqVO`/`FileDeleteReqVO`，`FileInfoService#register` 补齐 owner/bucket/scene/status/refCount，`/file/register` 支持 C 端（EITHER），`list` 改 `{list,total,page,pageSize}`，`delete` 兼容 JSON 体；前端 `upload.ts` 按域分流登记并按前缀映射 scene，`resource/List.vue` 字段对齐 `file_info`；契约测试 31 条全绿，HTTP + DB + 浏览器验收 9 项通过，探针数据已清理。
 - 迭代 1（2026-10-26，同分支）：后端新增 `FileKeyGenerator`（ULID Key）、`FileSceneEnum#of/clientCodes`、`FileUploadService`/`FileUploadServiceImpl`、`POST /file/uploadToken` 与 `GET /file/config`；`QiniuUtil#getToken` 支持 `fsizeLimit`/`mimeLimit`/`insertOnly`/`returnBody`；`FileBaseVO` 增加 `fileHash`（64 位十六进制校验）并在服务层小写化；前端 `upload.ts` 改用服务端 Key、登记前计算 SHA-256，`session.test.ts` 同步打桩。契约测试 49 条全绿，前端 45 条 vitest 与 `vue-tsc` 通过，HTTP + DB + OpenAPI 验收 11 项通过，探针已物理删除。
 - 迭代 2（2026-10-26，同分支）：`file_biz_ref` 增加 `biz_field` 并调整唯一键、`file_info` 增加 `deleted_at` 与回收站索引；后端新增 `FileBizRefService#bind/unbind/pageRefs`、`FileInfoService#findAny/softDelete/restore/purge/pageDeleted`、`FileRecycleController`、`/file/ref/*`；`FileAdminController#delete` 支持 `force`（引用中 409，永久删先清存储对象）；`FileInfoStoragePurgeTest`/`FileRefHttpContractTest`/`FileRecycleHttpContractTest` 新增 23 条，文件模块合计 80 条全绿；HTTP + DB + OpenAPI 验收 13 项通过，探针永久删除后 0 残留。
+- 迭代 3（2026-10-26，同分支）：新增 `QiniuUtil#listObjects`（翻页列举裸 key）与 `StorageObject`；`FileStorageMapper` 增加 `selectAnyByStoragePath`/`selectExistingPaths`，`FileInfoService` 增加 `findAnyByStoragePath`/`existingStoragePaths`；新增 `FileGovernanceService`/`Impl`、`FileGovernanceController`（`/file/orphan/scan`、`/file/orphan/backfill`、`/file/unreferenced/list`、`/file/batch`）与 7 个 VO；扫描过滤目录占位对象，补登记/批量均默认 `dryRun`，批量对引用中文件一律跳过；无 DDL；新增 `FileGovernanceHttpContractTest` 12 条与 `FileGovernanceServiceTest` 15 条，文件模块合计 107 条全绿；HTTP + DB + OpenAPI 验收 14 项通过，两表回到 0 行。
 - 保留旧原文为折叠历史附录；其测试数据操作、运行状态及清理披露均属于过去，不作为本轮行为。
 - 第二轮业务源代码、配置、数据库和缓存未修改，也未提交/合并/推送 Git；第三轮只改上述 3 个后端文件并提交到 fix 分支，回归数据已清理。编译/构建/测试只更新本地生成产物（`target/`、`dist/`、`logs/audit-build-1024.log`）。
 
@@ -728,7 +766,8 @@ Key 规则：`{scene}/{ownerId}/{yyyyMM}/{ulid}.{ext}`。ULID 为 26 位 Crockfo
 - 第五轮把后台管理端大量 `value = 0` 放宽为 `value = 1`，属权限模型收紧口径的放宽：`changeUserType` 是唯一保留站长专属的写接口，其余管理操作现由 0/1 共同掌握，是否符合最终产品授权需要产品方确认。
 - 第五轮只逐页验证了读接口；role=1 的写接口（保存/删除/审核）未逐项执行，仅依据注解与前端调用链判定。
 - `/admin/resourcePathList`（资源聚合）仍是既有 404 页面，前端端点与后端模块不匹配，未在本轮修复。
-- 文件模块已覆盖迭代 0–2（登记链路、服务端 Key、大小/类型/场景约束、SHA256 落库、引用绑定/解绑/查询、回收站软删与恢复、`force` 永久删除），但真实七牛直传未执行；`file_hash` 未与对象 ETag 比对（412 未实现）；前端尚未接入引用/回收站接口；孤儿治理与 F15–F17 仍为源码结论。
+- 文件模块已覆盖迭代 0–3（登记链路、服务端 Key、大小/类型/场景约束、SHA256 落库、引用绑定/解绑/查询、回收站软删与恢复、`force` 永久删除、孤儿扫描/补登记、未引用清单、批量清理），但真实七牛直传未执行；`file_hash` 未与对象 ETag 比对（412 未实现）；前端尚未接入引用/回收站/治理接口；F15–F17 仍为源码结论。
+- 迭代 3 的治理是手动触发：扫描上限 5000、无游标续扫，只检测“对象在库不在”而发现不了“库在对象不在”的反向孤儿；补登记统一归 `system` 且不计算 `file_hash`；契约修订 10 的 24h 定时清理与修订 9 的 412/429 均未实现。
 - 未在真实 Redis 上执行 Lua 脚本与 Sa-Token 1.46.0 的键格式契约测试（集成测试被 system property 门控）；S5 的`login:session` 键共享与 S6 的日志/存储增长因此只能定性不能定量。
 - 不执行有状态探针：即使 GET 也可能回填缓存/记录访问/增加计数，认证切面会续期；不能将“GET”自动当作零副作用。
 - 未确认运行 JVM 是否等于当前 HEAD、网关兼容路由、生产 CORS/限流及真实数据分布；不沿用上次 PID、端口或“实例必然旧”的说法。第六轮核查到两个更早的残留实例（18082 旧 jar，2026-10-23 启动；5175 旧 vite，2026-10-16 启动），均非当前 HEAD 构建。

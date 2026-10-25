@@ -20,8 +20,13 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 文件存储表 服务实现类
@@ -32,6 +37,9 @@ import java.util.Locale;
 @Slf4j
 @Service
 public class FileInfoServiceImpl extends CoreServiceImpl<FileStorageMapper, FileInfo> implements FileInfoService {
+
+    /** 路径 IN 查询的单批上限。 */
+    private static final int PATH_CHUNK = 500;
 
     @Resource(name = "storeFileService")
     private FileStorageService storeService;
@@ -104,6 +112,29 @@ public class FileInfoServiceImpl extends CoreServiceImpl<FileStorageMapper, File
     @Override
     public FileInfo findAny(Long id) {
         return id == null ? null : getBaseMapper().selectAnyById(id);
+    }
+
+    @Override
+    public FileInfo findAnyByStoragePath(String path) {
+        return StringUtils.hasText(path) ? getBaseMapper().selectAnyByStoragePath(path) : null;
+    }
+
+    /** IN 查询按 500 分片，避免单个 SQL 参数过多。 */
+    @Override
+    public Set<String> existingStoragePaths(Collection<String> paths) {
+        if (paths == null || paths.isEmpty()) {
+            return Collections.emptySet();
+        }
+        List<String> distinct = paths.stream()
+                .filter(StringUtils::hasText)
+                .distinct()
+                .collect(Collectors.toList());
+        Set<String> existing = new HashSet<>();
+        for (int start = 0; start < distinct.size(); start += PATH_CHUNK) {
+            List<String> part = distinct.subList(start, Math.min(start + PATH_CHUNK, distinct.size()));
+            existing.addAll(getBaseMapper().selectExistingPaths(part));
+        }
+        return existing;
     }
 
     @Override

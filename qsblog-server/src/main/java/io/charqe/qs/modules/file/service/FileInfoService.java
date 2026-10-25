@@ -7,6 +7,9 @@ import io.charqe.qs.modules.file.controller.admin.vo.FileRespVO;
 import io.charqe.qs.modules.file.domain.pojo.FileInfo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 
+import java.util.Collection;
+import java.util.Set;
+
 /**
  * 文件存储表 服务类
  *
@@ -29,6 +32,12 @@ public interface FileInfoService extends CoreService<FileInfo> {
 
     /** 含已删除记录的单条查询；不存在返回 null。 */
     FileInfo findAny(Long id);
+
+    /** 按存储路径查登记记录（含回收站）；路径为空返回 null。 */
+    FileInfo findAnyByStoragePath(String path);
+
+    /** 批量判断存储路径是否已登记（含回收站），用于孤儿扫描与补登记。 */
+    Set<String> existingStoragePaths(Collection<String> paths);
 
     /** 软删除（移入回收站），返回受影响行数；记录已删除或不存在时为 0。 */
     int softDelete(Long id);

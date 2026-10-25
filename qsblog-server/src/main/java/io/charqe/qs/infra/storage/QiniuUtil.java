@@ -525,6 +525,41 @@ public class QiniuUtil implements StoreService {
     }
 
     /**
+     * 按前缀列举对象，返回裸 key 与元信息，最多 {@code limit} 条。
+     * <p>
+     * 供孤儿扫描比对登记表使用；limit 超过七牛单页上限时自动翻页。
+     *
+     * @param prefix 裸 key 前缀，空串表示整个 bucket
+     * @param limit  本次最多返回的对象数
+     */
+    public List<StorageObject> listObjects(String prefix, int limit) {
+        if (limit <= 0) {
+            return Collections.emptyList();
+        }
+        String normalizedPrefix = StrUtil.nullToEmpty(prefix);
+        BucketManager.FileListIterator it =
+                getBucketManager().createFileListIterator(bucket, normalizedPrefix, 1000, "");
+
+        List<StorageObject> objects = new ArrayList<>();
+        while (it.hasNext() && objects.size() < limit) {
+            FileInfo[] items = it.next();
+            if (items == null) {
+                break;
+            }
+            for (FileInfo item : items) {
+                if (item == null || item.key == null || item.key.equals(normalizedPrefix)) {
+                    continue;
+                }
+                objects.add(new StorageObject(item.key, item.fsize, item.mimeType, item.putTime));
+                if (objects.size() >= limit) {
+                    break;
+                }
+            }
+        }
+        return objects;
+    }
+
+    /**
      * 前缀匹配 + 体积 ≥ 250KB + 后缀非 .webp，返回裸 key。
      */
     public List<String> listLargeNonWebp(String imgPrefix) {
