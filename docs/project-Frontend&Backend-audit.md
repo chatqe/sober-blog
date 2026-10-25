@@ -419,20 +419,21 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 - **Impact**：前端校验可被绕过；带 GPS 原图直接公开；超大像素图可打满堆内存。
 - **最小修复**：`saveFile` 后增加仅对图片生效的 `ImageSanitizer`，失败拒绝入库；非图片只做魔数校验。
 
-#### F17｜派生变体缺失（thumb/card/hero）｜UNVERIFIED
+#### F17｜派生变体缺失（thumb/card/hero）｜已落地（迭代 4，七牛 URL 变体）
 
 - **Evidence**：`file_info` 无变体表/字段；[QiniuUtil.java:559-584](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/infra/storage/QiniuUtil.java#L559-L584) `submitPfop` 无调用方；列表与详情只返回单一 `visitPath`。
 - **Expected**：上传后异步生成 3 档（thumb 320 / card 800 / hero 1600），详情返回 `variants{thumb,card,hero}`；库内只留原图与 `file_hash`，变体走 CDN 变换或对象前缀，不重复登记。
 - **Impact**：列表页被迫加载原图；后续换 CDN 需回刷全量 URL。
 - **最小修复**：七牛用 `imageView2` URL 变体（零额外存储）；本地用 Thumbnailator 生成 `_thumb/_card/_hero`；`detail` 统一返回 `variants`，前端不再拼域名。
 - **口径**：属内部能力，不占接口数；审计后原方案的 `POST /file/derive` 已删除。
+- **落地**：迭代 4 在 `detail` 返回 `variants{thumb,card,hero}`（七牛 `imageView2/2/w/320|800|1600`），本地存储与 gif 降级为原图；库内仍只存原图与 `file_hash`。
 
 ### 与参考文章的接口口径对照
 
 | 文章能力 | 本项目落点 | 状态 |
 | --- | --- | --- |
 | 图片列表 | `POST /file/admin/list` | 有端点，契约已修（迭代 0） |
-| 图片详情 | `GET /file/detail/{id}`（支持 HEAD） | 待建 |
+| 图片详情 | `GET /file/detail/{id}`（支持 HEAD） | 已建（迭代 4：HEAD + ETag + 派生变体） |
 | 上传 | `getUpToken` / `uploadToken` / `admin/upload` + `save` | 已建（迭代 1 服务端 Key） |
 | 引用查询 | `POST /file/ref/list`（按 fileId 或 bizType+bizId） | 已建（迭代 2） |
 | 删除（force） | `POST /file/admin/delete?force=` | 已建（迭代 2） |
@@ -443,7 +444,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 孤儿扫描 | `POST /file/orphan/scan`（`dryRun`） | 已建（迭代 3） |
 | 补登记 | `POST /file/orphan/backfill` | 已建（迭代 3） |
 
-口径汇总：文章 **11**（原 15：删除与永久删除合并为 `force`、批量删除与孤儿清理合并、重复检测并入登记、派生改 URL 变体）→ 本项目 **17**（5 现有 + 12 新增）。已落地 16 个（5 现有 + 迭代 1 的 2 + 迭代 2 的 5 + 迭代 3 的 4），详情 1 个待建。
+口径汇总：文章 **11**（原 15：删除与永久删除合并为 `force`、批量删除与孤儿清理合并、重复检测并入登记、派生改 URL 变体）→ 本项目 **17**（5 现有 + 12 新增）。已落地 17 个（5 现有 + 迭代 1 的 2 + 迭代 2 的 5 + 迭代 3 的 4 + 迭代 4 的 1），无待建项。
 
 ### 分迭代路线
 
@@ -456,7 +457,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 4 媒体库 | `detail`（+HEAD）、异步变体（F17） | +1 |
 | 内部能力 | F15 压缩、F16 重绘、F17 变体 | 0 |
 
-落地进度：迭代 0–3 已完成（当前 `/file` 端点 16 个），迭代 4 与 F15–F17 未做。
+落地进度：迭代 0–4 已完成（当前 `/file` 端点 17 个）；F17 以七牛 URL 变体落地，F15（上传前压缩）与 F16（入库前重绘）未做。
 
 ### 契约修订（不改接口数，实现时必须带上）
 
@@ -474,13 +475,13 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 10 | 未登记的暂存对象 24h 定时清理（任务，非接口） | S3 multipart abort / lifecycle |
 | 11 | F15 压缩（上传前）、F16 重绘（入库前）作为流水线阶段实现，**不新增端点** | 内部能力口径 |
 
-落地状态：修订 4 已在迭代 3 落实（`batch` ≤100 + `dryRun` + 逐条 `{ok,skipped,reason}`）；修订 9 只覆盖 404/409（412 校验和、429 限流未做）；修订 10 的「未登记暂存对象 24h 定时清理」仍未实现，迭代 3 只提供手动 `orphan/scan` + `orphan/backfill`。
+落地状态：修订 4 已在迭代 3 落实（`batch` ≤100 + `dryRun` + 逐条 `{ok,skipped,reason}`）；修订 6 与 7 已在迭代 4 落实（`detail` 支持 HEAD、返回 `ETag=fileHash` 与 `Cache-Control`，三档变体由七牛 `imageView2` URL 拼接，库内不存派生文件）；修订 9 只覆盖 404/409（412 校验和、429 限流未做）；修订 10 的「未登记暂存对象 24h 定时清理」仍未实现，迭代 3 只提供手动 `orphan/scan` + `orphan/backfill`。
 
 ### 结论与限制
 
 - 当前不是「功能不全」，而是「登记链路从未成功」：`file_info` 0 行是硬证据，F1/F2 未修之前，引用、回收站、孤儿治理都没有可作用的对象。
-- F15–F17 不占接口数，但决定存储成本、首屏速度与上传安全，建议随迭代 1（F15/F16）与迭代 4（F17）落地。
-- 本小节 F1–F17 结论来自源码与数据库元数据；迭代 0 的登记/列表/删除链路已在 2026-10-26 补跑运行时验收（见下节），F3 的 `force`、F15–F17 仍未验证。
+- F15–F17 不占接口数，但决定存储成本、首屏速度与上传安全；F17 已在迭代 4 以七牛 URL 变体落地，F15/F16 仍未做。
+- 本小节 F1–F17 结论来自源码与数据库元数据；迭代 0–4 的登记/列表/删除/引用/回收站/治理/详情链路已在 2026-10-26 补跑运行时验收（见下节），F3 的 `force` 已在迭代 2 验证，F15/F16 仍未验证。
 
 ### 迭代 0 落地与运行时验收（2026-10-26）
 
@@ -609,6 +610,36 @@ Key 规则：`{scene}/{ownerId}/{yyyyMM}/{ulid}.{ext}`。ULID 为 26 位 Crockfo
 
 未覆盖：前端媒体库尚未接这 4 个接口；扫描依赖 bucket 列举，5000 条以上需按前缀分批，未做游标续扫；只比对 `storage_path`，无法发现“已登记但对象被删”的反向孤儿；补登记以 `system` 归属且不计算 `file_hash`（七牛 etag 非 SHA256）；契约修订 10 的“未登记暂存对象 24h 定时清理”仍是手动治理，未加定时任务；修订 9 的 412/429 仍未实现。
 
+### 迭代 4 落地与运行时验收（2026-10-26，媒体库：详情 + ETag + 派生变体）
+
+接口数 16 → 17：新增 `GET /file/detail/{id}`（`@LoginCheck(value=1, scope=ADMIN)`），同一映射由 Spring 隐式响应 HEAD 并丢弃响应体。本轮无 DDL，无新增表字段。
+
+详情字段：在 `FileRespVO` 之上补 `ownerId/ownerType/bucket/refCount/status/createTime/deletedAt/visitPath/etag/variantMode/variants`。`visitPath` 按「`cdnDomain` 优先，其次按 `thirdPartyName` 选七牛/本地下载域名」+ 裸 key 拼接，前缀统一补末尾 `/`；`etag` 取小写 `file_hash`，为空时不下发 ETag 头；未登记或已进回收站返回 `code 404`（HTTP 200，与模块内其他端点信封一致）。
+
+条件请求与缓存：成功响应带 `ETag="<sha256>"` 与 `Cache-Control: public, max-age=300`（`file.detail.cache-control` 可配）；`If-None-Match` 支持强/弱校验与 `*` 通配，命中返回 `304`（仍带 ETag 与缓存头）。
+
+派生变体（F17）：仅七牛 + `image/*` + 非 gif 时 `variantMode=transform`，`variants{thumb,card,hero}` 为 `visitPath + ?imageView2/2/w/{320/800/1600}/q/85`（key 已带 `?` 时改用 `&`）；本地存储、非图片与 gif 返回 `variantMode=none`、`variants=null`，不落派生文件。
+
+运行时验收（后端 18081 dev，admin `Joy`；DB `192.168.30.100:3309/qingsi`，起始两表 0 行）：
+
+| # | 操作 | 结果 |
+| --- | --- | --- |
+| 1 | 起始计数 | `file_rows=0 ref_rows=0` |
+| 2 | `admin/save` 图片探针（`fileHash=sha256("abc")`） | `code 200 id=12`；库内 `owner_id=1 owner_type=admin file_hash=ba7816…15ad third_party_name=3 scene=avatar` |
+| 3 | `GET /file/detail/12` | `200`；`visitPath=https://img.soberup.top/avatar/1/202610/m5-probe-a.png`，`variantMode=transform`，thumb/card/hero 分别为 `imageView2` 的 `w/320`、`w/800`、`w/1600`（`q/85`），`etag=ba7816…15ad` |
+| 4 | 响应头 | `ETag="ba7816…15ad"`、`Cache-Control=public, max-age=300` |
+| 5 | `HEAD /file/detail/12` | `200`，ETag 与缓存头同上，响应体长度 `0` |
+| 6 | `If-None-Match` 命中 / `*` / `"stale"` | `304` / `304` / `200` |
+| 7 | 登记 pdf 探针后查详情 | `code 200 variantMode=none variants=null` |
+| 8 | `GET /file/detail/999999` | `code 404 文件不存在`，无 ETag 头 |
+| 9 | 软删探针后查详情 → 恢复 | `code 404`；`restore` 后 `code 200` |
+| 10 | `force` 清理两探针 | `200/200`；`file_rows=0 ref_rows=0` |
+| 11 | `/v3/api-docs` | `/file/*` 共 17 条，含 `detail/{id}` |
+
+代码级验证：`mvn -o -B -pl qsblog-server test "-DskipTests=false" -Dtest="File*"` → **126 条全绿**（107 + 19）。新增 `FileMediaServiceTest` 10 条（三档宽度、gif/非图片/七牛关闭降级、本地域名、`cdnDomain` 优先、query 拼接、空 hash、回收站与不存在）、`FileDetailHttpContractTest` 9 条（详情信封、ETag 与缓存头、强/弱/通配 304、过期 ETag 返回全量、HEAD 无体、404 信封、ADMIN 作用域）。
+
+未覆盖：`detail` 仅对后台会话开放，C 端读详情尚未定义；变体只拼 URL，未在浏览器验证七牛 `imageView2` 的真实返回（探针 key 本身无对象，公开读策略也未校验）；本地存储的物理派生（Thumbnailator `_thumb/_card/_hero`）未实现，`variantMode=none` 是显式降级；ETag 由 `file_hash` 提供，未与七牛 ETag 比对，412 语义仍未实现。
+
 ## Evidence
 
 本轮证据来自：Sa-Token 双会话改造的逐文件核对（`modules/user/auth` 下 `AuthSessionService`/`SaTokenSessionAdapter`/`AuthSessionProperties`/`UserCredentialService`/`AuthSessionVO`/`SessionScope`，`aop/LoginCheck` + `LoginCheckAspect`，`GlobalExceptionHandler`，前端 `src/auth/*`、`stores/modules/auth.ts`、`router/index.ts`、`utils/request.ts`、`api/client/responseHandler.ts`），以及下列本地命令。当前条目链接对应本轮工作树；历史附录链接仍是旧报告记录的行号，不保证与当前文件对齐。
@@ -634,6 +665,7 @@ Key 规则：`{scene}/{ownerId}/{yyyyMM}/{ulid}.{ext}`。ULID 为 26 位 Crockfo
 - 迭代 1（2026-10-26，同分支）：后端新增 `FileKeyGenerator`（ULID Key）、`FileSceneEnum#of/clientCodes`、`FileUploadService`/`FileUploadServiceImpl`、`POST /file/uploadToken` 与 `GET /file/config`；`QiniuUtil#getToken` 支持 `fsizeLimit`/`mimeLimit`/`insertOnly`/`returnBody`；`FileBaseVO` 增加 `fileHash`（64 位十六进制校验）并在服务层小写化；前端 `upload.ts` 改用服务端 Key、登记前计算 SHA-256，`session.test.ts` 同步打桩。契约测试 49 条全绿，前端 45 条 vitest 与 `vue-tsc` 通过，HTTP + DB + OpenAPI 验收 11 项通过，探针已物理删除。
 - 迭代 2（2026-10-26，同分支）：`file_biz_ref` 增加 `biz_field` 并调整唯一键、`file_info` 增加 `deleted_at` 与回收站索引；后端新增 `FileBizRefService#bind/unbind/pageRefs`、`FileInfoService#findAny/softDelete/restore/purge/pageDeleted`、`FileRecycleController`、`/file/ref/*`；`FileAdminController#delete` 支持 `force`（引用中 409，永久删先清存储对象）；`FileInfoStoragePurgeTest`/`FileRefHttpContractTest`/`FileRecycleHttpContractTest` 新增 23 条，文件模块合计 80 条全绿；HTTP + DB + OpenAPI 验收 13 项通过，探针永久删除后 0 残留。
 - 迭代 3（2026-10-26，同分支）：新增 `QiniuUtil#listObjects`（翻页列举裸 key）与 `StorageObject`；`FileStorageMapper` 增加 `selectAnyByStoragePath`/`selectExistingPaths`，`FileInfoService` 增加 `findAnyByStoragePath`/`existingStoragePaths`；新增 `FileGovernanceService`/`Impl`、`FileGovernanceController`（`/file/orphan/scan`、`/file/orphan/backfill`、`/file/unreferenced/list`、`/file/batch`）与 7 个 VO；扫描过滤目录占位对象，补登记/批量均默认 `dryRun`，批量对引用中文件一律跳过；无 DDL；新增 `FileGovernanceHttpContractTest` 12 条与 `FileGovernanceServiceTest` 15 条，文件模块合计 107 条全绿；HTTP + DB + OpenAPI 验收 14 项通过，两表回到 0 行。
+- 迭代 4（2026-10-26，同分支）：新增 `GET /file/detail/{id}`（ADMIN，Spring 隐式响应 HEAD）与 `FileMediaService`/`Impl`、`FileDetailRespVO`/`FileVariantsVO`、`FileVariantEnum`；`visitPath` 按 `cdnDomain`→存储域顺序推导，`etag` 取小写 `file_hash` 并据此支持 `If-None-Match` 304，缓存 `public, max-age=300` 可配；F17 以七牛 `imageView2` URL 变体落地（320/800/1600），本地/gif/非图片降级 `variantMode=none`；无 DDL；新增 `FileMediaServiceTest` 10 条与 `FileDetailHttpContractTest` 9 条，文件模块合计 126 条全绿；HTTP + DB + OpenAPI 验收 11 项通过，两表回到 0 行。
 - 保留旧原文为折叠历史附录；其测试数据操作、运行状态及清理披露均属于过去，不作为本轮行为。
 - 第二轮业务源代码、配置、数据库和缓存未修改，也未提交/合并/推送 Git；第三轮只改上述 3 个后端文件并提交到 fix 分支，回归数据已清理。编译/构建/测试只更新本地生成产物（`target/`、`dist/`、`logs/audit-build-1024.log`）。
 
@@ -766,7 +798,8 @@ Key 规则：`{scene}/{ownerId}/{yyyyMM}/{ulid}.{ext}`。ULID 为 26 位 Crockfo
 - 第五轮把后台管理端大量 `value = 0` 放宽为 `value = 1`，属权限模型收紧口径的放宽：`changeUserType` 是唯一保留站长专属的写接口，其余管理操作现由 0/1 共同掌握，是否符合最终产品授权需要产品方确认。
 - 第五轮只逐页验证了读接口；role=1 的写接口（保存/删除/审核）未逐项执行，仅依据注解与前端调用链判定。
 - `/admin/resourcePathList`（资源聚合）仍是既有 404 页面，前端端点与后端模块不匹配，未在本轮修复。
-- 文件模块已覆盖迭代 0–3（登记链路、服务端 Key、大小/类型/场景约束、SHA256 落库、引用绑定/解绑/查询、回收站软删与恢复、`force` 永久删除、孤儿扫描/补登记、未引用清单、批量清理），但真实七牛直传未执行；`file_hash` 未与对象 ETag 比对（412 未实现）；前端尚未接入引用/回收站/治理接口；F15–F17 仍为源码结论。
+- 文件模块已覆盖迭代 0–4（登记链路、服务端 Key、大小/类型/场景约束、SHA256 落库、引用绑定/解绑/查询、回收站软删与恢复、`force` 永久删除、孤儿扫描/补登记、未引用清单、批量清理、详情/ETag/派生变体），但真实七牛直传未执行；`file_hash` 未与对象 ETag 比对（412 未实现）；前端尚未接入引用/回收站/治理/详情接口；F15/F16 仍为源码结论。
+- 迭代 4 的 `detail` 只对后台会话开放，变体为 CDN URL 拼接，未验证七牛 `imageView2` 对真实对象的返回与公开读策略；本地存储的物理派生（Thumbnailator）未实现，`variantMode=none` 是显式降级。
 - 迭代 3 的治理是手动触发：扫描上限 5000、无游标续扫，只检测“对象在库不在”而发现不了“库在对象不在”的反向孤儿；补登记统一归 `system` 且不计算 `file_hash`；契约修订 10 的 24h 定时清理与修订 9 的 412/429 均未实现。
 - 未在真实 Redis 上执行 Lua 脚本与 Sa-Token 1.46.0 的键格式契约测试（集成测试被 system property 门控）；S5 的`login:session` 键共享与 S6 的日志/存储增长因此只能定性不能定量。
 - 不执行有状态探针：即使 GET 也可能回填缓存/记录访问/增加计数，认证切面会续期；不能将“GET”自动当作零副作用。

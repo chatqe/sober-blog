@@ -2,6 +2,7 @@ package io.charqe.qs.modules.file.convert;
 
 
 import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
+import io.charqe.qs.modules.file.controller.admin.vo.FileDetailRespVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileRespVO;
 import io.charqe.qs.modules.file.domain.pojo.FileInfo;
 import org.mapstruct.Mapper;
@@ -28,5 +29,10 @@ public interface FileConvert {
      * entity → respVO：返回给前端的转换
      */
     FileRespVO convert(FileInfo file);
+
+    /**
+     * entity → 详情VO：只复制登记字段，访问地址与派生图由服务层推导
+     */
+    FileDetailRespVO convertDetail(FileInfo file);
 
 }
