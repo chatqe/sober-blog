@@ -1,10 +1,10 @@
 # 前后端联合审计报告
 
-更新日期：2026-10-25（第八轮：首页分类区块放开私密文章并修复解包）。本文前半部分为当前结论；末尾折叠附录保留旧运行时审计记录，不代表当前版本的运行结果。
+更新日期：2026-10-26（第九轮：文件模块专项审计 F1–F17，只读源码 + 数据库事实核对，未改动业务代码）。本文前半部分为当前结论；末尾折叠附录保留旧运行时审计记录，不代表当前版本的运行结果。
 
 ## Result
 
-**PARTIAL：Sa-Token 双会话改造已完成源码复审、构建/单测与运行时回归。动态模块的鉴权链路（S1/S2）、回归中暴露的三处存量缺陷（S9–S11）、第四轮按业务更正落地的站长专属写权限、第五轮的后台登录门槛与菜单全量开放，第七轮按业务口径修复的 A2（私密文章列表正文暴露），以及第八轮的首页分类放开私密文章 + 分类区块解包修复，均已在真实 MySQL/Redis + 浏览器环境中验证通过；第五轮改动已提交并快进合并至两仓库 `main`（未推送远程，第七、八轮改动尚未提交）。A1/B1/B2 等存量项仍未在运行时复核，项目整体不判定为通过。**
+**PARTIAL：Sa-Token 双会话改造已完成源码复审、构建/单测与运行时回归。动态模块的鉴权链路（S1/S2）、回归中暴露的三处存量缺陷（S9–S11）、第四轮按业务更正落地的站长专属写权限、第五轮的后台登录门槛与菜单全量开放，第七轮按业务口径修复的 A2（私密文章列表正文暴露），以及第八轮的首页分类放开私密文章 + 分类区块解包修复，均已在真实 MySQL/Redis + 浏览器环境中验证通过；第五轮改动已提交并快进合并至两仓库 `main`（第七、八轮已提交：后端 `361cd07`、前端 `bcd56f2`，两仓库均未推送远程）。第九轮新增文件模块专项审计（F1–F17）：dev 库 `file_info`/`file_biz_ref` 均为 0 行，登记从未成功落库；前端压缩、后端重绘、派生变体三项内部能力全部缺失，详见「文件模块专项审计（第九轮）」。A1/B1/B2 等存量项仍未在运行时复核，项目整体不判定为通过。**
 
 - 本轮最高优先级（S1）：动态模块 12 个写接口原为 `value=1` + `scope=ADMIN`，既拒绝普通用户又以 WEB 会话拦截所有人。第四轮按业务方更正后的口径重定契约：**新增/修改/删除仅站长（`userType=0`）**，其余人（含匿名）可读动态、点赞数、评论内容与作者信息，点赞/评论需登录；后台 `/admin/moment/*` 保留给站长(0)与管理员(1)。
 - 双会话设计在源码层成立：WEB/ADMIN 各自独立的 `StpLogic`、revision 版本撤销、跨域调用显式拒绝、401/403 以真实 HTTP 状态返回、前端按域存储并按 generation 丢弃过期响应。
@@ -370,6 +370,114 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 - `FALSE POSITIVE`：“两域共用 `tokenName` 必然导致越权”。业务校验仍由 loginType + revision + scope 三重把关；共用键名影响的是会话簿记与运营能力，已降为 S5（P2，需运行时验证）。
 - 不把“注册接口返回 `AuthSessionVO`”当作契约破坏：注册即登录是本次改造的显式设计，前端 `accept()` 也能按 64 位 token + `sessionType='WEB'` 正常消费；真正异常的是旧 `/user/token`（S4）。
 
+## 文件模块专项审计（第九轮）
+
+范围：`modules/file` 的 Controller/Service、`infra/storage`（FileFilter/QiniuUtil/LocalUtil）、前端上传封装与组件、`file_info`/`file_biz_ref` 建表语句、dev 库实际数据。**只读审计**：未改业务代码、未建表、未启动服务、未产生测试数据。
+
+### 事实基线
+
+| 项 | 事实 | 证据 |
+| --- | --- | --- |
+| 表数据 | `file_info` 0 行、`file_biz_ref` 0 行 | dev 库 `SELECT COUNT(*)`（第九轮） |
+| SQL 模式 | `ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,...` | `SELECT @@sql_mode`（第九轮） |
+| 必填列 | `file_hash`、`bucket`、`owner_id` 均 NOT NULL 且无默认值 | [qingsi-model.sql:270-304](file:///E:/idea/qs-blog/docs/sql/qingsi-model.sql#L270-L304) |
+| 写入实现 | 仅填 `storedName`/`fileExt`/`fileCategory`，上述三列未赋值 | [FileInfoServiceImpl.java:24-35](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/file/service/FileInfoServiceImpl.java#L24-L35) |
+| 结论 | 严格模式下 INSERT 必然失败；前端只有 `ElMessage.warning('文件已上传，但资源登记失败')`，故历史验证未发现 | [upload.ts:70-118](file:///E:/web/qs-web/src/api/modules/upload.ts#L70-L118) |
+
+### F1–F14｜接口与链路缺陷
+
+| 编号 | 级别 | Current Fact（源码） | Impact | 最小修复 |
+| --- | --- | --- | --- | --- |
+| F1 | P0 | 三列 NOT NULL 无默认却未赋值，表 0 行 | 登记 100% 失败，媒体库永远为空 | 三列放宽（hash 可空、bucket 默认 `''`、owner 可空）+ 服务端补全 |
+| F2 | P0 | `upload` 只返回 `visitPath` 不落库；登记靠前端二次 `saveResource`，且仅 `admin && userType===0` | C 端上传无任何记录，全部成为孤儿 | 上传即登记，或由服务端统一调用 `register` |
+| F3 | P1 | `delete` 用 `@RequestParam id`，前端发 JSON body | 400，后台删除不可用 | 改 `@RequestBody`，或前端改 query |
+| F4 | P1 | `list` 返回 `BaseReqVO`（`records`），前端读 `res.list` | 列表恒为空 | 统一 `{list,total,page,pageSize}` |
+| F5 | P1 | 前端 `resource.ts` 调 `/file/list`、`/file/save`、`/file/delete`、`/file/update`，后端无这些路由 | 全部 404 | 对齐 `/file/admin/*` |
+| F6 | P1 | `resource/List.vue` 先判 `res.data` 再读 `res.list` | 双解包误判为空 | 去掉 `.data` |
+| F7 | P1 | `getToken` 无 `insertOnly`/`mimeLimit`/`returnBody`，key 由前端拼 | 可覆盖同名对象、任意 MIME 直传 | 服务端生成 key + PutPolicy |
+| F8 | P1 | `FileFilter` 先 `resolve` 再判空 token；`BlogUtil.getAdminUser()` 可能 NPE；计数不回写 Redis | 匿名 401、NPE、限流失效 | 顺序修正 + 原子计数 |
+| F9 | P1 | `LocalUtil` 用 `uploadUrl + path` 字符串拼接 | 子路径/反代下 URL 错误 | URI 规范化 |
+| F10 | P1 | `Edit.vue#imgAdd` 用 `VITE_QINIU_URL`/`VITE_QINIU_DOWNLOAD`，`.env*` 未定义 | 回填域名 `undefined` | 改用后端 `visitPath` 或补 env |
+| F11 | P2 | `UploadPicture` 的 `storeType` 取自 localStorage | 与后端 `store.type` 漂移 | 改读 `/file/config` |
+| F12 | P2 | `beforeUpload` 空实现，仅校验大小 | 无类型/尺寸/压缩校验 | 见 F15 |
+| F13 | P0（设计） | `file_biz_ref` 无 `biz_field` 列，全仓无写入方 | 无法表达封面/正文/头像，引用不可查 | 加 `biz_field` + 重建唯一键 |
+| F14 | P2 | `QiniuUtil#submitPfop` 无调用方 | 派生转码为死代码 | 迭代 4 接回或删除 |
+
+### F15–F17｜三项内部能力（均不新增 HTTP 接口）
+
+#### F15｜前端压缩缺失（OffscreenCanvas）｜UNVERIFIED
+
+- **Evidence**：[UploadPicture.vue:136-160](file:///E:/web/qs-web/src/components/media/UploadPicture.vue#L136-L160) `beforeUpload` 为空实现，只校验 `file.size`；[upload.ts:70-118](file:///E:/web/qs-web/src/api/modules/upload.ts#L70-L118) 直接 `FormData.append` 原文件。
+- **Expected**：上传前用 `OffscreenCanvas` 等比缩到长边 ≤2560、`quality=0.85` 转 WebP（不支持回退 JPEG），按 EXIF `Orientation` 归一；压缩失败降级原图并提示。
+- **Impact**：手机原图 5–15MB 直传，白耗七牛流量与存储；列表仍加载原图，首屏变慢。
+- **最小修复**：在 `beforeUpload` 返回压缩后的 `File`；提示压缩前后体积；同步收紧 `accept` 与 MIME 校验。
+
+#### F16｜后端重绘缺失（Thumbnailator / ImageIO）｜UNVERIFIED
+
+- **Evidence**：[QiniuUtil.java:147-175](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/infra/storage/QiniuUtil.java#L147-L175) `saveFile` 只做流写入；`LocalUtil` 直接落盘，无二次编码。
+- **Expected**：服务端解码→重绘→再编码（`ImageIO` 或 Thumbnailator），剥离 EXIF/GPS、纠正方向、限制像素总数（防解压炸弹）、按魔数嗅探真实类型。
+- **Impact**：前端校验可被绕过；带 GPS 原图直接公开；超大像素图可打满堆内存。
+- **最小修复**：`saveFile` 后增加仅对图片生效的 `ImageSanitizer`，失败拒绝入库；非图片只做魔数校验。
+
+#### F17｜派生变体缺失（thumb/card/hero）｜UNVERIFIED
+
+- **Evidence**：`file_info` 无变体表/字段；[QiniuUtil.java:559-584](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/infra/storage/QiniuUtil.java#L559-L584) `submitPfop` 无调用方；列表与详情只返回单一 `visitPath`。
+- **Expected**：上传后异步生成 3 档（thumb 320 / card 800 / hero 1600），详情返回 `variants{thumb,card,hero}`；库内只留原图与 `file_hash`，变体走 CDN 变换或对象前缀，不重复登记。
+- **Impact**：列表页被迫加载原图；后续换 CDN 需回刷全量 URL。
+- **最小修复**：七牛用 `imageView2` URL 变体（零额外存储）；本地用 Thumbnailator 生成 `_thumb/_card/_hero`；`detail` 统一返回 `variants`，前端不再拼域名。
+- **口径**：属内部能力，不占接口数；审计后原方案的 `POST /file/derive` 已删除。
+
+### 与参考文章的接口口径对照
+
+| 文章能力 | 本项目落点 | 状态 |
+| --- | --- | --- |
+| 图片列表 | `POST /file/admin/list` | 有端点，契约待修（F4/F5/F6） |
+| 图片详情 | `GET /file/detail/{id}`（支持 HEAD） | 待建 |
+| 上传 | `getUpToken` / `uploadToken` / `admin/upload` + `save` | 有端点，登记断链（F1/F2） |
+| 引用查询 | `GET /file/ref/{fileId}` | 待建（F13） |
+| 删除（force） | `POST /file/admin/delete?force=` | 有端点，参数不匹配（F3） |
+| 回收站列表 | `GET /file/recycle/list` | 待建 |
+| 恢复 | `POST /file/recycle/restore` | 待建 |
+| 未引用清单 | `POST /file/unreferenced/list` | 待建 |
+| 批量清理 | `POST /file/batch`（≤100，`dryRun`） | 待建 |
+| 孤儿扫描 | `POST /file/orphan/scan`（`dryRun`） | 待建 |
+| 补登记 | `POST /file/orphan/backfill` | 待建 |
+
+口径汇总：文章 **11**（原 15：删除与永久删除合并为 `force`、批量删除与孤儿清理合并、重复检测并入登记、派生改 URL 变体）→ 本项目 **17**（5 现有 + 12 新增），最小闭环 12，迭代 0 仅 5 个现有接口。
+
+### 分迭代路线
+
+| 迭代 | 内容 | 接口增量 |
+| --- | --- | --- |
+| 0 打通登记 | `file_hash` 可空、`bucket` 默认 `''`、`owner_id` 可空；`save` 补 `ownerId/ownerType/bucket/thirdPartyName`；`list` 改 `{list,total}`；`delete` 改 `@RequestBody` | 0（现有 5 个） |
+| 1 安全 | 服务端 key + `insertOnly`/`mimeLimit`/`returnBody`；`GET /file/config` | +2 |
+| 2 引用与回收站 | ref 绑定/解绑/查询；`recycle/list`、`recycle/restore`；`delete` 加 `force` | +5 |
+| 3 治理 | `orphan/scan`、`orphan/backfill`、`unreferenced/list`、`batch` | +4 |
+| 4 媒体库 | `detail`（+HEAD）、异步变体（F17） | +1 |
+| 内部能力 | F15 压缩、F16 重绘、F17 变体 | 0 |
+
+### 契约修订（不改接口数，实现时必须带上）
+
+| # | 修订 | 依据 |
+| --- | --- | --- |
+| 1 | `delete` 带 `force`；默认只写 `deleted_at` | WP `DELETE /wp/v2/media/<id>` |
+| 2 | `save`/`uploadToken`/`batch` 支持 `Idempotency-Key`（Redis 存 24h 响应） | MDN Idempotency-Key |
+| 3 | `uploadToken` 返回服务端 `key` + `fsizeLimit` + `mimeLimit` + `insertOnly` + 期望 `sha256` | S3 presigned + ChecksumSHA256 |
+| 4 | `batch` 单次 ≤100、支持 `dryRun`、返回逐条 `{ok, skipped, reason}` | Cloudinary Delete resources / Sonatype |
+| 5 | `list` 返回 `{list,total,page,pageSize}`，删掉 `records` 错位 | Strapi `/upload/files/page` |
+| 6 | `detail` 支持 `HEAD`，返回 `ETag=fileHash` 与 `Cache-Control` | Strapi `/upload/files/:id` / S3 HeadObject |
+| 7 | 派生 URL 由 CDN 变换拼接，库内只存原图 + 一份 `file_hash`；变体由 F17 提供 | Cloudinary 变换 URL |
+| 8 | `bind` 必填 `bizType`/`bizId`/`bizField`，唯一键含 `biz_field` | Strapi `ref`/`refId`/`field` |
+| 9 | 错误语义：404 未登记、409 引用中禁删、412 校验和不符、429 限流 | Strapi / S3 |
+| 10 | 未登记的暂存对象 24h 定时清理（任务，非接口） | S3 multipart abort / lifecycle |
+| 11 | F15 压缩（上传前）、F16 重绘（入库前）作为流水线阶段实现，**不新增端点** | 内部能力口径 |
+
+### 结论与限制
+
+- 当前不是「功能不全」，而是「登记链路从未成功」：`file_info` 0 行是硬证据，F1/F2 未修之前，引用、回收站、孤儿治理都没有可作用的对象。
+- F15–F17 不占接口数，但决定存储成本、首屏速度与上传安全，建议随迭代 1（F15/F16）与迭代 4（F17）落地。
+- 本小节全部结论来自源码与数据库元数据，未启动 18081/5173 跑上传链路，故统一标 `UNVERIFIED`（见 Remaining Uncertainty 8/9）。
+
 ## Evidence
 
 本轮证据来自：Sa-Token 双会话改造的逐文件核对（`modules/user/auth` 下 `AuthSessionService`/`SaTokenSessionAdapter`/`AuthSessionProperties`/`UserCredentialService`/`AuthSessionVO`/`SessionScope`，`aop/LoginCheck` + `LoginCheckAspect`，`GlobalExceptionHandler`，前端 `src/auth/*`、`stores/modules/auth.ts`、`router/index.ts`、`utils/request.ts`、`api/client/responseHandler.ts`），以及下列本地命令。当前条目链接对应本轮工作树；历史附录链接仍是旧报告记录的行号，不保证与当前文件对齐。
@@ -390,6 +498,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 - 第六轮只做 Git 收口：后端 `a59b9e9 feat(admin): 后台仅放行站长与管理员并开放全量菜单`（15 文件，14 个控制器 + 本报告）、前端 `244ebe3 feat(admin): 后台菜单对站长与管理员全量开放`（4 文件）。两仓库均以 `git merge --ff-only` 合并到 `main`，无冲突、无合并提交；`fix/sa-token-scope-regression` 与 `fix/admin-login-role-menu` 分支保留在本地。未推送：后端 `main` 相对 `github/main` ahead 6，前端 `main` 相对 `origin/main` ahead 4。未跟踪的 `temp/` 与 `scripts/auth-browser-harness.cjs` 仍未入库。
 - 第七轮修复 A2：`ArticleServiceImpl` 新增 `projectForPublicList`/`toListSummary`，`listArticle` 与 `listCategoryArticle` 统一列表投影——`password`/`videoUrl` 置空，私密文章正文 >80 字截断为 80+`…`、≤80 字返回 `null`；前端 `ArticleList.vue` 对空摘要显示加密提示。探针文章与 Redis `category_article_list_v2` 缓存已清理。
 - 第八轮按产品决定放开首页分类：`listCategoryArticle` 去掉 `viewStatus=true` 过滤，`CommonConst.CATEGORY_ARTICLE_LIST` 由 `v2` 升为 `v3`（语义已变，避免旧快照命中）；前端 `index.vue#getSortArticles` 去掉多余的 `.data` 解包。验证时清理了无 TTL 的陈旧 `category:public`/`category:navbar_`（缺 `TestCategory01`，导致首页分类区块无法渲染）。
+- 第九轮只读审计文件模块：新增「文件模块专项审计（第九轮）」F1–F17（14 条链路缺陷 + 3 项内部能力 F15 压缩 / F16 重绘 / F17 变体），并补入文章接口口径对照（11 对 17）与五迭代路线；业务代码 0 行改动，未建表、未启动服务、未产生测试数据。
 - 保留旧原文为折叠历史附录；其测试数据操作、运行状态及清理披露均属于过去，不作为本轮行为。
 - 第二轮业务源代码、配置、数据库和缓存未修改，也未提交/合并/推送 Git；第三轮只改上述 3 个后端文件并提交到 fix 分支，回归数据已清理。编译/构建/测试只更新本地生成产物（`target/`、`dist/`、`logs/audit-build-1024.log`）。
 
@@ -798,5 +907,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 5. **前端未提交改动**：59 个未提交文件可能包含未审计的临时代码，本报告仅覆盖当前工作区快照。
 6. **运行环境差异**：本次为 `dev` profile + 本机 `18081`，生产 CORS 白名单、前端域名与网关策略可能不同（`application-prod.yml` 未逐一比对）。
 7. **管理员会话副作用**：`admin_token_1` 被覆写后删除，若之前存在有效管理员登录态，需要重新登录恢复。
+8. **文件模块未做运行时验证**：F1–F17 均为源码 + 数据库事实核对，未启动服务走「上传→登记→列表→删除」链路；`file_info` 0 行只证明历史未成功，不证明修复后可用。
+9. **七牛直传策略未实测**：`insertOnly`/`mimeLimit`/`fsizeLimit` 的组合行为依赖 bucket 侧配置，本轮无上传凭证实测。
 
 </details>
