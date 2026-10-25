@@ -111,6 +111,8 @@ qiniu:
   secretKey: ${QS_QINIU_SK}
 #  bucket: pb-buckets
   bucket: out-pb-bkt
+  # dev bucket 在亚洲区：直传域名必须与区域一致，否则七牛返回 "incorrect region"；前端以此为准
+  uploadUrl: "https://up-as0.qiniup.com"
   downloadUrl: "https://img.soberup.top/" # 返回前端用的 CDN 域名
   pipeline: default.sys  # 私有队列可提速
   pfop-size-limit: 314572  # 压缩标准 大于300 单位 Byte，（300 kB）

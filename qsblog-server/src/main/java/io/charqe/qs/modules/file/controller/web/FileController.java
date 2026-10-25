@@ -3,8 +3,11 @@ package io.charqe.qs.modules.file.controller.web;
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.R;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileDetailRespVO;
+import io.charqe.qs.modules.file.controller.admin.vo.FileListReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileRefBindReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileRefListReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileRefUnbindReqVO;
@@ -13,6 +16,7 @@ import io.charqe.qs.modules.file.controller.web.vo.FileConfigVO;
 import io.charqe.qs.modules.file.controller.web.vo.FileUploadTokenReqVO;
 import io.charqe.qs.modules.file.controller.web.vo.FileUploadTokenRespVO;
 import io.charqe.qs.modules.file.domain.pojo.FileBizRef;
+import io.charqe.qs.modules.file.domain.pojo.FileInfo;
 import io.charqe.qs.modules.file.enums.FileSceneEnum;
 import io.charqe.qs.modules.file.service.FileBizRefService;
 import io.charqe.qs.modules.file.service.FileInfoService;
@@ -105,6 +109,32 @@ public class FileController {
 
     private boolean isManager(User user) {
         return user.getUserType() != null && user.getUserType() <= 1;
+    }
+
+    /**
+     * 我的图片分页：仅返回当前会话账号自己上传的文件，供头像等选图场景使用。
+     * <p>
+     * 与后台 {@code /file/admin/list} 的区别是拥有者强制取自会话，不得由入参指定。
+     */
+    @PostMapping("/my/list")
+    @LoginCheck(scope = SessionScope.EITHER)
+    public R<Map<String, Object>> myList(@RequestBody FileListReqVO req) {
+        User user = sessions.current(SessionScope.EITHER, false).user();
+        req.normalize();
+        IPage<FileInfo> page = fileInfoService.page(
+                new Page<>(Math.max(req.getCurrent(), 1), Math.max(req.getSize(), 1)),
+                Wrappers.<FileInfo>lambdaQuery()
+                        .eq(FileInfo::getOwnerId, user.getId())
+                        .eq(StringUtils.hasText(req.getScene()), FileInfo::getScene, req.getScene())
+                        .like(StringUtils.hasText(req.getKeyword()), FileInfo::getOriginalName, req.getKeyword())
+                        .orderByDesc(FileInfo::getCreateTime));
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("list", page.getRecords());
+        data.put("total", page.getTotal());
+        data.put("page", page.getCurrent());
+        data.put("pageSize", page.getSize());
+        return R.success(data);
     }
 
     /**

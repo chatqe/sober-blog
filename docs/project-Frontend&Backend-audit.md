@@ -446,7 +446,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 孤儿扫描 | `POST /file/orphan/scan`（`dryRun`） | 已建（迭代 3） |
 | 补登记 | `POST /file/orphan/backfill` | 已建（迭代 3） |
 
-口径汇总：文章 **11**（原 15：删除与永久删除合并为 `force`、批量删除与孤儿清理合并、重复检测并入登记、派生改 URL 变体）→ 本项目 **17**（5 现有 + 12 新增），迭代 7 因卡片需要真实编辑入口再加 1 个 `update`，合计 **18**。已落地 18 个（5 现有 + 迭代 1 的 2 + 迭代 2 的 5 + 迭代 3 的 4 + 迭代 4 的 1 + 迭代 7 的 1），无待建项；迭代 6 起前端已接入其中 13 个端点。
+口径汇总：文章 **11**（原 15：删除与永久删除合并为 `force`、批量删除与孤儿清理合并、重复检测并入登记、派生改 URL 变体）→ 本项目 **17**（5 现有 + 12 新增），迭代 7 因卡片需要真实编辑入口再加 1 个 `update`，迭代 8 因 C 端选图需要「我的图片」列表再加 1 个 `my/list`，合计 **19**。已落地 19 个（5 现有 + 迭代 1 的 2 + 迭代 2 的 5 + 迭代 3 的 4 + 迭代 4 的 1 + 迭代 7 的 1 + 迭代 8 的 1），无待建项；迭代 8 起前端已接入其中 15 个端点。
 
 ### 分迭代路线
 
@@ -459,8 +459,9 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 4 媒体库 | `detail`（+HEAD）、异步变体（F17） | +1 |
 | 内部能力 | F15 压缩、F16 重绘、F17 变体 | 0 |
 | 7 页面拆分与编辑 | 三页拆分、卡片视图；`POST /file/admin/update`（仅文件名/场景） | +1 |
+| 8 选图容器 | 文章封面/logo/头像可选图；`POST /file/my/list`（C 端可用） | +1 |
 
-落地进度：迭代 0–7 已完成（`/file` 端点 18 个，迭代 5、6 不新增接口，迭代 7 新增 `update`）；F17 以七牛 URL 变体落地，F15（上传前压缩）与 F16（服务端重绘）已在迭代 5 落地，迭代 6 把详情/引用/回收站/治理/批量接到前端页面并完成 `resource`→`file` 命名归一，迭代 7 把文件库/回收站/治理拆成三个二级菜单页面、改用卡片网格并为卡片补上可落库的编辑入口。
+落地进度：迭代 0–8 已完成（`/file` 端点 19 个，迭代 5、6 不新增接口，迭代 7 新增 `update`，迭代 8 新增 `my/list`）；F17 以七牛 URL 变体落地，F15（上传前压缩）与 F16（服务端重绘）已在迭代 5 落地，迭代 6 把详情/引用/回收站/治理/批量接到前端页面并完成 `resource`→`file` 命名归一，迭代 7 把文件库/回收站/治理拆成三个二级菜单页面、改用卡片网格并为卡片补上可落库的编辑入口，迭代 8 把“选图”从“只能手填 URL”升级为通用容器并接入三处业务表单。
 
 ### 契约修订（不改接口数，实现时必须带上）
 
@@ -748,6 +749,45 @@ F16 服务端重绘：新增 [ImageSanitizer.java](file:///E:/idea/qs-blog/qsblo
 
 未覆盖：上传对话框未实跑（素材走「凭证 + 直传 + save」脚本）；孤儿扫描、补登记、永久删除按钮未在 UI 端到端点击；站点素材只登记未替换页面引用（页面仍用打包资源）；卡片缩略图的真实视觉未在可用 CDN 环境确认，本机仅验证降级分支；编辑未跑负面用例（超 255 字节的 `@Size` 校验、回收站记录 404 分支、非法场景值），且未提供批量改场景入口；列表视图在 1366 以下未逐档截图。
 
+### 迭代 8 落地与运行时验收（2026-10-26，选图容器 + C 端「我的图片」+ 直传域名回归）
+
+接口 +1（18 → 19）：新增 `POST /file/my/list`（`SessionScope.EITHER`，拥有者强制取自会话），其余为前端组件与配置修正，无 DDL。
+
+**为什么要新接口**：选图容器要覆盖 C 端「修改头像」，而 `/file/admin/list` 是站长专属（`value=1, scope=ADMIN`），C 端会话拿不到任何列表。新增的 `my/list` 与后台列表同构（`{list,total,page,pageSize}` + `scene`/`keyword`），但 `owner_id` 由服务端按会话写入、不接受入参指定，因此普通用户只能看到自己上传过的图，不会互相翻图。
+
+**容器**：`src/components/media/ImagePickerDialog.vue`，按参考图布局——标题栏、顶部工具栏（类型下拉 + 关键词搜索 + 搜索按钮 + **上传按钮** + 右侧「共 N 张」）、5 列卡片网格（缩略图 + 底部名称条，单选描边与勾选徽标）、居中分页（12/24/48）、底部「未选择图片 / 已选：xxx」+「取消」/「使用该图片」（未选时禁用）。`append-to-body` 使其可嵌在既有对话框内（C 端「修改头像」本身就是弹窗）。
+
+**上传按钮的语义**：容器里没有想要的图时当场上传，走的是同一条 `uploadMedia` 链（压缩 → 凭证 → 直传 → 登记），成功后 `search()` 回到第一页，新图立即可选——不给「只能选已有的」留死角。上传前按 `maxSize`/`image/*` 拦截；本地存储只对已验证站长开放，C 端固定七牛。
+
+**接入点**（都是在原 URL 输入框旁加一个选图入口，不删原有上传与手填 URL 能力）：
+
+| 场景 | 页面 | 列表来源 | 上传前缀 → scene |
+| --- | --- | --- | --- |
+| 文章封面 | `views/admin/article/Edit.vue` | `library`（后台媒体库） | `articleCover` → `article-cover` |
+| 站点头像（logo）/ 背景图片 | `views/admin/settings/WebEdit.vue` | `library`，预置筛「站点素材」 | `webAvatar`/`webBackgroundImage` → `system` |
+| 用户头像 | `views/front/user/index.vue` | `mine`（我的图片） | `userAvatar` → `avatar` |
+
+**顺带修掉的两处既有缺陷**：
+
+1. `SCENE_BY_PREFIX` 缺 `articleCover`/`userAvatar`/`webAvatar`/`webBackgroundImage`/`randomAvatar`/`randomCover` 六项，这些页面上传的图全部落 `scene=unknown`，选图容器按场景筛选时永远看不到它们；补齐后新上传才归到 `article-cover`/`avatar`/`system`（历史数据不回改）。
+2. 七牛直传域名写死 `https://upload.qiniup.com`，而 dev bucket `out-pb-bkt` 在亚洲区，浏览器上传一律 `400 incorrect region, please use up-as0.qiniup.com`（即上传按钮在本地根本不可能成功）。改为**以服务端凭证下发的 `uploadUrl` 为准**、前端常量只兜底，并在 `application-dev.yml` 补 `qiniu.uploadUrl: "https://up-as0.qiniup.com"`（prod 未配 `uploadUrl`，行为保持原样）。
+
+验收（本地 18081 + 5173 + 真实七牛）：
+
+| # | 步骤 | 结果 |
+| --- | --- | --- |
+| 1 | 文章编辑页点「从图片库选择」 | 标题「选择文章封面」，工具栏齐全（含上传按钮），共 18 张、卡片网格、分页 24/page、底部「未选择图片」且「使用该图片」禁用 |
+| 2 | 选中 `letter-2.png` → 使用该图片 | 描边 + 勾选 + 「已选」文案生效，弹窗关闭，封面输入框回填 `https://img.soberup.top/system/1/...png` |
+| 3 | 网站设置「站点头像」→ 选择图片 | 标题「选择站点头像」，类型下拉预置「站点素材」，18 张 |
+| 4 | C 端「修改头像」→ 从我上传的图片选择 | `/file/my/list` 200，场景预置「用户头像」→ 共 0 张 + 空态提示「没有匹配的图片，可点击右上角上传」 |
+| 5 | 容器内点上传并选本地图片 | `up-as0.qiniup.com` 200 → `/file/register` 200 → 列表刷新为「共 1 张」，卡片名即上传文件名 |
+| 6 | 选中该图 → 使用该图片 | `/user/updateUserInfo` 200，头像换成新图；`file_info` 落库 `scene=avatar`、`storagePath=avatar/1/...` |
+| 7 | 收尾 | 头像改回原值，测试文件 `force=true` 永久删除（列表检索 0 残留） |
+
+代码级验证：`pnpm test:auth` **73 条全绿**（`file.test.ts` 14，新增 `listMyFiles` 路径与 `authScope: 'web'` 断言），`pnpm type-check` 通过；后端 `mvn -o -B -pl qsblog-server compile` 成功并启动，`GET /file/config` 返回 `uploadUrl: "https://up-as0.qiniup.com"`。
+
+未覆盖：容器只支持单选，多选/裁剪/替换已选图未做；正文配图、评论涂鸦、弹幕、表白墙等仍在用 `UploadPicture` 直传，未接入容器；`my/list` 的可见口径（只看自己上传）未经产品确认；容器内上传的失败分支（登记失败仅告警、超限拦截）未逐条 UI 端到端跑；prod 的 `qiniu.uploadUrl` 仍缺省，若生产 bucket 也在非默认区域需另行配置。
+
 ## Evidence
 
 本轮证据来自：Sa-Token 双会话改造的逐文件核对（`modules/user/auth` 下 `AuthSessionService`/`SaTokenSessionAdapter`/`AuthSessionProperties`/`UserCredentialService`/`AuthSessionVO`/`SessionScope`，`aop/LoginCheck` + `LoginCheckAspect`，`GlobalExceptionHandler`，前端 `src/auth/*`、`stores/modules/auth.ts`、`router/index.ts`、`utils/request.ts`、`api/client/responseHandler.ts`），以及下列本地命令。当前条目链接对应本轮工作树；历史附录链接仍是旧报告记录的行号，不保证与当前文件对齐。
@@ -777,6 +817,7 @@ F16 服务端重绘：新增 [ImageSanitizer.java](file:///E:/idea/qs-blog/qsblo
 - 迭代 5（2026-10-26，双仓库）：F15 前端新增 `src/utils/image/compressImage.ts` 并接入 `uploadMedia`（凭证前压缩、哈希/登记改用压缩后文件），`UploadPicture.vue` 加体积提示与非图片拦截，`vitest.config.ts` 扩到 `src/**`，新增 `compressImage.test.ts` 9 条；F16 后端新增 `ImageSanitizer`/`SanitizedImage`/`ExifOrientation`（纯 JDK ImageIO，无新依赖）并接入 `QiniuUtil#saveFile`、`LocalUtil#saveFile`，`LocalUtil` 同时修掉尾斜杠目录不可用的问题；新增 `ImageSanitizerTest` 12 条与 `LocalUtilTest` 6 条，后端 144 条、前端 54 条全绿，`vue-tsc` 通过；无 DDL、无新增接口；运行时验收 8 项通过（方向纠正、EXIF 剥离、伪造图片/穿越/覆盖拒绝、非图片原样），本地存储探针文件仅写入未跟踪的 `temp/`。
 - 迭代 6（2026-10-26，前端仓库）：把前端「文件媒体库」链路从 `resource` 改为 `file` —— 新增 `src/api/types/file.ts`、`src/api/modules/file.ts`（12 个封装）与 `file.test.ts`（12 条）、`src/utils/file/fileFormat.ts`、`views/admin/file/List.vue` 及 `FileDetailDrawer`/`RecyclePanel`/`GovernancePanel` 三组件；`resource.ts` 只留 `ResourcePath*`，`upload.ts`/`article.ts` 的 `saveResource` 改 `saveFile`，删除死类型 `ResourceInfo` 与 `Graffiti.vue` 死声明；路由 `resourceList`→`fileList`，菜单「资源管理」→「文件管理」，`adminTabs`/`navigation.ts` 同步；删除 `views/admin/resource/List.vue`。`pnpm test:auth` 66 条全绿、`pnpm type-check` 通过；前后端联调 7 项通过，探针解绑并永久删除后 0 残留。未跟踪的 `temp/`、`scripts/auth-browser-harness.cjs` 与截图不入库。
 - 迭代 7（2026-10-26，双仓库 + 数据）：文件管理拆为 `file/list|recycle|governance` 三个二级菜单页并兼容 `/admin/fileList`，新增 `FilePageHeader`，删除 `RecyclePanel`/`GovernancePanel`；文件库默认卡片网格（固定 6 列 + 窄屏降级）并保留列表切换，新增 `thumbUrl()` 与两级图片降级，默认分页改 20；卡片操作图标改为悬停才出现的左上角按钮组（详情/复制链接/编辑/移入回收站），选择框移到右上角，触屏常驻；为支撑编辑图标新增 `POST /file/admin/update`（`FileUpdateReqVO` + `FileInfoService#updateMeta` + `FileAdminController#update`，仅文件名/场景，回收站记录 404）与前端 `updateFile` + 编辑对话框；`ADMIN_ROLES` 增 3 条、`adminTabs` 增 3 条标题，新增 `navigation.test.ts` 4 条与 `updateFile` 1 条用例，前端 72 条全绿；用官方「凭证 → 七牛直传 → 登记」链路把 `src/assets/file` 的 18 张位图登记进 `file_info`（id 16–33，`scene=system`），5 个伪 `.jpg` 按文件头纠正为 `.png`。
+- 迭代 8（2026-10-26，双仓库）：新增通用选图容器 `src/components/media/ImagePickerDialog.vue`（类型筛选 + 关键词搜索 + 容器内上传 + 卡片单选 + 分页 + 「使用该图片」），接入文章封面、站点头像/背景图片、C 端用户头像三处；后端新增 `POST /file/my/list`（`FileController#myList`，EITHER，拥有者取自会话）与前端 `listMyFiles`；修两处既有缺陷——`SCENE_BY_PREFIX` 补齐六个前缀映射（此前这些页面上传全落 `scene=unknown`）、七牛直传改以凭证 `uploadUrl` 为准并在 `application-dev.yml` 配 `up-as0.qiniup.com`（此前写死域名导致浏览器上传必 400 incorrect region）；新增 `listMyFiles` 1 条用例，前端 73 条全绿，运行时 7 项验收通过，测试图与头像改动均已回滚。
 - 保留旧原文为折叠历史附录；其测试数据操作、运行状态及清理披露均属于过去，不作为本轮行为。
 - 第二轮业务源代码、配置、数据库和缓存未修改，也未提交/合并/推送 Git；第三轮只改上述 3 个后端文件并提交到 fix 分支，回归数据已清理。编译/构建/测试只更新本地生成产物（`target/`、`dist/`、`logs/audit-build-1024.log`）。
 
@@ -909,8 +950,9 @@ F16 服务端重绘：新增 [ImageSanitizer.java](file:///E:/idea/qs-blog/qsblo
 - 第五轮把后台管理端大量 `value = 0` 放宽为 `value = 1`，属权限模型收紧口径的放宽：`changeUserType` 是唯一保留站长专属的写接口，其余管理操作现由 0/1 共同掌握，是否符合最终产品授权需要产品方确认。
 - 第五轮只逐页验证了读接口；role=1 的写接口（保存/删除/审核）未逐项执行，仅依据注解与前端调用链判定。
 - `/admin/resourcePathList`（资源聚合）仍是既有 404 页面，前端端点与后端模块不匹配，未在本轮修复。
-- 文件模块已覆盖迭代 0–7（登记链路、服务端 Key、大小/类型/场景约束、SHA256 落库、引用绑定/解绑/查询、回收站软删与恢复、`force` 永久删除、孤儿扫描/补登记、未引用清单、批量清理、详情/ETag/派生变体、上传前压缩、服务端重绘、三页拆分、卡片视图与卡片编辑；迭代 7 已用真实七牛直传登记 18 张站点素材），但仍未覆盖七牛直传的失败重试/大文件/私有空间签名；`file_hash` 未与对象 ETag 比对（412 未实现）；前端孤儿扫描、补登记、上传对话框未做 UI 端到端验收；站点素材仅登记，未替换页面引用。
+- 文件模块已覆盖迭代 0–8（登记链路、服务端 Key、大小/类型/场景约束、SHA256 落库、引用绑定/解绑/查询、回收站软删与恢复、`force` 永久删除、孤儿扫描/补登记、未引用清单、批量清理、详情/ETag/派生变体、上传前压缩、服务端重绘、三页拆分、卡片视图与卡片编辑、选图容器与 C 端「我的图片」；迭代 7 已用真实七牛直传登记 18 张站点素材，迭代 8 补上浏览器直传域名修正并真实跑通），但仍未覆盖七牛直传的失败重试/大文件/私有空间签名；`file_hash` 未与对象 ETag 比对（412 未实现）；前端孤儿扫描、补登记未在 UI 端到端验收；站点素材仅登记，未替换页面引用。
 - 迭代 7 新增的 `update` 是「只改元数据」的最小接口：不级联更新引用表的展示名、不校验新场景与文件实际类型是否兼容（如把 `image/*` 改成 `avatar` 以外的场景）、无乐观锁（`BaseDO#version` 仍被注释），并发改名以最后写入为准；`originalName` 也不参与存储 Key，改名不影响访问地址。
+- 迭代 8 的选图容器是「单选 + 直接回填 URL」：选完不会自动 `ref/bind`，因此仍可在文件库把一张正被封面使用的图直接删除（引用计数不增长）；也不校验尺寸/宽高比是否适配目标位（头像与封面均无裁切）；`my/list` 与 `admin/list` 共用分页契约但可见范围不同，若后续要“全站素材池开放给所有登录用户挑”需先定权限与隐私口径。
 - 迭代 5 的 F16 只作用于经过服务端的 `/file/admin/upload`：七牛直传链后端拿不到字节，仍依赖 F15 前端压缩与七牛侧处理；WEBP/AVIF 无 JDK 解码器时保留原字节（元数据未剥离），gif 为保动图同样不重绘；重绘为同步 CPU 操作，4000 万像素上限下未验证大图耗时与堆压力；前端压缩的 WebP 回退与 EXIF 方向仅在 jsdom 替身中验证，未经真实移动端浏览器。
 - 迭代 3 的治理是手动触发：扫描上限 5000、无游标续扫，只检测“对象在库不在”而发现不了“库在对象不在”的反向孤儿；补登记统一归 `system` 且不计算 `file_hash`；契约修订 10 的 24h 定时清理与修订 9 的 412/429 均未实现。
 - 未在真实 Redis 上执行 Lua 脚本与 Sa-Token 1.46.0 的键格式契约测试（集成测试被 system property 门控）；S5 的`login:session` 键共享与 S6 的日志/存储增长因此只能定性不能定量。
