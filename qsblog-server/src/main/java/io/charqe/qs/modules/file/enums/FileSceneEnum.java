@@ -2,6 +2,9 @@ package io.charqe.qs.modules.file.enums;
 
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 文件业务场景：决定资源归属与 C 端可上传白名单。
  * <p>
@@ -55,13 +58,30 @@ public enum FileSceneEnum {
         return StringUtils.hasText(scene) ? scene.trim() : UNKNOWN.code;
     }
 
-    public static boolean clientUploadable(String scene) {
+    /** 按 code 精确匹配；未登记的场景返回 null，供下发上传凭证时拒绝自造场景。 */
+    public static FileSceneEnum of(String scene) {
         String code = normalize(scene);
         for (FileSceneEnum value : values()) {
-            if (value.clientUploadable && value.code.equals(code)) {
-                return true;
+            if (value.code.equals(code)) {
+                return value;
             }
         }
-        return false;
+        return null;
+    }
+
+    public static boolean clientUploadable(String scene) {
+        FileSceneEnum value = of(scene);
+        return value != null && value.clientUploadable;
+    }
+
+    /** C 端可上传场景清单，用于 /file/config 下发。 */
+    public static List<String> clientCodes() {
+        List<String> codes = new ArrayList<>();
+        for (FileSceneEnum value : values()) {
+            if (value.clientUploadable) {
+                codes.add(value.code);
+            }
+        }
+        return codes;
     }
 }

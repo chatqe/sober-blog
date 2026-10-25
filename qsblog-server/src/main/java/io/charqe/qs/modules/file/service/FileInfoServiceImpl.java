@@ -51,6 +51,9 @@ public class FileInfoServiceImpl extends CoreServiceImpl<FileStorageMapper, File
             file.setBucket(Integer.valueOf(3).equals(file.getThirdPartyName()) ? nullToEmpty(qiniuBucket) : "");
         }
         file.setScene(FileSceneEnum.normalize(file.getScene()));
+        if (StringUtils.hasText(file.getFileHash())) {
+            file.setFileHash(file.getFileHash().toLowerCase(Locale.ROOT));
+        }
         file.setOwnerId(ownerId);
         file.setOwnerType(StringUtils.hasText(ownerType) ? ownerType : (ownerId == null ? "system" : "user"));
         if (file.getStatus() == null) {

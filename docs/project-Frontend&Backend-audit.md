@@ -504,6 +504,40 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 
 未覆盖：七牛直传（`insertOnly`/`mimeLimit`/`fsizeLimit`）与真实 `file_hash` 计算仍空；F15–F17 未实现；前端 `PathList.vue` 仍调已不存在的 `/file/list`（控制台 404，存量问题）；C 端未知前缀会因 `scene=unknown` 被拒（与改造前“不登记”一致）。
 
+### 迭代 1 落地与运行时验收（2026-10-26，安全：服务端 Key + 上传约束 + SHA256）
+
+接口数 5 → 7：新增 `POST /file/uploadToken`、`GET /file/config`。
+
+Key 规则：`{scene}/{ownerId}/{yyyyMM}/{ulid}.{ext}`。ULID 为 26 位 Crockford Base32（前 10 位毫秒时间戳，同前缀内按时间有序）；扩展名取原始文件名，缺省按 MIME 映射并清洗为 `[a-z0-9]{1,8}`，避免中文/特殊后缀与路径穿越。
+
+凭证策略：`fsizeLimit`（`upload.fsize-limit`，默认 20MB）、`mimeLimit`（MIME 白名单：png/jpeg/gif/webp/avif/bmp、mp4/webm/quicktime、mpeg/wav/ogg/mp4、pdf、text/plain，拒绝 html/svg）、`insertOnly=1`、`returnBody`（key/etag/fsize/mimeType）、有效期 `upload.token-ttl`（默认 3600s）。旧 `GET /qiniu/getUpToken` 保留（60s、无策略），前端上传链不再使用。
+
+场景与归属：`FileSceneEnum.of()` 精确匹配，未知场景在申请凭证阶段即拒绝（不再落 `unknown`）；C 端仅 avatar/moment/comment，站长/管理员可申请任意已登记场景。
+
+`file_hash`：凭证返回 `hashAlgo=sha256`，前端上传前用 Web Crypto 计算（无 `crypto.subtle` 时省略，服务端容忍），登记时写入 `fileHash`（`@Pattern` 64 位十六进制，服务层统一小写）。
+
+配置下发：`GET /file/config` 匿名可读，返回 `storeType/qiniuEnabled/uploadUrl/downloadUrl/fsizeLimit/clientScenes/hashAlgo/tokenTtl`。
+
+运行时验收（后端 18081 dev，`regularuser` userType=2；DB `192.168.30.100:3309/qingsi`）：
+
+| # | 操作 | 结果 |
+| --- | --- | --- |
+| 1 | `GET /file/config` 匿名 | `200`；`storeType=qiniu qiniuEnabled=true fsizeLimit=20971520 hashAlgo=sha256 ttl=3600 scenes=avatar,moment,comment downloadUrl=https://img.soberup.top/` |
+| 2 | `POST /file/uploadToken` 无 token | `401 登录已失效，请重新登录` |
+| 3 | C 端申请 avatar 凭证 | `200`；`key=avatar/3/202610/01M5T14BH8RCPAQHEVWGBN771V.png`，token 414B，`insertOnly=1 mimeLimit=image/png` |
+| 4 | 解码凭证 putPolicy | `{"insertOnly":1,"scope":"out-pb-bkt:avatar/3/202610/…png","mimeLimit":"image/png","returnBody":"{…$(etag)…}","fsizeLimit":20971520,"deadline":1792952310}` |
+| 5 | C 端申请 article-cover 凭证 | `code 500 该场景不允许当前账号上传` |
+| 6 | 申请 `text/html` 凭证 | `code 500 不支持的文件类型：text/html` |
+| 7 | 申请 30MB 凭证 | `code 500 文件大小超过 20MB 限制` |
+| 8 | `POST /file/register` 携带 sha256("abc") | `200`；响应 `fileHash=ba7816…15ad`，库内 `owner_id=3 owner_type=user scene=avatar file_hash=ba7816…15ad status=1` |
+| 9 | `POST /file/register` 携带 `fileHash="forged"` | HTTP `400`（`@Valid` 拒绝） |
+| 10 | `/v3/api-docs` | `/file/*` 共 7 条；`FileCreateReqVO` 含 `fileHash`，`FileUploadTokenRespVO`/`FileConfigVO` 字段齐全 |
+| 11 | 清理 | 探针物理删除，`file_info` 0 行；18081 已停止 |
+
+代码级验证：后端 `mvn ... "-Dtest=FileAdminHttpContractTest,FileRegisterHttpContractTest,FileUploadHttpContractTest,FileKeyGeneratorTest" -DskipTests=false test` → **49 条全绿**（28+5+9+7）；前端 `npx vitest run` → **45 条通过**，`npx vue-tsc --noEmit` → EXIT=0。
+
+未覆盖：真实七牛直传未执行，策略字段来自凭证解码，不代表 bucket 侧一定接受；`qiniu.uploadUrl` 未配置，`/file/config.uploadUrl` 为空，前端仍以 webInfo 的上传域名调用；`file_hash` 未与对象 ETag 比对（412 校验和语义未实现，七牛 etag 与 sha256 算法不同）；本地存储分支仍只上传不登记 `file_info`；F15–F17 未实现。
+
 ## Evidence
 
 本轮证据来自：Sa-Token 双会话改造的逐文件核对（`modules/user/auth` 下 `AuthSessionService`/`SaTokenSessionAdapter`/`AuthSessionProperties`/`UserCredentialService`/`AuthSessionVO`/`SessionScope`，`aop/LoginCheck` + `LoginCheckAspect`，`GlobalExceptionHandler`，前端 `src/auth/*`、`stores/modules/auth.ts`、`router/index.ts`、`utils/request.ts`、`api/client/responseHandler.ts`），以及下列本地命令。当前条目链接对应本轮工作树；历史附录链接仍是旧报告记录的行号，不保证与当前文件对齐。
@@ -526,6 +560,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 - 第八轮按产品决定放开首页分类：`listCategoryArticle` 去掉 `viewStatus=true` 过滤，`CommonConst.CATEGORY_ARTICLE_LIST` 由 `v2` 升为 `v3`（语义已变，避免旧快照命中）；前端 `index.vue#getSortArticles` 去掉多余的 `.data` 解包。验证时清理了无 TTL 的陈旧 `category:public`/`category:navbar_`（缺 `TestCategory01`，导致首页分类区块无法渲染）。
 - 第九轮只读审计文件模块：新增「文件模块专项审计（第九轮）」F1–F17（14 条链路缺陷 + 3 项内部能力 F15 压缩 / F16 重绘 / F17 变体），并补入文章接口口径对照（11 对 17）与五迭代路线；业务代码 0 行改动，未建表、未启动服务、未产生测试数据。
 - 迭代 0（2026-10-26，`fix/file-registration-bootstrap`）：后端 8 条 ALTER + 新增 `FileSceneEnum`/`FileListReqVO`/`FileDeleteReqVO`，`FileInfoService#register` 补齐 owner/bucket/scene/status/refCount，`/file/register` 支持 C 端（EITHER），`list` 改 `{list,total,page,pageSize}`，`delete` 兼容 JSON 体；前端 `upload.ts` 按域分流登记并按前缀映射 scene，`resource/List.vue` 字段对齐 `file_info`；契约测试 31 条全绿，HTTP + DB + 浏览器验收 9 项通过，探针数据已清理。
+- 迭代 1（2026-10-26，同分支）：后端新增 `FileKeyGenerator`（ULID Key）、`FileSceneEnum#of/clientCodes`、`FileUploadService`/`FileUploadServiceImpl`、`POST /file/uploadToken` 与 `GET /file/config`；`QiniuUtil#getToken` 支持 `fsizeLimit`/`mimeLimit`/`insertOnly`/`returnBody`；`FileBaseVO` 增加 `fileHash`（64 位十六进制校验）并在服务层小写化；前端 `upload.ts` 改用服务端 Key、登记前计算 SHA-256，`session.test.ts` 同步打桩。契约测试 49 条全绿，前端 45 条 vitest 与 `vue-tsc` 通过，HTTP + DB + OpenAPI 验收 11 项通过，探针已物理删除。
 - 保留旧原文为折叠历史附录；其测试数据操作、运行状态及清理披露均属于过去，不作为本轮行为。
 - 第二轮业务源代码、配置、数据库和缓存未修改，也未提交/合并/推送 Git；第三轮只改上述 3 个后端文件并提交到 fix 分支，回归数据已清理。编译/构建/测试只更新本地生成产物（`target/`、`dist/`、`logs/audit-build-1024.log`）。
 
@@ -658,6 +693,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 - 第五轮把后台管理端大量 `value = 0` 放宽为 `value = 1`，属权限模型收紧口径的放宽：`changeUserType` 是唯一保留站长专属的写接口，其余管理操作现由 0/1 共同掌握，是否符合最终产品授权需要产品方确认。
 - 第五轮只逐页验证了读接口；role=1 的写接口（保存/删除/审核）未逐项执行，仅依据注解与前端调用链判定。
 - `/admin/resourcePathList`（资源聚合）仍是既有 404 页面，前端端点与后端模块不匹配，未在本轮修复。
+- 文件模块已覆盖迭代 0 + 迭代 1（登记链路、服务端 Key、大小/类型/场景约束、SHA256 落库），但真实七牛直传未执行；`file_hash` 未与对象 ETag 比对（412 未实现）、引用绑定/回收站/孤儿治理与 F15–F17 仍为源码结论。
 - 未在真实 Redis 上执行 Lua 脚本与 Sa-Token 1.46.0 的键格式契约测试（集成测试被 system property 门控）；S5 的`login:session` 键共享与 S6 的日志/存储增长因此只能定性不能定量。
 - 不执行有状态探针：即使 GET 也可能回填缓存/记录访问/增加计数，认证切面会续期；不能将“GET”自动当作零副作用。
 - 未确认运行 JVM 是否等于当前 HEAD、网关兼容路由、生产 CORS/限流及真实数据分布；不沿用上次 PID、端口或“实例必然旧”的说法。第六轮核查到两个更早的残留实例（18082 旧 jar，2026-10-23 启动；5175 旧 vite，2026-10-16 启动），均非当前 HEAD 构建。

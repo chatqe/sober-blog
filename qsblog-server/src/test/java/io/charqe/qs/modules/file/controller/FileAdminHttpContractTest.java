@@ -162,7 +162,7 @@ class FileAdminHttpContractTest {
         var body = json.valueToTree(request());
         var fields = (com.fasterxml.jackson.databind.node.ObjectNode) body;
         fields.put("id", 999).put("ownerId", 999).put("status", 1).put("bucket", "forged")
-                .put("fileHash", "forged").put("storedName", "forged").put("fileExt", "exe")
+                .put("storedName", "forged").put("fileExt", "exe")
                 .put("fileCategory", "forged");
         mvc.perform(post("/file/admin/save").contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(body)))
                 .andExpect(status().isOk())
@@ -173,6 +173,29 @@ class FileAdminHttpContractTest {
         assertEquals("", saved.getBucket());
         assertNull(saved.getFileHash());
         assertEquals(Integer.valueOf(1), saved.getStatus());
+    }
+
+    @Test
+    void fileHashIsStoredLowercased() {
+        var request = request();
+        request.setFileHash("ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789");
+
+        service.save(request);
+
+        assertEquals("abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+                saved.getFileHash());
+    }
+
+    @Test
+    void malformedFileHashIsRejected() throws Exception {
+        var body = json.valueToTree(request());
+        ((com.fasterxml.jackson.databind.node.ObjectNode) body).put("fileHash", "forged");
+
+        mvc.perform(post("/file/admin/save").contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsBytes(body)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400));
+        assertNull(saved);
     }
 
     @Test

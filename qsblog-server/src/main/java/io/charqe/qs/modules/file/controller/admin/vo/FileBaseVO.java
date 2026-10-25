@@ -3,6 +3,7 @@ package io.charqe.qs.modules.file.controller.admin.vo;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
 
 /**
  * file基础VO
@@ -48,4 +49,10 @@ public class FileBaseVO {
      * 业务场景：avatar/moment/comment/article-cover/article-content/system，缺省 unknown
      */
     private String scene;
+
+    /**
+     * 文件内容 SHA256（64 位十六进制）：直传场景由客户端计算后上报，用于去重与一致性校验
+     */
+    @Pattern(regexp = "^[a-fA-F0-9]{64}$", message = "文件哈希必须是 64 位十六进制 SHA256")
+    private String fileHash;
 }

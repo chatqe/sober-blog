@@ -141,6 +141,32 @@ public class QiniuUtil implements StoreService {
         return getAuth().uploadToken(bucket, key, EXPIRE_SECONDS, putPolicy);
     }
 
+    /**
+     * 生成带上传策略的凭证：大小/类型双限 + 禁止覆盖 + 回传元数据。
+     *
+     * @param key         服务端生成的目标 key
+     * @param fsizeLimit  单次上传大小上限（字节）
+     * @param mimeLimit   允许的 MIME，多个用分号分隔；为空表示不限制
+     * @param insertOnly  为 true 时禁止覆盖同 key 对象
+     * @param expireSeconds 凭证有效期（秒）
+     * @param returnBody  上传成功后的回调体，可为空
+     */
+    public String getToken(String key, long fsizeLimit, String mimeLimit, boolean insertOnly,
+                           long expireSeconds, String returnBody) {
+        StringMap putPolicy = new StringMap();
+        putPolicy.put("fsizeLimit", fsizeLimit);
+        if (StrUtil.isNotBlank(mimeLimit)) {
+            putPolicy.put("mimeLimit", mimeLimit.trim());
+        }
+        if (insertOnly) {
+            putPolicy.put("insertOnly", 1);
+        }
+        if (StrUtil.isNotBlank(returnBody)) {
+            putPolicy.put("returnBody", returnBody);
+        }
+        return getAuth().uploadToken(bucket, key, expireSeconds, putPolicy);
+    }
+
     /* ====================== 上传 ====================== */
 
     @Override
