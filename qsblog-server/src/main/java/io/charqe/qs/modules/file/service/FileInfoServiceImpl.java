@@ -115,6 +115,33 @@ public class FileInfoServiceImpl extends CoreServiceImpl<FileStorageMapper, File
     }
 
     @Override
+    public FileInfo updateMeta(Long id, String originalName, String scene) {
+        FileInfo exist = findAny(id);
+        if (exist == null || Integer.valueOf(1).equals(exist.getIsDel())) {
+            return null;
+        }
+        FileInfo update = new FileInfo();
+        update.setId(id);
+        boolean changed = false;
+        if (StringUtils.hasText(originalName)) {
+            update.setOriginalName(originalName.trim());
+            changed = true;
+        }
+        if (StringUtils.hasText(scene)) {
+            update.setScene(FileSceneEnum.normalize(scene.trim()));
+            changed = true;
+        }
+        if (!changed) {
+            return exist;
+        }
+        // 逻辑删除条件由 MyBatis-Plus 自动拼接，已入回收站的记录不会命中
+        if (!updateById(update)) {
+            return null;
+        }
+        return findAny(id);
+    }
+
+    @Override
     public FileInfo findAnyByStoragePath(String path) {
         return StringUtils.hasText(path) ? getBaseMapper().selectAnyByStoragePath(path) : null;
     }

@@ -12,6 +12,7 @@ import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileDeleteReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileListReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileRespVO;
+import io.charqe.qs.modules.file.controller.admin.vo.FileUpdateReqVO;
 import io.charqe.qs.modules.file.domain.pojo.FileInfo;
 import io.charqe.qs.modules.file.service.FileInfoService;
 import io.charqe.qs.modules.user.auth.AuthSessionService;
@@ -109,6 +110,19 @@ public class FileAdminController {
         }
         fileInfoService.purge(file);
         return R.success();
+    }
+
+    /**
+     * 编辑元信息：仅原始文件名与业务场景，字段留空保持原值；回收站中的文件不允许编辑。
+     */
+    @PostMapping("/update")
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
+    public R<FileInfo> update(@Valid @RequestBody FileUpdateReqVO vo) {
+        FileInfo file = fileInfoService.updateMeta(vo.getId(), vo.getOriginalName(), vo.getScene());
+        if (file == null) {
+            return R.fail(404, "文件不存在或已在回收站");
+        }
+        return R.success("保存成功", file);
     }
 
     /**

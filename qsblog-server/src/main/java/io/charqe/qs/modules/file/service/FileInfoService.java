@@ -33,6 +33,13 @@ public interface FileInfoService extends CoreService<FileInfo> {
     /** 含已删除记录的单条查询；不存在返回 null。 */
     FileInfo findAny(Long id);
 
+    /**
+     * 编辑元信息：仅文件名与业务场景，空值表示保持原值。
+     *
+     * @return 编辑后的记录；记录不存在或已在回收站时返回 null
+     */
+    FileInfo updateMeta(Long id, String originalName, String scene);
+
     /** 按存储路径查登记记录（含回收站）；路径为空返回 null。 */
     FileInfo findAnyByStoragePath(String path);
 

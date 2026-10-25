@@ -446,7 +446,7 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 孤儿扫描 | `POST /file/orphan/scan`（`dryRun`） | 已建（迭代 3） |
 | 补登记 | `POST /file/orphan/backfill` | 已建（迭代 3） |
 
-口径汇总：文章 **11**（原 15：删除与永久删除合并为 `force`、批量删除与孤儿清理合并、重复检测并入登记、派生改 URL 变体）→ 本项目 **17**（5 现有 + 12 新增）。已落地 17 个（5 现有 + 迭代 1 的 2 + 迭代 2 的 5 + 迭代 3 的 4 + 迭代 4 的 1），无待建项；迭代 6 起前端已接入其中 12 个端点，后端计数不变。
+口径汇总：文章 **11**（原 15：删除与永久删除合并为 `force`、批量删除与孤儿清理合并、重复检测并入登记、派生改 URL 变体）→ 本项目 **17**（5 现有 + 12 新增），迭代 7 因卡片需要真实编辑入口再加 1 个 `update`，合计 **18**。已落地 18 个（5 现有 + 迭代 1 的 2 + 迭代 2 的 5 + 迭代 3 的 4 + 迭代 4 的 1 + 迭代 7 的 1），无待建项；迭代 6 起前端已接入其中 13 个端点。
 
 ### 分迭代路线
 
@@ -458,8 +458,9 @@ Sa-Token 改造相关的收窄（避免把设计写成缺陷）：
 | 3 治理 | `orphan/scan`、`orphan/backfill`、`unreferenced/list`、`batch` | +4 |
 | 4 媒体库 | `detail`（+HEAD）、异步变体（F17） | +1 |
 | 内部能力 | F15 压缩、F16 重绘、F17 变体 | 0 |
+| 7 页面拆分与编辑 | 三页拆分、卡片视图；`POST /file/admin/update`（仅文件名/场景） | +1 |
 
-落地进度：迭代 0–6 已完成（`/file` 端点仍 17 个，迭代 5、6 不新增接口）；F17 以七牛 URL 变体落地，F15（上传前压缩）与 F16（服务端重绘）已在迭代 5 落地，迭代 6 把详情/引用/回收站/治理/批量接到前端页面并完成 `resource`→`file` 命名归一。
+落地进度：迭代 0–7 已完成（`/file` 端点 18 个，迭代 5、6 不新增接口，迭代 7 新增 `update`）；F17 以七牛 URL 变体落地，F15（上传前压缩）与 F16（服务端重绘）已在迭代 5 落地，迭代 6 把详情/引用/回收站/治理/批量接到前端页面并完成 `resource`→`file` 命名归一，迭代 7 把文件库/回收站/治理拆成三个二级菜单页面、改用卡片网格并为卡片补上可落库的编辑入口。
 
 ### 契约修订（不改接口数，实现时必须带上）
 
@@ -704,6 +705,49 @@ F16 服务端重绘：新增 [ImageSanitizer.java](file:///E:/idea/qs-blog/qsblo
 
 未覆盖：孤儿扫描未在页面点击（仅 API 单测与后端契约测试）；补登记与「永久删除」按钮未在 UI 端到端执行（永久删除由脚本直调接口验证）；上传对话框未实跑（探针走 `/file/admin/save`，无对象存储）；`resourcePath` 仍指向不存在的后端端点，本轮明确保留；真实七牛直传链路仍未执行。验收截图仅在本地 `logs/playwright-mcp/file-list-verified.png`、`file-governance-verified.png`，不入库。
 
+### 迭代 7 落地与运行时验收（2026-10-26，三页拆分 + 卡片视图 + 卡片编辑 + 站点素材落库）
+
+接口 +1（17 → 18）：新增 `POST /file/admin/update`，其余仅改前端 + 数据落库，无 DDL、无新增表字段。
+
+**信息架构**：文件库 / 回收站 / 治理从同一页三个 Tab 拆为「文件管理」下三个二级菜单页面，各自独立路由、独立页签与面包屑：
+
+| 菜单 | 路由 | 页面 |
+| --- | --- | --- |
+| 文件库（默认） | `/admin/file/list`（`name=fileList`） | [views/admin/file/List.vue](file:///E:/web/qs-web/src/views/admin/file/List.vue) |
+| 回收站 | `/admin/file/recycle`（`fileRecycle`） | [views/admin/file/Recycle.vue](file:///E:/web/qs-web/src/views/admin/file/Recycle.vue) |
+| 治理工具 | `/admin/file/governance`（`fileGovernance`） | [views/admin/file/Governance.vue](file:///E:/web/qs-web/src/views/admin/file/Governance.vue) |
+
+- 旧地址 `/admin/fileList` 保留 `redirect → /admin/file/list`，`ADMIN_ROLES` 同时保留旧键，登录回跳与书签不 404。
+- 新增 [FilePageHeader.vue](file:///E:/web/qs-web/src/views/admin/file/components/FilePageHeader.vue)（图标 + 标题 + 描述 + actions 插槽）统一三页页头；`RecyclePanel.vue`/`GovernancePanel.vue` 删除，逻辑内联进各自页面。
+- [Sidebar](file:///E:/web/qs-web/src/layouts/AdminLayout/components/Sidebar/index.vue) 文件管理改 `el-sub-menu`，`default-openeds` 按当前路径自动展开；父级 `/admin/file` 不在白名单，新增 `menuVisible` 按子项判定，避免整组被隐藏。
+- `adminTabs` 的 `ROUTE_TITLE_MAP` 增补三条标题（文件库/回收站/治理工具），页签与 Header 面包屑自动跟随。
+
+**卡片视图**：文件库默认卡片网格（每行 6 列，≤1400/1200/960/680 逐级降为 5/4/3/2 列），工具栏 `el-segmented` 可切列表并记忆到 `localStorage.fileViewMode`；卡片含缩略图（4:3）、文件名、场景、大小、引用数徽标，以及**悬停才出现的左上角操作组**（详情 / 复制链接 / 编辑 / 移入回收站，26px 方块 + 半透深底白图标，`@media (hover: none)` 下常驻），选择框相应移到右上角避免重叠；选中加靛色描边并复用批量条。缩略图由新增的 `thumbUrl()`（[fileFormat.ts](file:///E:/web/qs-web/src/utils/file/fileFormat.ts)）拼七牛 `imageView2/2/w/480/q/75`，加载失败先回退原图再降级为「类型图标 + 扩展名」，表格预览列同步补 error 插槽，不再露出 `FAILED` 文本；默认分页改 20（20/40/60）。
+
+**卡片编辑**：编辑图标必须有真实能力承载，因此后端补一个最小元信息更新入接口：[FileUpdateReqVO](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/file/controller/admin/vo/FileUpdateReqVO.java)（`id` 必填、`originalName` ≤255、`scene`）+ `FileInfoService#updateMeta` + [FileAdminController#update](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/file/controller/admin/FileAdminController.java)（`@LoginCheck(value = 1, scope = ADMIN)`）。只开放文件名与业务场景，存储路径/MIME/归属仍由上传链路决定；字段留空保持原值，回收站中的记录不允许编辑（先查 `is_del` 再 `updateById`，逻辑删除条件由 MyBatis-Plus 自动拼接，未命中则返回 404）。前端 `fileApi.updateFile` + 编辑对话框（文件名输入框 + 场景下拉），卡片与列表两个入口共用。
+
+**站点素材落库**：`src/assets/file` 下 18 张位图（排除 `like.svg`、`fontawesome-webfont.svg` 与脚手架图标；后端 MIME 白名单不收 SVG）按官方链路登记——`POST /file/uploadToken` 取服务端 Key 与七牛凭证 → 直传 `up-as0.qiniup.com` → `POST /file/admin/save`，全部 `scene=system`、`thirdPartyName=3`，`file_info` id 16–33。其中 `comment.jpg`、`letter-2/3/4.jpg`、`top.jpg` 实际内容为 PNG，按文件头纠正 MIME 与扩展名后登记为 `comment.png`、`letter-2/3/4.png`、`top.png`，避免存储 Key 与内容不一致。批处理脚本在未跟踪的 `temp/register-site-assets.mjs`，幂等跳过已登记项。
+
+运行时验收（后端 18081 dev + 前端 5173，admin `Joy`）：
+
+| # | 操作 | 结果 |
+| --- | --- | --- |
+| 1 | 登录后落到 `/admin/file/list` | 侧边栏「文件管理」自动展开、`文件库` 高亮，页签与面包屑「仪表盘/文件库」正确 |
+| 2 | 深链 `/admin/file/recycle` | 标题「回收站」、面包屑正确、空态「回收站为空」，0 console error |
+| 3 | 侧边栏点「治理工具」 | 跳到 `/admin/file/governance`，两张卡片（孤儿扫描/未引用清单）渲染，tagbar 为 [回收站, 治理工具] |
+| 4 | 访问旧地址 `/admin/fileList` | 重定向到 `/admin/file/list`，标题与高亮回落到文件库 |
+| 5 | 文件库卡片视图（1920 宽） | 6 列；1366 宽降为 5 列；文件名/场景/大小/引用徽标/选中描边/批量条均正常 |
+| 6 | 切「列表」视图 | 表格 ID/预览/名称/场景/大小/MIME/存储/引用/状态/时间/操作齐全，`comment.png`/`top.png` 的 MIME 为 `image/png` |
+| 7 | 站点素材落库 18 张 | 全部返回 id，列表 Total 18；再次执行脚本全部 `SKIP`（幂等） |
+| 8 | 缩略图加载 | 本机 `img.soberup.top` 证书链不受信任（首页既有头像/封面同样 `ERR_CERT_AUTHORITY_INVALID`），卡片与表格均降级为类型图标，无 `FAILED` 文本 |
+| 9 | 卡片默认态 / 悬停态 | 默认无操作图标（元素截图确认 `opacity: 0`）；悬停后左上角出现详情/复制链接/编辑/移入回收站 4 个 26px 按钮，computed 为 `rgba(51,65,85,.72)` 底 + 白图标，选择框在右上角 |
+| 10 | 卡片编辑改名并保存 | `POST /file/admin/update` 成功，对话框关闭、列表即时刷新为 `letter-2-edit.png`，重新导航后仍为新名（已落库），随后改回 `letter-2.png` |
+| 11 | 列表视图编辑入口 | 操作列为详情/编辑/删除三按钮，点编辑打开同一对话框并回填当前文件名与场景 |
+
+代码级验证：前端 `pnpm test:auth` → **72 条全绿**（`session.test.ts` 46 + `compressImage.test.ts` 9 + `file.test.ts` 13 + 新增 `navigation.test.ts` 4），`pnpm type-check` 通过；后端 `mvn -pl qsblog-server spring-boot:run` 编译并启动成功。新增用例覆盖三子路由白名单、旧地址 redirect、`safeAdminRedirect` 保留 query 与非法路径回落、`updateFile` 的路径与参数透传。
+
+未覆盖：上传对话框未实跑（素材走「凭证 + 直传 + save」脚本）；孤儿扫描、补登记、永久删除按钮未在 UI 端到端点击；站点素材只登记未替换页面引用（页面仍用打包资源）；卡片缩略图的真实视觉未在可用 CDN 环境确认，本机仅验证降级分支；编辑未跑负面用例（超 255 字节的 `@Size` 校验、回收站记录 404 分支、非法场景值），且未提供批量改场景入口；列表视图在 1366 以下未逐档截图。
+
 ## Evidence
 
 本轮证据来自：Sa-Token 双会话改造的逐文件核对（`modules/user/auth` 下 `AuthSessionService`/`SaTokenSessionAdapter`/`AuthSessionProperties`/`UserCredentialService`/`AuthSessionVO`/`SessionScope`，`aop/LoginCheck` + `LoginCheckAspect`，`GlobalExceptionHandler`，前端 `src/auth/*`、`stores/modules/auth.ts`、`router/index.ts`、`utils/request.ts`、`api/client/responseHandler.ts`），以及下列本地命令。当前条目链接对应本轮工作树；历史附录链接仍是旧报告记录的行号，不保证与当前文件对齐。
@@ -732,6 +776,7 @@ F16 服务端重绘：新增 [ImageSanitizer.java](file:///E:/idea/qs-blog/qsblo
 - 迭代 4（2026-10-26，同分支）：新增 `GET /file/detail/{id}`（ADMIN，Spring 隐式响应 HEAD）与 `FileMediaService`/`Impl`、`FileDetailRespVO`/`FileVariantsVO`、`FileVariantEnum`；`visitPath` 按 `cdnDomain`→存储域顺序推导，`etag` 取小写 `file_hash` 并据此支持 `If-None-Match` 304，缓存 `public, max-age=300` 可配；F17 以七牛 `imageView2` URL 变体落地（320/800/1600），本地/gif/非图片降级 `variantMode=none`；无 DDL；新增 `FileMediaServiceTest` 10 条与 `FileDetailHttpContractTest` 9 条，文件模块合计 126 条全绿；HTTP + DB + OpenAPI 验收 11 项通过，两表回到 0 行。
 - 迭代 5（2026-10-26，双仓库）：F15 前端新增 `src/utils/image/compressImage.ts` 并接入 `uploadMedia`（凭证前压缩、哈希/登记改用压缩后文件），`UploadPicture.vue` 加体积提示与非图片拦截，`vitest.config.ts` 扩到 `src/**`，新增 `compressImage.test.ts` 9 条；F16 后端新增 `ImageSanitizer`/`SanitizedImage`/`ExifOrientation`（纯 JDK ImageIO，无新依赖）并接入 `QiniuUtil#saveFile`、`LocalUtil#saveFile`，`LocalUtil` 同时修掉尾斜杠目录不可用的问题；新增 `ImageSanitizerTest` 12 条与 `LocalUtilTest` 6 条，后端 144 条、前端 54 条全绿，`vue-tsc` 通过；无 DDL、无新增接口；运行时验收 8 项通过（方向纠正、EXIF 剥离、伪造图片/穿越/覆盖拒绝、非图片原样），本地存储探针文件仅写入未跟踪的 `temp/`。
 - 迭代 6（2026-10-26，前端仓库）：把前端「文件媒体库」链路从 `resource` 改为 `file` —— 新增 `src/api/types/file.ts`、`src/api/modules/file.ts`（12 个封装）与 `file.test.ts`（12 条）、`src/utils/file/fileFormat.ts`、`views/admin/file/List.vue` 及 `FileDetailDrawer`/`RecyclePanel`/`GovernancePanel` 三组件；`resource.ts` 只留 `ResourcePath*`，`upload.ts`/`article.ts` 的 `saveResource` 改 `saveFile`，删除死类型 `ResourceInfo` 与 `Graffiti.vue` 死声明；路由 `resourceList`→`fileList`，菜单「资源管理」→「文件管理」，`adminTabs`/`navigation.ts` 同步；删除 `views/admin/resource/List.vue`。`pnpm test:auth` 66 条全绿、`pnpm type-check` 通过；前后端联调 7 项通过，探针解绑并永久删除后 0 残留。未跟踪的 `temp/`、`scripts/auth-browser-harness.cjs` 与截图不入库。
+- 迭代 7（2026-10-26，双仓库 + 数据）：文件管理拆为 `file/list|recycle|governance` 三个二级菜单页并兼容 `/admin/fileList`，新增 `FilePageHeader`，删除 `RecyclePanel`/`GovernancePanel`；文件库默认卡片网格（固定 6 列 + 窄屏降级）并保留列表切换，新增 `thumbUrl()` 与两级图片降级，默认分页改 20；卡片操作图标改为悬停才出现的左上角按钮组（详情/复制链接/编辑/移入回收站），选择框移到右上角，触屏常驻；为支撑编辑图标新增 `POST /file/admin/update`（`FileUpdateReqVO` + `FileInfoService#updateMeta` + `FileAdminController#update`，仅文件名/场景，回收站记录 404）与前端 `updateFile` + 编辑对话框；`ADMIN_ROLES` 增 3 条、`adminTabs` 增 3 条标题，新增 `navigation.test.ts` 4 条与 `updateFile` 1 条用例，前端 72 条全绿；用官方「凭证 → 七牛直传 → 登记」链路把 `src/assets/file` 的 18 张位图登记进 `file_info`（id 16–33，`scene=system`），5 个伪 `.jpg` 按文件头纠正为 `.png`。
 - 保留旧原文为折叠历史附录；其测试数据操作、运行状态及清理披露均属于过去，不作为本轮行为。
 - 第二轮业务源代码、配置、数据库和缓存未修改，也未提交/合并/推送 Git；第三轮只改上述 3 个后端文件并提交到 fix 分支，回归数据已清理。编译/构建/测试只更新本地生成产物（`target/`、`dist/`、`logs/audit-build-1024.log`）。
 
@@ -864,7 +909,8 @@ F16 服务端重绘：新增 [ImageSanitizer.java](file:///E:/idea/qs-blog/qsblo
 - 第五轮把后台管理端大量 `value = 0` 放宽为 `value = 1`，属权限模型收紧口径的放宽：`changeUserType` 是唯一保留站长专属的写接口，其余管理操作现由 0/1 共同掌握，是否符合最终产品授权需要产品方确认。
 - 第五轮只逐页验证了读接口；role=1 的写接口（保存/删除/审核）未逐项执行，仅依据注解与前端调用链判定。
 - `/admin/resourcePathList`（资源聚合）仍是既有 404 页面，前端端点与后端模块不匹配，未在本轮修复。
-- 文件模块已覆盖迭代 0–6（登记链路、服务端 Key、大小/类型/场景约束、SHA256 落库、引用绑定/解绑/查询、回收站软删与恢复、`force` 永久删除、孤儿扫描/补登记、未引用清单、批量清理、详情/ETag/派生变体、上传前压缩、服务端重绘；迭代 6 起前端页面已接入详情/引用/回收站/治理/批量），但真实七牛直传未执行；`file_hash` 未与对象 ETag 比对（412 未实现）；前端孤儿扫描、补登记、上传对话框未做 UI 端到端验收。
+- 文件模块已覆盖迭代 0–7（登记链路、服务端 Key、大小/类型/场景约束、SHA256 落库、引用绑定/解绑/查询、回收站软删与恢复、`force` 永久删除、孤儿扫描/补登记、未引用清单、批量清理、详情/ETag/派生变体、上传前压缩、服务端重绘、三页拆分、卡片视图与卡片编辑；迭代 7 已用真实七牛直传登记 18 张站点素材），但仍未覆盖七牛直传的失败重试/大文件/私有空间签名；`file_hash` 未与对象 ETag 比对（412 未实现）；前端孤儿扫描、补登记、上传对话框未做 UI 端到端验收；站点素材仅登记，未替换页面引用。
+- 迭代 7 新增的 `update` 是「只改元数据」的最小接口：不级联更新引用表的展示名、不校验新场景与文件实际类型是否兼容（如把 `image/*` 改成 `avatar` 以外的场景）、无乐观锁（`BaseDO#version` 仍被注释），并发改名以最后写入为准；`originalName` 也不参与存储 Key，改名不影响访问地址。
 - 迭代 5 的 F16 只作用于经过服务端的 `/file/admin/upload`：七牛直传链后端拿不到字节，仍依赖 F15 前端压缩与七牛侧处理；WEBP/AVIF 无 JDK 解码器时保留原字节（元数据未剥离），gif 为保动图同样不重绘；重绘为同步 CPU 操作，4000 万像素上限下未验证大图耗时与堆压力；前端压缩的 WebP 回退与 EXIF 方向仅在 jsdom 替身中验证，未经真实移动端浏览器。
 - 迭代 3 的治理是手动触发：扫描上限 5000、无游标续扫，只检测“对象在库不在”而发现不了“库在对象不在”的反向孤儿；补登记统一归 `system` 且不计算 `file_hash`；契约修订 10 的 24h 定时清理与修订 9 的 412/429 均未实现。
 - 未在真实 Redis 上执行 Lua 脚本与 Sa-Token 1.46.0 的键格式契约测试（集成测试被 system property 门控）；S5 的`login:session` 键共享与 S6 的日志/存储增长因此只能定性不能定量。
