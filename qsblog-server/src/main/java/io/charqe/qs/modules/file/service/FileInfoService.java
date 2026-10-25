@@ -2,8 +2,10 @@ package io.charqe.qs.modules.file.service;
 
 import io.charqe.qs.common.model.mp.CoreService;
 import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
+import io.charqe.qs.modules.file.controller.admin.vo.FileListReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileRespVO;
 import io.charqe.qs.modules.file.domain.pojo.FileInfo;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 
 /**
  * 文件存储表 服务类
@@ -24,4 +26,25 @@ public interface FileInfoService extends CoreService<FileInfo> {
      * @param ownerType user/admin/system，为空时按 ownerId 推断
      */
     FileRespVO register(FileCreateReqVO vo, Long ownerId, String ownerType);
+
+    /** 含已删除记录的单条查询；不存在返回 null。 */
+    FileInfo findAny(Long id);
+
+    /** 软删除（移入回收站），返回受影响行数；记录已删除或不存在时为 0。 */
+    int softDelete(Long id);
+
+    /** 从回收站恢复，返回受影响行数；记录不在回收站时为 0。 */
+    int restore(Long id);
+
+    /** 永久删除：先清理存储对象，再物理删除元数据。 */
+    void purge(FileInfo file);
+
+    /** 回收站分页。 */
+    IPage<FileInfo> pageDeleted(FileListReqVO req);
+
+    /** 被引用次数 +1（绑定引用时调用）。 */
+    void increaseRefCount(Long id);
+
+    /** 被引用次数 -1（解绑引用时调用，下限为 0）。 */
+    void decreaseRefCount(Long id);
 }

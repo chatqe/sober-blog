@@ -5,6 +5,8 @@ import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.LocalDateTime;
+
 /**
  * 文件存储表
  *
@@ -103,5 +105,8 @@ public class FileInfo extends BaseDO {
 
     /** 被业务引用次数 */
     private Integer refCount;
+
+    /** 进入回收站时间（is_del=1 时写入，恢复时清空） */
+    private LocalDateTime deletedAt;
 
 }

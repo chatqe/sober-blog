@@ -81,17 +81,33 @@ public class FileAdminController {
     }
 
     /**
-     * 删除文件：同时兼容 JSON 体 {@code {id}} 与 query 参数 {@code ?id=}。
+     * 删除文件：同时兼容 JSON 体 {@code {id,force}} 与 query 参数 {@code ?id=&force=}。
+     * <p>
+     * 默认仅移入回收站；{@code force=true} 为永久删除，文件仍被业务引用时返回 409。
      */
     @PostMapping("/delete")
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R delete(@RequestParam(value = "id", required = false) Long id,
+                    @RequestParam(value = "force", required = false) Boolean force,
                     @RequestBody(required = false) FileDeleteReqVO body) {
         Long target = id != null ? id : (body == null ? null : body.getId());
         if (target == null) {
             return R.fail("文件ID不能为空");
         }
-        fileInfoService.removeById(target);
+        boolean hard = Boolean.TRUE.equals(force) || (body != null && Boolean.TRUE.equals(body.getForce()));
+        if (!hard) {
+            fileInfoService.softDelete(target);
+            return R.success();
+        }
+
+        FileInfo file = fileInfoService.findAny(target);
+        if (file == null) {
+            return R.fail(404, "文件不存在");
+        }
+        if (file.getRefCount() != null && file.getRefCount() > 0) {
+            return R.fail(409, "文件仍被 " + file.getRefCount() + " 处引用，禁止永久删除");
+        }
+        fileInfoService.purge(file);
         return R.success();
     }
 

@@ -2,12 +2,18 @@ package io.charqe.qs.modules.file.controller.web;
 
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.R;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
+import io.charqe.qs.modules.file.controller.admin.vo.FileRefBindReqVO;
+import io.charqe.qs.modules.file.controller.admin.vo.FileRefListReqVO;
+import io.charqe.qs.modules.file.controller.admin.vo.FileRefUnbindReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileRespVO;
 import io.charqe.qs.modules.file.controller.web.vo.FileConfigVO;
 import io.charqe.qs.modules.file.controller.web.vo.FileUploadTokenReqVO;
 import io.charqe.qs.modules.file.controller.web.vo.FileUploadTokenRespVO;
+import io.charqe.qs.modules.file.domain.pojo.FileBizRef;
 import io.charqe.qs.modules.file.enums.FileSceneEnum;
+import io.charqe.qs.modules.file.service.FileBizRefService;
 import io.charqe.qs.modules.file.service.FileInfoService;
 import io.charqe.qs.modules.file.service.FileUploadService;
 import io.charqe.qs.modules.user.auth.AuthSessionService;
@@ -21,6 +27,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * 文件control
@@ -38,6 +46,9 @@ public class FileController {
 
     @Resource
     private FileUploadService fileUploadService;
+
+    @Resource
+    private FileBizRefService fileBizRefService;
 
     @Resource
     private AuthSessionService sessions;
@@ -78,5 +89,42 @@ public class FileController {
 
     private boolean isManager(User user) {
         return user.getUserType() != null && user.getUserType() <= 1;
+    }
+
+    /**
+     * 绑定文件引用：业务对象落库后登记，重复绑定幂等。
+     */
+    @PostMapping("/ref/bind")
+    @LoginCheck(scope = SessionScope.EITHER)
+    public R<FileBizRef> bindRef(@Valid @RequestBody FileRefBindReqVO req) {
+        User user = sessions.current(SessionScope.EITHER, false).user();
+        return R.success("绑定成功", fileBizRefService.bind(req, user.getId(), isManager(user)));
+    }
+
+    /**
+     * 解绑文件引用：记录不存在时返回 false（幂等）。
+     */
+    @PostMapping("/ref/unbind")
+    @LoginCheck(scope = SessionScope.EITHER)
+    public R<Boolean> unbindRef(@Valid @RequestBody FileRefUnbindReqVO req) {
+        User user = sessions.current(SessionScope.EITHER, false).user();
+        return R.success("解绑成功", fileBizRefService.unbind(req, user.getId(), isManager(user)));
+    }
+
+    /**
+     * 查询文件引用：返回 {@code {list,total,page,pageSize}}。
+     */
+    @PostMapping("/ref/list")
+    @LoginCheck(scope = SessionScope.EITHER)
+    public R<Map<String, Object>> listRefs(@Valid @RequestBody FileRefListReqVO req) {
+        User user = sessions.current(SessionScope.EITHER, false).user();
+        IPage<FileBizRef> page = fileBizRefService.pageRefs(req, user.getId(), isManager(user));
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("list", page.getRecords());
+        data.put("total", page.getTotal());
+        data.put("page", page.getCurrent());
+        data.put("pageSize", page.getSize());
+        return R.success(data);
     }
 }

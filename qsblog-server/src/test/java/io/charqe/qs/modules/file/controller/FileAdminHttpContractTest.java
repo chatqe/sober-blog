@@ -234,12 +234,13 @@ class FileAdminHttpContractTest {
 
     @Test
     void deleteAcceptsJsonBodyId() throws Exception {
-        doReturn(true).when(service).removeById(7L);
+        doReturn(1).when(service).softDelete(7L);
 
         mvc.perform(post("/file/admin/delete").contentType(MediaType.APPLICATION_JSON).content("{\"id\":7}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
-        verify(service).removeById(7L);
+        verify(service).softDelete(7L);
+        verify(service, never()).purge(any());
     }
 
     @Test
@@ -248,6 +249,49 @@ class FileAdminHttpContractTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(500))
                 .andExpect(jsonPath("$.msg").value("文件ID不能为空"));
-        verify(service, never()).removeById(any(java.io.Serializable.class));
+        verify(service, never()).softDelete(any());
+        verify(service, never()).purge(any());
+    }
+
+    @Test
+    void forceDeleteRejectsReferencedFile() throws Exception {
+        var file = new FileInfo();
+        file.setId(9L);
+        file.setRefCount(2);
+        doReturn(file).when(service).findAny(9L);
+
+        mvc.perform(post("/file/admin/delete?force=true").contentType(MediaType.APPLICATION_JSON).content("{\"id\":9}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(409))
+                .andExpect(jsonPath("$.msg").value("文件仍被 2 处引用，禁止永久删除"));
+        verify(service, never()).purge(any());
+        verify(service, never()).softDelete(any());
+    }
+
+    @Test
+    void forceDeletePurgesUnreferencedFile() throws Exception {
+        var file = new FileInfo();
+        file.setId(9L);
+        file.setRefCount(0);
+        doReturn(file).when(service).findAny(9L);
+        doNothing().when(service).purge(file);
+
+        mvc.perform(post("/file/admin/delete").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":9,\"force\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+        verify(service).purge(file);
+        verify(service, never()).softDelete(any());
+    }
+
+    @Test
+    void forceDeleteUnknownFileReturns404() throws Exception {
+        doReturn(null).when(service).findAny(9L);
+
+        mvc.perform(post("/file/admin/delete?id=9&force=true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.msg").value("文件不存在"));
+        verify(service, never()).purge(any());
     }
 }

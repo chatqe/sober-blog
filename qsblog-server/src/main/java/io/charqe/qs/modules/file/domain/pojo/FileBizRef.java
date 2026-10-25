@@ -26,6 +26,9 @@ public class FileBizRef extends BaseDO {
     /** 业务类型 */
     private Integer bizType;
 
+    /** 业务字段（同一业务对象的多个挂载点，如 cover/content，默认空串） */
+    private String bizField;
+
     /** 排序序号 */
     private Integer sort;
 
