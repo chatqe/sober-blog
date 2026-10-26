@@ -1,8 +1,11 @@
 package io.charqe.qs.modules.tag.service;
 
 import com.alibaba.fastjson2.JSON;
+import io.charqe.qs.common.constants.CacheKeyConst;
 import io.charqe.qs.common.constants.CommonConst;
+import io.charqe.qs.common.enums.OptionScopeEnum;
 import io.charqe.qs.common.exception.BizException;
+import io.charqe.qs.common.model.OptionVO;
 import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.common.model.mp.Lb;
@@ -24,6 +27,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -114,7 +118,7 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
 
     @Override
     public List<TagWebVO> listPublic(Long categoryId) {
-        String cacheKey = "tag:public:cat_" + categoryId;
+        String cacheKey = CacheKeyConst.TAG_PUBLIC + categoryId;
         String cached = qingSiCache.get(cacheKey);
         if (cached != null) {
             return com.alibaba.fastjson2.JSON.parseArray(cached, TagWebVO.class);
@@ -150,8 +154,46 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
     private void clearCache() {
         qingSiCache.del(CommonConst.CATEGORY_INFO);
         qingSiCache.del(CommonConst.TAG_DICT);
+        // 标签下拉选项（新结构版本 key）
+        qingSiCache.del(CacheKeyConst.TAG_OPTIONS);
+        // 历史缺陷：此处只删了固定 key，未处理按分类分片的 tag:public:cat_*，
+        // 导致后台改标签后前台分类页长期脏读，现按前缀批量清理
+        Set<String> publicKeys = qingSiCache.keys(CacheKeyConst.TAG_PUBLIC + "*");
+        if (publicKeys != null && !publicKeys.isEmpty()) {
+            qingSiCache.del(publicKeys);
+        }
     }
 
+    @Override
+    public List<OptionVO> listOptions(OptionScopeEnum scope) {
+        // tag 表无状态列，PUBLIC / ALL 口径共用一份缓存；scope 仅用于与分类端点契约对称
+        String cached = qingSiCache.get(CacheKeyConst.TAG_OPTIONS);
+        if (cached != null) {
+            return JSON.parseArray(cached, OptionVO.class);
+        }
+
+        // isDel 由 BaseDO 的 @TableLogic 自动过滤；排序与分类保持一致采用 sort、id 升序
+        List<OptionVO> options = lambdaQuery()
+                .orderByAsc(Tag::getSort)
+                .orderByAsc(Tag::getId)
+                .list()
+                .stream()
+                .map(t -> {
+                    OptionVO vo = OptionVO.of(t.getId(), t.getName(), t.getSort());
+                    vo.setCategoryId(t.getCategoryId());
+                    return vo;
+                }).toList();
+
+        if (!options.isEmpty()) {
+            qingSiCache.put(CacheKeyConst.TAG_OPTIONS, options);
+        }
+        return options;
+    }
+
+    /**
+     * @deprecated 请改用 {@link #listOptions(OptionScopeEnum)}
+     */
+    @Deprecated
     @Override
     public List<TagDictVO> getDictList() {
         String cached = qingSiCache.get(CommonConst.TAG_DICT);

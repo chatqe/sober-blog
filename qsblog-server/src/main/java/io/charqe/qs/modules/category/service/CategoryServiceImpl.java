@@ -1,9 +1,12 @@
 package io.charqe.qs.modules.category.service;
 
 import com.alibaba.fastjson2.JSON;
+import io.charqe.qs.common.constants.CacheKeyConst;
 import io.charqe.qs.common.constants.CommonConst;
+import io.charqe.qs.common.enums.OptionScopeEnum;
 import io.charqe.qs.common.enums.StatusEnum;
 import io.charqe.qs.common.exception.BizException;
+import io.charqe.qs.common.model.OptionVO;
 import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.common.model.mp.Lb;
@@ -25,6 +28,8 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * 分类服务实现
@@ -189,10 +194,50 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         qingSiCache.del(CommonConst.CATEGORY_DICT);
         qingSiCache.del(CateConstant.CATEGORY_NAVBAR);
         qingSiCache.del(CateConstant.CATEGORY_PUBLIC);
-        qingSiCache.del("category:public:type_0");
-        qingSiCache.del("category:public:type_1");
+        // 选项缓存按口径分片（public / all），必须整族失效，否则会出现一口新、一口旧的不一致数据
+        Set<String> optionKeys = qingSiCache.keys(CacheKeyConst.CATEGORY_OPTIONS + "*");
+        if (optionKeys != null && !optionKeys.isEmpty()) {
+            qingSiCache.del(optionKeys);
+        }
     }
 
+    @Override
+    public List<OptionVO> listOptions(OptionScopeEnum scope) {
+        OptionScopeEnum effective = scope == null ? OptionScopeEnum.PUBLIC : scope;
+        String cacheKey = CacheKeyConst.CATEGORY_OPTIONS + effective.getCode();
+        String cached = qingSiCache.get(cacheKey);
+        if (cached != null) {
+            return JSON.parseArray(cached, OptionVO.class);
+        }
+
+        boolean publicOnly = effective == OptionScopeEnum.PUBLIC;
+        // isDel 由 BaseDO 的 @TableLogic 自动过滤；公开口径额外限定启用且展示
+        List<Category> categories = list(Lb.<Category>q()
+                .eq(publicOnly, Category::getStatus, StatusEnum.ENABLE.getCode())
+                .eq(publicOnly, Category::getIsShow, StatusEnum.ENABLE.getCode())
+                .orderByAsc(Category::getSort)
+                .orderByAsc(Category::getId));
+
+        List<OptionVO> options = categories.stream().map(c -> {
+            OptionVO vo = OptionVO.of(c.getId(), c.getName(), c.getSort());
+            if (!publicOnly) {
+                vo.setStatus(c.getStatus());
+                vo.setIsShow(c.getIsShow());
+                vo.setDisabled(!Objects.equals(StatusEnum.ENABLE.getCode(), c.getStatus()));
+            }
+            return vo;
+        }).toList();
+
+        if (!options.isEmpty()) {
+            qingSiCache.put(cacheKey, options);
+        }
+        return options;
+    }
+
+    /**
+     * @deprecated 请改用 {@link #listOptions(OptionScopeEnum)}
+     */
+    @Deprecated
     @Override
     public List<DictVO> getDictList() {
         String cached = qingSiCache.get(CommonConst.CATEGORY_DICT);

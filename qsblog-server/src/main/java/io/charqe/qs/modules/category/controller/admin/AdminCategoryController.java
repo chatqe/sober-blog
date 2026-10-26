@@ -3,6 +3,8 @@ package io.charqe.qs.modules.category.controller.admin;
 import io.charqe.qs.modules.user.auth.SessionScope;
 
 import io.charqe.qs.aop.LoginCheck;
+import io.charqe.qs.common.enums.OptionScopeEnum;
+import io.charqe.qs.common.model.OptionVO;
 import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.category.controller.admin.dto.CategoryBatchSortDTO;
@@ -17,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 分类管理控制器（后台管理）
@@ -45,6 +48,18 @@ public class AdminCategoryController {
             @Parameter(name = "pageNum", description = "页码") @RequestParam(defaultValue = "1") int pageNum,
             @Parameter(name = "pageSize", description = "每页条数") @RequestParam(defaultValue = "10") int pageSize) {
         return R.success(categoryService.pageList(keyword, type, status, pageNum, pageSize));
+    }
+
+    @Operation(summary = "获取分类下拉选项", description = "后台表单与筛选的下拉数据源（精简投影，id 为字符串）；"
+            + "scope=all（默认）含停用/隐藏并返回 status/isShow/disabled，scope=public 仅启用且展示")
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "401", description = "未授权")
+    @GetMapping("/options")
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
+    public R<List<OptionVO>> options(
+            @Parameter(name = "scope", description = "口径：all-全部（含停用/隐藏），public-仅启用且展示；非法值降级为 public", example = "all")
+            @RequestParam(defaultValue = "all") String scope) {
+        return R.success(categoryService.listOptions(OptionScopeEnum.of(scope)));
     }
 
     @Operation(summary = "获取分类详情", description = "返回分类的完整信息")

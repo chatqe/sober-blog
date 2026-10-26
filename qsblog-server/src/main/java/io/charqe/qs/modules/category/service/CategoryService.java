@@ -1,6 +1,8 @@
 package io.charqe.qs.modules.category.service;
 
 import io.charqe.qs.common.model.PageResult;
+import io.charqe.qs.common.enums.OptionScopeEnum;
+import io.charqe.qs.common.model.OptionVO;
 import io.charqe.qs.modules.category.controller.admin.dto.CategoryBatchSortDTO;
 import io.charqe.qs.modules.category.controller.admin.dto.CategorySaveReqDTO;
 import io.charqe.qs.modules.category.controller.admin.vo.CategoryDetailVO;
@@ -61,8 +63,20 @@ public interface CategoryService extends CoreService<Category> {
     List<CategoryWebVO> listWebCategories();
 
     /**
-     * 获取分类下拉字典列表
+     * 获取分类下拉选项（Options）
+     *
+     * @param scope 口径：PUBLIC 仅启用且展示；ALL 含停用/隐藏并返回状态字段（只供后台使用）
+     * @return 精简选项列表，按 sort、id 升序
      */
+    List<OptionVO> listOptions(OptionScopeEnum scope);
+
+    /**
+     * 获取分类下拉字典列表
+     *
+     * @deprecated value 返回的是分类描述（cateDesc）而非主键，不能用于表单取值，
+     *             请改用 {@link #listOptions(OptionScopeEnum)}；保留仅为外部兼容
+     */
+    @Deprecated
     List<DictVO> getDictList();
 
     /**

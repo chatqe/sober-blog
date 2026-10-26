@@ -2,6 +2,8 @@ package io.charqe.qs.modules.category.controller.web;
 
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.enums.CodeMsg;
+import io.charqe.qs.common.enums.OptionScopeEnum;
+import io.charqe.qs.common.model.OptionVO;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.behavior.controller.web.dto.BehDTO;
 import io.charqe.qs.modules.behavior.service.subscribe.SubscribeService;
@@ -54,7 +56,21 @@ public class CategoryController {
         return R.success(categoryService.listWebCategories());
     }
 
-    @Operation(summary = "获取分类下拉字典", description = "返回所有可用分类的 id/name 列表，用于表单下拉选择，结果带Redis缓存，数据变更时主动刷新")
+    @Operation(summary = "获取分类下拉选项", description = "返回表单下拉与级联所需的精简选项（id/label/value/sort），id 为字符串；"
+            + "固定采用公开口径（启用且展示），不接受客户端参数放宽可见性，后台请改用 /admin/category/options")
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "500", description = "服务器内部错误")
+    @GetMapping("/options")
+    public R<List<OptionVO>> options() {
+        return R.success(categoryService.listOptions(OptionScopeEnum.PUBLIC));
+    }
+
+    /**
+     * @deprecated value 返回的是分类描述而非主键，请改用 /category/options
+     */
+    @Deprecated
+    @Operation(summary = "获取分类下拉字典", deprecated = true, description = "已废弃：value 实际返回 cateDesc（分类描述）而非 id，"
+            + "不能用于表单取值，请改用 /category/options；本接口仅为外部兼容保留")
     @ApiResponse(responseCode = "200", description = "查询成功")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/dict")

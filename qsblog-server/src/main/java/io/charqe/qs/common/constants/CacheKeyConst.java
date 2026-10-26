@@ -43,4 +43,21 @@ public final class CacheKeyConst {
     public static final String ARTICLE_LIST         = "article_list";
     public static final String SORT_ARTICLE_LIST    = "sort_article_list";
     public static final String USER_LIKES           = "user_likes_";
+
+    /* ====================== 下拉选项缓存（结构版本 v2） ====================== */
+
+    /**
+     * 分类下拉选项缓存前缀，后缀为口径编码（public / all），两种口径不可互相复用
+     */
+    public static final String CATEGORY_OPTIONS     = "category:options:v2:";
+
+    /**
+     * 标签下拉选项缓存（tag 表无状态列，两种口径数据一致，共用一个 key）
+     */
+    public static final String TAG_OPTIONS          = "tag:options:v2";
+
+    /**
+     * 公开标签按分类分片的缓存前缀，失效时必须按前缀批量清理
+     */
+    public static final String TAG_PUBLIC           = "tag:public:cat_";
 }

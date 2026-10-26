@@ -1,6 +1,8 @@
 package io.charqe.qs.modules.tag.controller.web;
 
+import io.charqe.qs.common.model.OptionVO;
 import io.charqe.qs.common.model.R;
+import io.charqe.qs.common.enums.OptionScopeEnum;
 import io.charqe.qs.modules.sysdict.controller.web.vo.DictVO;
 import io.charqe.qs.modules.tag.controller.web.vo.TagDictVO;
 import io.charqe.qs.modules.tag.controller.web.vo.TagWebVO;
@@ -36,7 +38,20 @@ public class TagController {
         return R.success(tagService.listPublic(categoryId));
     }
 
-    @Operation(summary = "获取标签下拉字典", description = "返回所有标签的 id/name 列表，用于表单下拉选择，结果带Redis缓存，数据变更时主动刷新")
+    @Operation(summary = "获取标签下拉选项", description = "返回表单下拉与级联所需的精简选项（id/label/value/categoryId/sort），id 与 categoryId 为字符串；"
+            + "标签表无状态列，返回全部未删除标签；后台表单请改用 /admin/tag/options（出于权限口径要求，两者数据一致）")
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @GetMapping("/options")
+    public R<List<OptionVO>> options() {
+        return R.success(tagService.listOptions(OptionScopeEnum.PUBLIC));
+    }
+
+    /**
+     * @deprecated value 返回的是标签描述而非主键，请改用 /tag/options
+     */
+    @Deprecated
+    @Operation(summary = "获取标签下拉字典", deprecated = true, description = "已废弃：value 实际返回 tagDesc（标签描述）而非 id，"
+            + "cateId 又受陈旧缓存影响可能为空，请改用 /tag/options；本接口仅为外部兼容保留")
     @ApiResponse(responseCode = "200", description = "查询成功")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @GetMapping("/dict")

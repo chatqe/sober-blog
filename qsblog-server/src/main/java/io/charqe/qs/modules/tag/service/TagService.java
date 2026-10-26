@@ -1,6 +1,8 @@
 package io.charqe.qs.modules.tag.service;
 
 import io.charqe.qs.common.model.PageResult;
+import io.charqe.qs.common.enums.OptionScopeEnum;
+import io.charqe.qs.common.model.OptionVO;
 import io.charqe.qs.modules.tag.controller.admin.dto.TagSaveReqDTO;
 import io.charqe.qs.modules.tag.controller.admin.vo.TagDetailVO;
 import io.charqe.qs.modules.tag.controller.admin.vo.TagListVO;
@@ -51,8 +53,23 @@ public interface TagService extends CoreService<Tag> {
     List<TagWebVO> listPublic(Long categoryId);
 
     /**
-     * 获取标签下拉字典列表
+     * 获取标签下拉选项（Options）
+     *
+     * <p>tag 表无状态列，PUBLIC 与 ALL 口径返回内容一致（均为未删除标签，携带 categoryId 供级联）；
+     * 参数仅用于与分类 options 端点保持契约对称。
+     *
+     * @param scope 口径（当前两种口径结果相同）
+     * @return 精简选项列表，按 sort、id 升序
      */
+    List<OptionVO> listOptions(OptionScopeEnum scope);
+
+    /**
+     * 获取标签下拉字典列表
+     *
+     * @deprecated value 返回的是标签描述（tagDesc）而非主键，不能用于表单取值，
+     *             请改用 {@link #listOptions(OptionScopeEnum)}；保留仅为外部兼容
+     */
+    @Deprecated
     List<TagDictVO> getDictList();
 
     /**

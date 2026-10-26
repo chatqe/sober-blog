@@ -3,6 +3,8 @@ package io.charqe.qs.modules.tag.controller.admin;
 import io.charqe.qs.modules.user.auth.SessionScope;
 
 import io.charqe.qs.aop.LoginCheck;
+import io.charqe.qs.common.enums.OptionScopeEnum;
+import io.charqe.qs.common.model.OptionVO;
 import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.tag.controller.admin.dto.TagSaveReqDTO;
@@ -16,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 标签管理控制器（后台管理）
@@ -43,6 +46,18 @@ public class AdminTagController {
             @Parameter(name = "pageNum", description = "页码") @RequestParam(defaultValue = "1") int pageNum,
             @Parameter(name = "pageSize", description = "每页条数") @RequestParam(defaultValue = "10") int pageSize) {
         return R.success(tagService.pageList(categoryId, keyword, pageNum, pageSize));
+    }
+
+    @Operation(summary = "获取标签下拉选项", description = "后台表单与筛选的下拉数据源（精简投影，id 与 categoryId 为字符串，供与分类级联）；"
+            + "标签表无状态列，scope 仅与分类端点契约对称，传 all 或 public 结果一致")
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "401", description = "未授权")
+    @GetMapping("/options")
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
+    public R<List<OptionVO>> options(
+            @Parameter(name = "scope", description = "口径：all-全部，public-仅启用且展示（标签无状态列，两者结果相同）", example = "all")
+            @RequestParam(defaultValue = "all") String scope) {
+        return R.success(tagService.listOptions(OptionScopeEnum.of(scope)));
     }
 
     @Operation(summary = "获取标签详情", description = "返回标签的完整信息，含分类名称")
