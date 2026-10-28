@@ -144,7 +144,9 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             if (articleVO.getViewStatus()) {
                 List<User> users = userService.lambdaQuery().select(User::getEmail, User::getSubscribe).eq(User::getUserStatus, StatusEnum.ENABLE.getCode()).list();
                 List<String> emails = users.stream().filter(u -> {
-                    List<Integer> sub = JSON.parseArray(u.getSubscribe(), Integer.class);
+                    // 订阅列表里存的是标签 ID（Long）：以前解析成 List<Integer> 后 contains(Long) 永远为 false，
+                    // 导致订阅邮件静默不发
+                    List<Long> sub = JSON.parseArray(u.getSubscribe(), Long.class);
                     return !CollectionUtils.isEmpty(sub) && sub.contains(articleVO.getTagId());
                 }).map(User::getEmail).collect(Collectors.toList());
 
@@ -557,7 +559,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
         AdminArticlePageRespVO respVO = new AdminArticlePageRespVO();
         respVO.setList(list);
-        respVO.setTotal(articlePage.getTotal());
+        respVO.setTotal(Math.toIntExact(articlePage.getTotal()));
         respVO.setPages((int) articlePage.getPages());
         respVO.setPageNum((int) articlePage.getCurrent());
         respVO.setPageSize((int) articlePage.getSize());

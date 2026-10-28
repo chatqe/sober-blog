@@ -85,7 +85,7 @@ public class DanmakuController {
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R del(
         @Parameter(name = "id", description = "弹幕留言ID", required = true, example = "1")
-        @RequestParam("id") Integer id) {
+        @RequestParam("id") Long id) {
         danmakuMapper.deleteById(id);
         return R.success();
     }

@@ -28,7 +28,7 @@ public class PageResult<T> implements Serializable {
     private List<T> list;
 
     @Schema(description = "总条数")
-    private Long total;
+    private Integer total;
 
     @Schema(description = "总页数")
     private Integer pages;
@@ -47,7 +47,7 @@ public class PageResult<T> implements Serializable {
     public static <T> PageResult<T> empty() {
         PageResult<T> result = new PageResult<>();
         result.setList(Collections.emptyList());
-        result.setTotal(0L);
+        result.setTotal(0);
         result.setPages(0);
         result.setPageNum(1);
         result.setPageSize(10);
@@ -60,7 +60,7 @@ public class PageResult<T> implements Serializable {
     public static <T> PageResult<T> fromMpPage(Page<T> mpPage) {
         PageResult<T> result = new PageResult<>();
         result.setList(mpPage.getRecords());
-        result.setTotal(mpPage.getTotal());
+        result.setTotal(toInt(mpPage.getTotal()));
         result.setPages(toInt(mpPage.getPages()));
         result.setPageNum(toInt(mpPage.getCurrent()));
         result.setPageSize(toInt(mpPage.getSize()));
@@ -74,7 +74,7 @@ public class PageResult<T> implements Serializable {
     public static <E, V> PageResult<V> fromMpPage(Page<E> mpPage, Function<E, V> mapper) {
         PageResult<V> result = new PageResult<>();
         result.setList(mpPage.getRecords().stream().map(mapper).collect(Collectors.toList()));
-        result.setTotal(mpPage.getTotal());
+        result.setTotal(toInt(mpPage.getTotal()));
         result.setPages(toInt(mpPage.getPages()));
         result.setPageNum(toInt(mpPage.getCurrent()));
         result.setPageSize(toInt(mpPage.getSize()));
@@ -88,7 +88,7 @@ public class PageResult<T> implements Serializable {
         int pages = total == 0 || pageSize == 0 ? 0 : (int) Math.ceil((double) total / pageSize);
         PageResult<T> result = new PageResult<>();
         result.setList(list);
-        result.setTotal(total);
+        result.setTotal(total == null ? 0 : toInt(total));
         result.setPages(pages);
         result.setPageNum(pageNum);
         result.setPageSize(pageSize);
@@ -102,13 +102,17 @@ public class PageResult<T> implements Serializable {
         // int pages = total == 0 || pageSize == 0 ? 0 : (int) Math.ceil((double) total / pageSize);
         PageResult<T> result = new PageResult<>();
         result.setList(list);
-        result.setTotal(page.getTotal());
+        result.setTotal(toInt(page.getTotal()));
         result.setPages((int) page.getPages());
         result.setPageNum((int) page.getCurrent());
         result.setPageSize((int) page.getSize());
         return result;
     }
 
+    /**
+     * MyBatis-Plus 的分页数值均为 long，而响应体语义上是页码/条数，必须声明为 Integer：
+     * 全局 Jackson 约定（见 JacksonConfig）会把 Long 序列化为字符串，分页数值若用 Long 会被误伤。
+     */
     private static Integer toInt(long value) {
         return value > Integer.MAX_VALUE ? Integer.MAX_VALUE : (value < Integer.MIN_VALUE ? Integer.MIN_VALUE : (int) value);
     }

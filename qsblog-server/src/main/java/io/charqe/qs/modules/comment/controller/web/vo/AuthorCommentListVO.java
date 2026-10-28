@@ -11,16 +11,16 @@ import java.util.List;
 public class AuthorCommentListVO {
 
     @Schema(description = "总条数")
-    private Long total;
+    private Integer total;
 
     @Schema(description = "总页数")
-    private Long pages;
+    private Integer pages;
 
     @Schema(description = "当前页码")
-    private Long pageNum;
+    private Integer pageNum;
 
     @Schema(description = "每页条数")
-    private Long pageSize;
+    private Integer pageSize;
 
     @Schema(description = "评论列表")
     private List<Item> records;

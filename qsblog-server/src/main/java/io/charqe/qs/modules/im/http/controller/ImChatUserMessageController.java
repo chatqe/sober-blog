@@ -102,7 +102,7 @@ public class ImChatUserMessageController {
      */
     @GetMapping("/deleteSystemMessage")
     @LoginCheck(value = 0, scope = SessionScope.ADMIN)
-    public R deleteSystemMessage(@RequestParam("id") Integer id) {
+    public R deleteSystemMessage(@RequestParam("id") Long id) {
         imChatUserMessageService.removeById(id);
         return R.success();
     }

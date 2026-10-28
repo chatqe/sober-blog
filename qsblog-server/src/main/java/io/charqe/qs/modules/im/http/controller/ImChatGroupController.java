@@ -190,7 +190,7 @@ public class ImChatGroupController {
      */
     @GetMapping("/addGroupTopic")
     @LoginCheck
-    public R addGroupTopic(@RequestParam("id") Integer id) {
+    public R addGroupTopic(@RequestParam("id") Long id) {
         LambdaQueryChainWrapper<ImChatGroup> lambdaQuery = imChatGroupService.lambdaQuery();
         Integer count = Math.toIntExact(lambdaQuery.eq(ImChatGroup::getId, id)
                 .eq(ImChatGroup::getGroupType, ImConfigConst.GROUP_TOPIC).count());

@@ -527,10 +527,11 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
      * @return
      */
     @Override
-    public R<UserVO> subscribe(Integer labelId, Boolean flag) {
+    public R<UserVO> subscribe(Long labelId, Boolean flag) {
         UserVO userVO = null;
         User one = lambdaQuery().eq(User::getId, BlogUtil.getUserId()).one();
-        List<Integer> sub = JSON.parseArray(one.getSubscribe(), Integer.class);
+        // 订阅列表存的是标签 ID（bigint 主键），按 ID 一律 Long 的约定解析
+        List<Long> sub = JSON.parseArray(one.getSubscribe(), Long.class);
         if (sub == null) sub = new ArrayList<>();
         if (flag) {
             if (!sub.contains(labelId)) {
@@ -544,7 +545,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
                 BehaviorState behaviorState = new BehaviorState();
                 behaviorState.setUserId(BlogUtil.getUserId());
                 behaviorState.setBizType(BizTypeEnum.TAG.getCode()); // 2表示标签类型
-                behaviorState.setBizId(labelId.longValue());
+                behaviorState.setBizId(labelId);
                 behaviorState.setAction(BehActionType.SUBSCRIBE.getCode());
                 behaviorState.setCreateTime(LocalDateTime.now());
                 // behaviorLogService.save(behaviorState);
@@ -567,7 +568,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
                 BehaviorState behaviorState = new BehaviorState();
                 behaviorState.setUserId(BlogUtil.getUserId());
                 behaviorState.setBizType(BizTypeEnum.TAG.getCode()); // 2表示标签类型
-                behaviorState.setBizId(labelId.longValue());
+                behaviorState.setBizId(labelId);
                 behaviorState.setAction(BehActionType.UN_SUBSCRIBE.getCode());
                 behaviorState.setCreateTime(LocalDateTime.now());
                 // behaviorLogService.save(behaviorState);

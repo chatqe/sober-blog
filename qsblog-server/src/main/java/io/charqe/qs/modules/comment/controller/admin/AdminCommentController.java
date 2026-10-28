@@ -52,7 +52,7 @@ public class AdminCommentController {
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R userDeleteComment(
         @Parameter(name = "id", description = "评论ID", required = true, example = "1")
-        @RequestParam("id") Integer id) {
+        @RequestParam("id") Long id) {
         Comment comment = commentService.lambdaQuery().select(Comment::getBizId, Comment::getBizType).eq(Comment::getId, id).one();
         if (comment == null) {
             return R.success();
@@ -61,7 +61,7 @@ public class AdminCommentController {
             return R.fail("权限不足！");
         }
         Article one = articleService.lambdaQuery().eq(Article::getId, comment.getBizId()).select(Article::getUserId).one();
-        if (one == null || (BlogUtil.getUserId().intValue() != one.getUserId().intValue())) {
+        if (one == null || !BlogUtil.getUserId().equals(one.getUserId())) {
             return R.fail("权限不足！");
         }
         commentService.removeById(id);
@@ -83,7 +83,7 @@ public class AdminCommentController {
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R adminDelComment(
         @Parameter(name = "id", description = "评论ID", required = true, example = "1")
-        @RequestParam("id") Integer id) {
+        @RequestParam("id") Long id) {
         commentService.removeById(id);
         return R.success();
     }

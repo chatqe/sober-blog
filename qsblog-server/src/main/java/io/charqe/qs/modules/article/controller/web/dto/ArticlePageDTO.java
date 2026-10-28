@@ -17,13 +17,15 @@ import lombok.NoArgsConstructor;
 public class ArticlePageDTO extends PageQuery {
     private Boolean desc = true;
     private String searchKey;
-    private String categoryId;
+
+    // ID 一律 Long：全局约定下 Long 会同时被发为字符串与 string schema；
+    // 曾经的 String/Integer 声明是为了绕开类型失配的局部补丁，现统一回 Long
+    private Long categoryId;
 
     // 是否推荐[0:否，1:是]
     private Boolean recommendStatus;
 
-
-    private Integer tagId;
+    private Long tagId;
 
     // private String articleSearch;
 

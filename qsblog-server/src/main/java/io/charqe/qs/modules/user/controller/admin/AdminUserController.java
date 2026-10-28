@@ -106,10 +106,11 @@ public class AdminUserController {
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R changeUserStatus(
             @Parameter(name = "userId", description = "用户ID", required = true, example = "1")
-            @RequestParam("userId") Integer userId,
+            @RequestParam("userId") Long userId,
             @Parameter(name = "flag", description = "操作类型，true-解禁，false-封禁", required = true, example = "true")
             @RequestParam("flag") Boolean flag) {
-        if (userId.intValue() == BlogUtil.getAdminUser().getId().intValue()) {
+        // ID 一律 Long（全局字符串契约），用 equals 比较，不再退化成 int 比较
+        if (userId.equals(BlogUtil.getAdminUser().getId())) {
             return R.fail("站长状态不能修改！");
         }
 
@@ -138,7 +139,7 @@ public class AdminUserController {
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R changeUserAdmire(
             @Parameter(name = "userId", description = "用户ID", required = true, example = "1")
-            @RequestParam("userId") Integer userId,
+            @RequestParam("userId") Long userId,
             @Parameter(name = "admire", description = "赞赏信息", required = true, example = "感谢支持！")
             @RequestParam("admire") String admire) {
         userService.lambdaUpdate()
@@ -166,10 +167,10 @@ public class AdminUserController {
     @LoginCheck(value = 0, scope = SessionScope.ADMIN)
     public R changeUserType(
             @Parameter(name = "userId", description = "用户ID", required = true, example = "1")
-            @RequestParam("userId") Integer userId,
+            @RequestParam("userId") Long userId,
             @Parameter(name = "userType", description = "用户类型，0-普通用户，1-管理员，2-超级管理员", schema = @Schema(allowableValues = {"0", "1", "2"}), required = true, example = "1")
             @RequestParam("userType") Integer userType) {
-        if (userId.intValue() == BlogUtil.getAdminUser().getId().intValue()) {
+        if (userId.equals(BlogUtil.getAdminUser().getId())) {
             return R.fail("站长类型不能修改！");
         }
 
@@ -182,10 +183,9 @@ public class AdminUserController {
         return R.success();
     }
 
-    private void logout(Integer userId) {
-        sessions.revokeAll(userId.longValue());
+    private void logout(Long userId) {
+        sessions.revokeAll(userId);
         qingSiCache.del(CommonConst.USER_CACHE + userId);
-
     }
 }
 

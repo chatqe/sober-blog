@@ -63,7 +63,7 @@ public class ResourceAggregationController {
      */
     @GetMapping("/deleteWeblinks")
     @LoginCheck(value = 0, scope = SessionScope.ADMIN)
-    public R deleteWeblinks(@RequestParam("id") Integer id) {
+    public R deleteWeblinks(@RequestParam("id") Long id) {
         weblinksMapper.deleteById(id);
         return R.success();
     }

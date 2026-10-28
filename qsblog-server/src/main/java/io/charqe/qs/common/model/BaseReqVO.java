@@ -23,15 +23,17 @@ public class BaseReqVO extends Page {
     // 是否推荐[0:否，1:是]
     private Boolean recommendStatus;
 
-    private Integer categoryId;
+    // ID 一律 Long：全局约定下 Long 会被同时发为字符串与 string schema，
+    // 若保持 Integer 则这些筛选参数与其它 id 类型不一致
+    private Long categoryId;
 
-    private Integer tagId;
+    private Long tagId;
 
     private Boolean userStatus;
 
     private Integer userType;
 
-    private Integer userId;
+    private Long userId;
 
     private String resourceType;
 

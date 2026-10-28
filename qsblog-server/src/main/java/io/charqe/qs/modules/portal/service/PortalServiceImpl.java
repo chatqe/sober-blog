@@ -82,14 +82,14 @@ public class PortalServiceImpl implements PortalService {
         overview.setArticleTotal(defaultZero(articleStats.getArticleTotal()));
         overview.setViewTotal(defaultZero(articleStats.getViewTotal()));
         overview.setLikeTotal(defaultZero(articleStats.getLikeTotal()));
-        overview.setCategoryTotal(categoryService.countVisible());
-        overview.setHistoryAllCount(accessLogService.getHistoryAllCount());
+        overview.setCategoryTotal(Math.toIntExact(categoryService.countVisible()));
+        overview.setHistoryAllCount(Math.toIntExact(accessLogService.getHistoryAllCount()));
 
         return overview;
     }
 
-    private long defaultZero(Long value) {
-        return value != null ? value : 0L;
+    private int defaultZero(Integer value) {
+        return value != null ? value : 0;
     }
 
     @Override

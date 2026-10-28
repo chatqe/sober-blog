@@ -251,20 +251,20 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
         }).collect(Collectors.toList());
 
         AuthorCommentListVO result = new AuthorCommentListVO();
-        result.setTotal(page.getTotal());
-        result.setPages(page.getPages());
-        result.setPageNum((long) dto.getPageNum());
-        result.setPageSize((long) dto.getPageSize());
+        result.setTotal(Math.toIntExact(page.getTotal()));
+        result.setPages(Math.toIntExact(page.getPages()));
+        result.setPageNum(dto.getPageNum());
+        result.setPageSize(dto.getPageSize());
         result.setRecords(records);
         return result;
     }
 
     private AuthorCommentListVO emptyResult() {
         AuthorCommentListVO result = new AuthorCommentListVO();
-        result.setTotal(0L);
-        result.setPages(0L);
-        result.setPageNum(1L);
-        result.setPageSize(0L);
+        result.setTotal(0);
+        result.setPages(0);
+        result.setPageNum(1);
+        result.setPageSize(0);
         result.setRecords(Collections.emptyList());
         return result;
     }

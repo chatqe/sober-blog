@@ -1,6 +1,7 @@
 package io.charqe.qs.modules.file.domain.pojo;
 
 import com.baomidou.mybatisplus.annotation.*;
+import io.charqe.qs.common.annotation.IdNum;
 import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -50,7 +51,8 @@ public class FileInfo extends BaseDO {
     /** CDN域名（为空时使用默认域名） */
     private String cdnDomain;
 
-    /** 文件大小(字节) */
+    /** 文件大小(字节) 库列 bigint，可超 int；非 ID 数值，豁免于全局 Long→字符串约定 */
+    @IdNum
     private Long fileSize;
 
     /** 文件分类: image/video/document/audio/other */

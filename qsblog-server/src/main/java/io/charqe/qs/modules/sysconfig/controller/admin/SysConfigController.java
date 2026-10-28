@@ -104,7 +104,7 @@ public class SysConfigController {
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
     public R deleteConfig(
         @Parameter(name = "id", description = "配置ID", required = true, example = "1")
-        @RequestParam("id") Integer id) {
+        @RequestParam("id") Long id) {
         sysConfigService.removeById(id);
         return R.success();
     }

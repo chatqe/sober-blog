@@ -51,7 +51,7 @@ public interface UserService extends CoreService<User> {
 
     R<AuthSessionVO> token(String userToken);
 
-    R<UserVO> subscribe(Integer labelId, Boolean flag);
+    R<UserVO> subscribe(Long labelId, Boolean flag);
 
     /**
      * 获取验证码

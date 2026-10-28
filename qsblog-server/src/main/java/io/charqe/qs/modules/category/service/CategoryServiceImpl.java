@@ -58,7 +58,7 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         List<CategoryListVO> voList = mpPage.getRecords()
                 .stream().map(CategoryConvert.INSTANCE::toListVO).toList();
         result.setList(voList);
-        result.setTotal(mpPage.getTotal());
+        result.setTotal(Math.toIntExact(mpPage.getTotal()));
         result.setPages((int) mpPage.getPages());
         result.setPageNum((int) mpPage.getCurrent());
         result.setPageSize((int) mpPage.getSize());

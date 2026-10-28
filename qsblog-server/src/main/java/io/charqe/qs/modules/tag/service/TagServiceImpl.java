@@ -58,7 +58,7 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
         PageResult<TagListVO> result = new PageResult<>();
         List<TagListVO> voList = mpPage.getRecords().stream().map(TagConvert.INSTANCE::toListVO).collect(Collectors.toList());
         result.setList(voList);
-        result.setTotal(mpPage.getTotal());
+        result.setTotal(Math.toIntExact(mpPage.getTotal()));
         result.setPages((int) mpPage.getPages());
         result.setPageNum((int) mpPage.getCurrent());
         result.setPageSize((int) mpPage.getSize());

@@ -21,15 +21,15 @@ public class ArticlePageVO extends PageResult {
     private List list;
     private boolean desc = true;
     private String searchKey;
-    private String categoryId;
-    private Integer tagId;
+    private Long categoryId;
+    private Long tagId;
 
     public static  ArticlePageVO build(
             PageResult baseResult, // 父类 PageResult 实例
             boolean desc ,
             String searchKey,
-            String categoryId,
-            Integer tagId
+            Long categoryId,
+            Long tagId
 
     ) {
         ArticlePageVO result = new ArticlePageVO();
