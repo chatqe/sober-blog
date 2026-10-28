@@ -2,6 +2,7 @@ package io.charqe.qs.modules.file.controller.admin;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.charqe.qs.aop.LoginCheck;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.file.controller.admin.vo.FileDeleteReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileListReqVO;
@@ -32,20 +33,14 @@ public class FileRecycleController {
     private FileInfoService fileInfoService;
 
     /**
-     * 回收站列表：返回 {@code {list,total,page,pageSize}}，按进入回收站时间倒序。
+     * 回收站列表：统一返回 {@code PageResult}，按进入回收站时间倒序。
      */
     @PostMapping("/list")
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
-    public R<Map<String, Object>> list(@RequestBody FileListReqVO req) {
+    public R<PageResult<FileInfo>> list(@RequestBody FileListReqVO req) {
         req.normalize();
         IPage<FileInfo> page = fileInfoService.pageDeleted(req);
-
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("list", page.getRecords());
-        data.put("total", page.getTotal());
-        data.put("page", page.getCurrent());
-        data.put("pageSize", page.getSize());
-        return R.success(data);
+        return R.success(PageResult.build(page.getRecords(), page.getTotal(), (int) page.getCurrent(), (int) page.getSize()));
     }
 
     /**

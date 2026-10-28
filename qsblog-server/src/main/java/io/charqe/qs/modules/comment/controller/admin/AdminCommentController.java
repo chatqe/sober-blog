@@ -4,6 +4,7 @@ import io.charqe.qs.modules.user.auth.SessionScope;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.modules.article.domain.pojo.Article;
@@ -102,7 +103,7 @@ public class AdminCommentController {
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/list")
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
-    public R<Page> listBossComment(
+    public R<PageResult> listBossComment(
         @Parameter(name = "baseReqVO", description = "查询参数", required = true, example = "{\"page\":1,\"pageSize\":10}")
         @RequestBody BaseReqVO baseReqVO) {
         return commentService.listAdminComment(baseReqVO, true);

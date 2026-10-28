@@ -1,6 +1,7 @@
 package io.charqe.qs.modules.comment.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 
 import io.charqe.qs.common.model.BaseReqVO;
@@ -18,9 +19,9 @@ public interface CommentService extends CoreService<Comment> {
 
     R deleteComment(Long id);
 
-    R<BaseReqVO> listComment(BaseReqVO baseReqVO);
+    R<PageResult> listComment(BaseReqVO baseReqVO);
 
-    R<Page> listAdminComment(BaseReqVO baseReqVO, Boolean isBoss);
+    R<PageResult> listAdminComment(BaseReqVO baseReqVO, Boolean isBoss);
 
     AuthorCommentListVO listAuthorComments(AuthorCommentQueryDTO dto, Long currentUserId);
 

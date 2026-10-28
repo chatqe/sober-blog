@@ -7,6 +7,7 @@ import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.enums.CodeMsg;
 import io.charqe.qs.common.enums.StatusEnum;
 import io.charqe.qs.common.model.BaseReqVO;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.im.websocket.TioUtil;
 import io.charqe.qs.modules.im.websocket.TioWebsocketStarter;
@@ -81,7 +82,7 @@ public class AdminUserController {
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/page")
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
-    public R<Page> listUser(
+    public R<PageResult> listUser(
             @Parameter(name = "baseReqVO", description = "查询条件", required = true, example = "{\"page\":1,\"pageSize\":10}")
             @RequestBody BaseReqVO baseReqVO) {
         return userService.listUser(baseReqVO);

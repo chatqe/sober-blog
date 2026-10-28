@@ -5,6 +5,7 @@ import io.charqe.qs.modules.user.auth.SessionScope;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.BaseReqVO;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.article.controller.admin.dto.AdminArticlePageReqDTO;
 import io.charqe.qs.modules.article.controller.admin.vo.AdminArticlePageRespVO;
@@ -66,7 +67,7 @@ public class AdminArticleController {
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/user/list")
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
-    public R<Page> listUserArticle(
+    public R<PageResult> listUserArticle(
             @Parameter(name = "baseReqVO", description = "分页查询参数", required = true, example = "{\"pageNum\":1,\"pageSize\":10}")
             @RequestBody BaseReqVO baseReqVO) {
         return articleService.listAdminArticle(baseReqVO, false);
@@ -86,7 +87,7 @@ public class AdminArticleController {
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/admin/list")
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
-    public R<Page> listBossArticle(
+    public R<PageResult> listBossArticle(
             @Parameter(name = "baseReqVO", description = "分页查询参数", required = true, example = "{\"pageNum\":1,\"pageSize\":10}")
             @RequestBody BaseReqVO baseReqVO) {
         return articleService.listAdminArticle(baseReqVO, true);

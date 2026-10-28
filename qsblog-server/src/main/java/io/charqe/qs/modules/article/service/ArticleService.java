@@ -1,6 +1,7 @@
 package io.charqe.qs.modules.article.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.article.controller.admin.dto.AdminArticlePageReqDTO;
 import io.charqe.qs.modules.article.controller.admin.vo.AdminArticlePageRespVO;
@@ -41,7 +42,7 @@ public interface ArticleService extends CoreService<Article> {
      */
     R<ArticleVO> getArticleWithPwd(Long id, String password);
 
-    R<Page> listAdminArticle(BaseReqVO baseReqVO, Boolean isBoss);
+    R<PageResult> listAdminArticle(BaseReqVO baseReqVO, Boolean isBoss);
 
     R<ArticleVO> getArticleById(Long id);
 

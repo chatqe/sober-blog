@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.common.model.BaseReqVO;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.weblinks.controller.web.vo.WeblinksVO;
 import io.charqe.qs.modules.weblinks.domain.dao.WeblinksMapper;
@@ -94,7 +95,7 @@ public class ResourceAggregationController {
      * 查询资源
      */
     @PostMapping("/listWeblinks")
-    public R<Page> listWeblinks(@RequestBody BaseReqVO baseReqVO) {
+    public R<PageResult> listWeblinks(@RequestBody BaseReqVO baseReqVO) {
         LambdaQueryChainWrapper<Weblinks> wrapper = new LambdaQueryChainWrapper<>(weblinksMapper);
         wrapper.eq(StringUtils.hasText(baseReqVO.getResourceType()), Weblinks::getType, baseReqVO.getResourceType());
         wrapper.eq(StringUtils.hasText(baseReqVO.getClassify()), Weblinks::getClassify, baseReqVO.getClassify());
@@ -124,7 +125,7 @@ public class ResourceAggregationController {
             }).collect(Collectors.toList());
             baseReqVO.setRecords(WeblinksVOs);
         }
-        return R.success(baseReqVO);
+        return R.success(PageResult.fromMpPage(baseReqVO));
     }
 }
 

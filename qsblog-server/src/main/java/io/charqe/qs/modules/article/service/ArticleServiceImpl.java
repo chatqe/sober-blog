@@ -305,7 +305,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
     }
 
     @Override
-    public R<Page> listAdminArticle(BaseReqVO baseReqVO, Boolean isBoss) {
+    public R<PageResult> listAdminArticle(BaseReqVO baseReqVO, Boolean isBoss) {
         LambdaQueryChainWrapper<Article> lambdaQuery = lambdaQuery();
         lambdaQuery.select(Article.class, a -> !a.getColumn().equals("article_content"));
         if (!isBoss) {
@@ -341,7 +341,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             }).collect(Collectors.toList());
             baseReqVO.setRecords(collect);
         }
-        return R.success(baseReqVO);
+        return R.success(PageResult.fromMpPage(baseReqVO));
     }
 
     @Override

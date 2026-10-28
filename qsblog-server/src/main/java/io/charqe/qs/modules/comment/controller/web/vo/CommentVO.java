@@ -2,6 +2,7 @@ package io.charqe.qs.modules.comment.controller.web.vo;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.charqe.qs.common.model.PageResult;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -51,7 +52,7 @@ public class CommentVO {
     private LocalDateTime createTime;
 
     @Schema(name = "childComments", description = "子评论分页列表")
-    private Page childComments;
+    private PageResult childComments;
 
     @Schema(name = "parentUsername", description = "父评论用户名", example = "user1")
     private String parentUsername;

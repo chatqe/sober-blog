@@ -23,7 +23,7 @@ public class AuthorCommentListVO {
     private Integer pageSize;
 
     @Schema(description = "评论列表")
-    private List<Item> records;
+    private List<Item> list;
 
     @Data
     @Schema(description = "单条评论")

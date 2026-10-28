@@ -1,6 +1,7 @@
 package io.charqe.qs.modules.file.controller.web;
 
 import io.charqe.qs.aop.LoginCheck;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -118,7 +119,7 @@ public class FileController {
      */
     @PostMapping("/my/list")
     @LoginCheck(scope = SessionScope.EITHER)
-    public R<Map<String, Object>> myList(@RequestBody FileListReqVO req) {
+    public R<PageResult<FileInfo>> myList(@RequestBody FileListReqVO req) {
         User user = sessions.current(SessionScope.EITHER, false).user();
         req.normalize();
         IPage<FileInfo> page = fileInfoService.page(
@@ -129,12 +130,7 @@ public class FileController {
                         .like(StringUtils.hasText(req.getKeyword()), FileInfo::getOriginalName, req.getKeyword())
                         .orderByDesc(FileInfo::getCreateTime));
 
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("list", page.getRecords());
-        data.put("total", page.getTotal());
-        data.put("page", page.getCurrent());
-        data.put("pageSize", page.getSize());
-        return R.success(data);
+        return R.success(PageResult.build(page.getRecords(), page.getTotal(), (int) page.getCurrent(), (int) page.getSize()));
     }
 
     /**
@@ -204,19 +200,13 @@ public class FileController {
     }
 
     /**
-     * 查询文件引用：返回 {@code {list,total,page,pageSize}}。
+     * 查询文件引用：统一返回 {@code PageResult}。
      */
     @PostMapping("/ref/list")
     @LoginCheck(scope = SessionScope.EITHER)
-    public R<Map<String, Object>> listRefs(@Valid @RequestBody FileRefListReqVO req) {
+    public R<PageResult<FileBizRef>> listRefs(@Valid @RequestBody FileRefListReqVO req) {
         User user = sessions.current(SessionScope.EITHER, false).user();
         IPage<FileBizRef> page = fileBizRefService.pageRefs(req, user.getId(), isManager(user));
-
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("list", page.getRecords());
-        data.put("total", page.getTotal());
-        data.put("page", page.getCurrent());
-        data.put("pageSize", page.getSize());
-        return R.success(data);
+        return R.success(PageResult.build(page.getRecords(), page.getTotal(), (int) page.getCurrent(), (int) page.getSize()));
     }
 }

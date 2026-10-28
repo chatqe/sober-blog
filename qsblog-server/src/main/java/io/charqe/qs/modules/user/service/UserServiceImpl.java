@@ -12,6 +12,7 @@ import io.charqe.qs.common.enums.EmailBizType;
 import io.charqe.qs.common.enums.VisibilityEnum;
 import io.charqe.qs.common.exception.BizException;
 import io.charqe.qs.common.model.BaseReqVO;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.model.mp.CoreServiceImpl;
 import io.charqe.qs.infra.thirdparty.mail.MailUtil;
@@ -466,7 +467,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
     }
 
     @Override
-    public R<Page> listUser(BaseReqVO baseReqVO) {
+    public R<PageResult> listUser(BaseReqVO baseReqVO) {
         LambdaQueryChainWrapper<User> lambdaQuery = lambdaQuery();
 
         if (baseReqVO.getUserStatus() != null) {
@@ -494,7 +495,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
                 u.setOpenId(null);
             });
         }
-        return R.success(baseReqVO);
+        return R.success(PageResult.fromMpPage(baseReqVO));
     }
 
     @Override

@@ -1,6 +1,7 @@
 package io.charqe.qs.modules.user.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.modules.user.domain.pojo.User;
@@ -45,7 +46,7 @@ public interface UserService extends CoreService<User> {
 
     R updateForForgetPassword(String place, Integer flag, String code, String password);
 
-    R<Page> listUser(BaseReqVO baseReqVO);
+    R<PageResult> listUser(BaseReqVO baseReqVO);
 
     R<List<UserVO>> getUserByUsername(String username);
 

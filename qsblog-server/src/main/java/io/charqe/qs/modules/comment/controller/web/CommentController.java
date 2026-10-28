@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.aop.SaveCheck;
 import io.charqe.qs.common.model.BaseReqVO;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.comment.controller.web.dto.AuthorCommentQueryDTO;
@@ -141,7 +142,7 @@ public class CommentController {
     @ApiResponse(responseCode = "400", description = "请求参数错误")
     @ApiResponse(responseCode = "500", description = "服务器内部错误")
     @PostMapping("/list")
-    public R<BaseReqVO> listComment(
+    public R<PageResult> listComment(
         @Parameter(name = "baseReqVO", description = "分页查询参数", required = true, example = "{\"pageNum\":1,\"pageSize\":10}") 
         @RequestBody BaseReqVO baseReqVO) {
         return commentService.listComment(baseReqVO);

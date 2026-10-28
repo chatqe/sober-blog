@@ -2,6 +2,7 @@ package io.charqe.qs.modules.file.controller.admin;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.charqe.qs.aop.LoginCheck;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.modules.file.controller.admin.vo.FileBatchReqVO;
 import io.charqe.qs.modules.file.controller.admin.vo.FileBatchRespVO;
@@ -55,22 +56,15 @@ public class FileGovernanceController {
     }
 
     /**
-     * 未引用清单：{@code ref_count=0} 且超过 N 天未引用，返回 {@code {list,total,page,pageSize,days}}。
+     * 未引用清单：{@code ref_count=0} 且超过 N 天未引用，统一返回 {@code PageResult}。
      */
     @PostMapping("/unreferenced/list")
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
-    public R<Map<String, Object>> listUnreferenced(@RequestBody(required = false) FileUnreferencedReqVO req) {
+    public R<PageResult<FileInfo>> listUnreferenced(@RequestBody(required = false) FileUnreferencedReqVO req) {
         FileUnreferencedReqVO query = req == null ? new FileUnreferencedReqVO() : req;
         query.normalize();
         IPage<FileInfo> page = fileGovernanceService.pageUnreferenced(query);
-
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("list", page.getRecords());
-        data.put("total", page.getTotal());
-        data.put("page", page.getCurrent());
-        data.put("pageSize", page.getSize());
-        data.put("days", query.getDays());
-        return R.success(data);
+        return R.success(PageResult.build(page.getRecords(), page.getTotal(), (int) page.getCurrent(), (int) page.getSize()));
     }
 
     /**

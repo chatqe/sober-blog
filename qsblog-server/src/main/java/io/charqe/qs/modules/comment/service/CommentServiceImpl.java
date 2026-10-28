@@ -8,6 +8,7 @@ import io.charqe.qs.common.constants.CommonConst;
 import io.charqe.qs.modules.article.domain.dao.ArticleMapper;
 import io.charqe.qs.modules.comment.domain.dao.CommentMapper;
 import io.charqe.qs.common.model.BaseReqVO;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.modules.comment.controller.web.dto.AuthorCommentQueryDTO;
 import io.charqe.qs.modules.comment.controller.web.vo.AuthorCommentListVO;
 import io.charqe.qs.modules.comment.controller.web.vo.CommentVO;
@@ -109,7 +110,7 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
     }
 
     @Override
-    public R<BaseReqVO> listComment(BaseReqVO baseReqVO) {
+    public R<PageResult> listComment(BaseReqVO baseReqVO) {
         if (baseReqVO.getBizId() == null || !StringUtils.hasText(baseReqVO.getCommentType())) {
             return R.fail(CodeMsg.PARAMETER_ERROR);
         }
@@ -133,7 +134,7 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
             lambdaQuery().eq(Comment::getBizId, baseReqVO.getBizId()).eq(Comment::getBizType, commentType).eq(Comment::getParentId, CommonConst.FIRST_COMMENT).orderByDesc(Comment::getCreateTime).page(baseReqVO);
             List<Comment> comments = baseReqVO.getRecords();
             if (CollectionUtils.isEmpty(comments)) {
-                return R.success(baseReqVO);
+                return R.success(PageResult.fromMpPage(baseReqVO));
             }
             List<CommentVO> commentVOs = comments.stream().map(c -> {
                 CommentVO commentVO = buildCommentVO(c);
@@ -144,7 +145,7 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
                     List<CommentVO> ccVO = childComments.stream().map(cc -> buildCommentVO(cc)).collect(Collectors.toList());
                     page.setRecords(ccVO);
                 }
-                commentVO.setChildComments(page);
+                commentVO.setChildComments(PageResult.fromMpPage(page));
                 return commentVO;
             }).collect(Collectors.toList());
             baseReqVO.setRecords(commentVOs);
@@ -152,16 +153,16 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
             lambdaQuery().eq(Comment::getBizId, baseReqVO.getBizId()).eq(Comment::getBizType, commentType).eq(Comment::getRootId, baseReqVO.getRootId()).orderByAsc(Comment::getCreateTime).page(baseReqVO);
             List<Comment> childComments = baseReqVO.getRecords();
             if (CollectionUtils.isEmpty(childComments)) {
-                return R.success(baseReqVO);
+                return R.success(PageResult.fromMpPage(baseReqVO));
             }
             List<CommentVO> ccVO = childComments.stream().map(cc -> buildCommentVO(cc)).collect(Collectors.toList());
             baseReqVO.setRecords(ccVO);
         }
-        return R.success(baseReqVO);
+        return R.success(PageResult.fromMpPage(baseReqVO));
     }
 
     @Override
-    public R<Page> listAdminComment(BaseReqVO baseReqVO, Boolean isBoss) {
+    public R<PageResult> listAdminComment(BaseReqVO baseReqVO, Boolean isBoss) {
         LambdaQueryChainWrapper<Comment> wrapper = lambdaQuery();
         if (isBoss) {
             if (baseReqVO.getBizId() != null) {
@@ -188,7 +189,7 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
                 wrapper.orderByDesc(Comment::getCreateTime).page(baseReqVO);
             }
         }
-        return R.success(baseReqVO);
+        return R.success(PageResult.fromMpPage(baseReqVO));
     }
 
     @Override
@@ -255,7 +256,7 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
         result.setPages(Math.toIntExact(page.getPages()));
         result.setPageNum(dto.getPageNum());
         result.setPageSize(dto.getPageSize());
-        result.setRecords(records);
+        result.setList(records);
         return result;
     }
 
@@ -265,7 +266,7 @@ public class CommentServiceImpl extends CoreServiceImpl<CommentMapper, Comment> 
         result.setPages(0);
         result.setPageNum(1);
         result.setPageSize(0);
-        result.setRecords(Collections.emptyList());
+        result.setList(Collections.emptyList());
         return result;
     }
 

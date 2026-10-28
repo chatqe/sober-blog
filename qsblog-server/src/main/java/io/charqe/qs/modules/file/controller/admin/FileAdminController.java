@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.FileVO;
+import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.infra.storage.StoreService;
 import io.charqe.qs.modules.file.controller.admin.vo.FileCreateReqVO;
@@ -126,21 +127,15 @@ public class FileAdminController {
     }
 
     /**
-     * 查询文件列表：返回 {@code {list,total,page,pageSize}}，与前端消费口径一致。
+     * 查询文件列表：统一返回 {@code PageResult}（list/total/pages/pageNum/pageSize）。
      */
     @PostMapping("/list")
     @LoginCheck(value = 1, scope = SessionScope.ADMIN)
-    public R<Map<String, Object>> list(@RequestBody FileListReqVO req) {
+    public R<PageResult<FileInfo>> list(@RequestBody FileListReqVO req) {
         req.normalize();
         Page<FileInfo> pageReq = new Page<>(Math.max(req.getCurrent(), 1), Math.max(req.getSize(), 1));
-        IPage<FileInfo> page = fileInfoService.page(pageReq, filter(req));
-
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("list", page.getRecords());
-        data.put("total", page.getTotal());
-        data.put("page", page.getCurrent());
-        data.put("pageSize", page.getSize());
-        return R.success(data);
+        fileInfoService.page(pageReq, filter(req));
+        return R.success(PageResult.fromMpPage(pageReq));
     }
 
     private Wrapper<FileInfo> filter(FileListReqVO req) {
