@@ -34,6 +34,9 @@ public enum FileSceneEnum {
     /** 站点级素材（背景、图标等） */
     SYSTEM("system", false),
 
+    /** 随机封面库（网站设置里的随机封面） */
+    RANDOM_COVER("random-cover", false),
+
     UNKNOWN("unknown", false);
 
     private final String code;
