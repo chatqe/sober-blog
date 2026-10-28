@@ -97,6 +97,7 @@ class FileConvertTest {
         Set<String> fields = new HashSet<>();
         json.fieldNames().forEachRemaining(fields::add);
         assertEquals(Set.of("id", "originalName", "storagePath", "fileSize", "mimeType",
-                "thirdPartyName", "cdnDomain", "storedName", "fileCategory", "fileExt"), fields);
+                "thirdPartyName", "cdnDomain", "storedName", "fileCategory", "fileExt",
+                "fileHash", "scene"), fields);
     }
 }

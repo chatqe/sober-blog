@@ -6,6 +6,8 @@ import io.charqe.qs.common.model.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.LocalDateTime;
+
 /**
  * 文件存储表
  *
@@ -58,6 +60,9 @@ public class FileInfo extends BaseDO {
     /** 文件分类: image/video/document/audio/other */
     private String fileCategory;
 
+    /** 业务场景 avatar/article-cover/article-content/moment/comment/system */
+    private String scene;
+
     /** MIME类型（如 image/jpeg） */
     private String mimeType;
 
@@ -102,5 +107,8 @@ public class FileInfo extends BaseDO {
 
     /** 被业务引用次数 */
     private Integer refCount;
+
+    /** 进入回收站时间（is_del=1 时写入，恢复时清空） */
+    private LocalDateTime deletedAt;
 
 }

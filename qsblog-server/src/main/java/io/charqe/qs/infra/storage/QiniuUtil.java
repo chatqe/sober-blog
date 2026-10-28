@@ -17,6 +17,7 @@ import com.qiniu.util.Auth;
 import com.qiniu.util.StringMap;
 import com.qiniu.util.UrlSafeBase64;
 import io.charqe.qs.common.FileVO;
+import io.charqe.qs.common.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
+import javax.annotation.Resource;
 
 /**
  * 七牛云工具类（Kodo）
@@ -53,6 +55,9 @@ public class QiniuUtil implements StoreService {
 
     @Value("${qiniu.pipeline}")
     private String pipeline;
+
+    @Resource
+    private ImageSanitizer imageSanitizer;
 
     /** 上传凭证有效期（秒） */
     private static final long EXPIRE_SECONDS = 60L;
@@ -141,6 +146,32 @@ public class QiniuUtil implements StoreService {
         return getAuth().uploadToken(bucket, key, EXPIRE_SECONDS, putPolicy);
     }
 
+    /**
+     * 生成带上传策略的凭证：大小/类型双限 + 禁止覆盖 + 回传元数据。
+     *
+     * @param key         服务端生成的目标 key
+     * @param fsizeLimit  单次上传大小上限（字节）
+     * @param mimeLimit   允许的 MIME，多个用分号分隔；为空表示不限制
+     * @param insertOnly  为 true 时禁止覆盖同 key 对象
+     * @param expireSeconds 凭证有效期（秒）
+     * @param returnBody  上传成功后的回调体，可为空
+     */
+    public String getToken(String key, long fsizeLimit, String mimeLimit, boolean insertOnly,
+                           long expireSeconds, String returnBody) {
+        StringMap putPolicy = new StringMap();
+        putPolicy.put("fsizeLimit", fsizeLimit);
+        if (StrUtil.isNotBlank(mimeLimit)) {
+            putPolicy.put("mimeLimit", mimeLimit.trim());
+        }
+        if (insertOnly) {
+            putPolicy.put("insertOnly", 1);
+        }
+        if (StrUtil.isNotBlank(returnBody)) {
+            putPolicy.put("returnBody", returnBody);
+        }
+        return getAuth().uploadToken(bucket, key, expireSeconds, putPolicy);
+    }
+
     /* ====================== 上传 ====================== */
 
     @Override
@@ -148,27 +179,34 @@ public class QiniuUtil implements StoreService {
         if (fileVO == null || fileVO.getFile() == null) {
             throw new IllegalArgumentException("FileVO 或 file 不能为空");
         }
-        // 构造裸 key：相对路径 + 原始文件名
-        String key = buildUploadKey(fileVO);
-        String upToken = getToken(key);
-        UploadManager uploadManager = new UploadManager(getConfiguration());
-
         try {
-            byte[] bytes = fileVO.getFile().getBytes();
-            Response response = uploadManager.put(bytes, key, upToken);
+            // 服务端重绘：剥离 EXIF/GPS、纠正方向并限制像素，失败直接拒绝上传
+            SanitizedImage sanitized = imageSanitizer.sanitize(fileVO.getFile().getBytes(),
+                    StrUtil.isNotBlank(fileVO.getOriginalName())
+                            ? fileVO.getOriginalName() : fileVO.getFile().getOriginalFilename(),
+                    fileVO.getFile().getContentType());
+            // 重编码可能改变扩展名，Key 必须以净化后的真实类型为准
+            fileVO.setOriginalName(sanitized.getFilename());
+            String key = buildUploadKey(fileVO);
+            String upToken = getToken(key);
+            UploadManager uploadManager = new UploadManager(getConfiguration());
+            Response response = uploadManager.put(sanitized.getBytes(), key, upToken);
             if (response.isOK()) {
                 fileVO.setVisitPath(downloadUrl + key);
-                log.info("文件上传成功：key={}", key);
+                log.info("文件上传成功：key={}，重绘={}", key, sanitized.isRewritten());
             } else {
                 log.error("文件上传失败：key={}，响应：{}", key, response.bodyString());
                 throw new RuntimeException("文件上传失败：" + response.bodyString());
             }
         } catch (QiniuException e) {
             log.error("文件上传异常：key={}，code={}，error={}",
-                    key, e.code(), e.response == null ? "" : e.response.toString());
+                    fileVO.getOriginalName(), e.code(), e.response == null ? "" : e.response.toString());
             throw new RuntimeException("文件上传失败", e);
+        } catch (BizException e) {
+            // 净化拒绝属于业务校验，保留原始原因
+            throw e;
         } catch (Exception e) {
-            log.error("文件读取异常：key={}", key, e);
+            log.error("文件读取异常：key={}", fileVO.getOriginalName(), e);
             throw new RuntimeException("文件上传失败", e);
         }
         return fileVO;
@@ -496,6 +534,41 @@ public class QiniuUtil implements StoreService {
             }
         }
         return urls;
+    }
+
+    /**
+     * 按前缀列举对象，返回裸 key 与元信息，最多 {@code limit} 条。
+     * <p>
+     * 供孤儿扫描比对登记表使用；limit 超过七牛单页上限时自动翻页。
+     *
+     * @param prefix 裸 key 前缀，空串表示整个 bucket
+     * @param limit  本次最多返回的对象数
+     */
+    public List<StorageObject> listObjects(String prefix, int limit) {
+        if (limit <= 0) {
+            return Collections.emptyList();
+        }
+        String normalizedPrefix = StrUtil.nullToEmpty(prefix);
+        BucketManager.FileListIterator it =
+                getBucketManager().createFileListIterator(bucket, normalizedPrefix, 1000, "");
+
+        List<StorageObject> objects = new ArrayList<>();
+        while (it.hasNext() && objects.size() < limit) {
+            FileInfo[] items = it.next();
+            if (items == null) {
+                break;
+            }
+            for (FileInfo item : items) {
+                if (item == null || item.key == null || item.key.equals(normalizedPrefix)) {
+                    continue;
+                }
+                objects.add(new StorageObject(item.key, item.fsize, item.mimeType, item.putTime));
+                if (objects.size() >= limit) {
+                    break;
+                }
+            }
+        }
+        return objects;
     }
 
     /**
