@@ -112,15 +112,40 @@
 
 排序统一：分类与标签的 options 均按 `sort ASC, id ASC`，修复此前分类按 `sort`、标签按 `id` 造成的顺序不一致。
 
-### 已知口径缺口（2026-10-26 运行态实测发现，尚未修）
+### 口径缺口的处置记录（2026-10-26 运行态实测发现，2026-10-28 分已修/搁置）
 
-1. `disabled` 分支在现有接口下**不可达**：它由 `status == 0` 派生，而 `CategorySaveReqDTO` 没有 `status` 字段
-   （只有 `isShow`），新增/更新都改不动它，`pageList` 只能按 status 筛选。实测置灰效果只能直改库造数据。
-   要么给 DTO 补 `status` 并开放后台启用/停用入口，要么去掉 `disabled` 语义——二选一，不要停在现在这种
-   “字段存在但永远是 false”的状态。
-2. `tag.sort` 库列为 `int NULL DEFAULT NULL`，新建标签不写 `sort`：`sort ASC` 下 NULL 排最前，
-   且 `@JsonInclude(NON_NULL)` 使该选项不下发 `sort` 键（实测新标签出现在 options 首位）。
-   应给列加 `NOT NULL DEFAULT 0` 或在保存时兜底填 0。
+已修：
+
+1. **`disabled` 分支不可达 → 已开放后台启用/停用入口**。原缺陷：`disabled` 由 `status == 0` 派生，而
+   `CategorySaveReqDTO` 只有 `isShow`，没有 `status`，新增/更新都改不动它，实测置灰效果只能直改库造数据。
+   现 `CategorySaveReqDTO` 补 `Integer status`（0-停用 1-启用，注释写明与 `isShow` 是两个独立维度：
+   `status` 控制能否被选用，`isShow` 控制前台导航是否露出），`CategoryListVO`/`CategoryDetailVO` 同步补 `status`
+   以便回显；后台分类页把原先混用的「状态」列拆成**「启用」(`status`) +「展示」(`isShow`)两个开关**，
+   各自只提交自己那一列（依赖 MyBatis-Plus 默认 `FieldStrategy.NOT_NULL`，null 字段不进 update SQL，
+   两个开关不会互相覆盖）。
+2. **`tag.sort` 可空导致新标签排首位 → 已改为 `int NOT NULL DEFAULT 1`**。原缺陷：列是 `int NULL DEFAULT NULL`，
+   新建标签不写 `sort` 时 `sort ASC` 下 NULL 排最前，且 `@JsonInclude(NON_NULL)` 使该选项不下发 `sort` 键。
+   现库列 DDL 为 `int NOT NULL DEFAULT 1 COMMENT '顺序（数字小的在前面）'`（迁移 SQL 见下），
+   `TagSaveReqDTO`/`TagListVO`/`TagDetailVO` 补 `Integer sort`，后台标签页新增「排序」表单项与列；
+   **前端留空时不提交 `sort` 键**，由数据库列默认值 1 兜底，而非在后端硬编码补默认值。
+
+> DDL 变更（`docs/sql` 下 `*.sql` 被 `.gitignore` 忽略，仅 `qingsi-model.sql` 例外，故在此留痕）：
+> ```sql
+> update tag set sort = 1 where sort is null;   -- 先清存量 NULL，否则 NOT NULL 转换报错
+> alter table tag modify column sort int NOT NULL DEFAULT 1 comment '顺序（数字小的在前面）';
+> ```
+> 实测迁移结果：`total=7 nulls=0`，`DESCRIBE tag` 得 `Field=sort Type=int Null=NO Default=1`。
+
+搁置（未修，非本轮范围）：
+
+3. **首次写接口耗时可能超过前端 axios 10s 超时**：实测新建分类服务端 10052ms，客户端 `ERR_ABORTED`（
+   `TIMEOUT.DEFAULT = 10000`）但数据已落库，用户重试会撞 `uk_name` 唯一键返回 code:500，看起来像“保存失败”却
+   已经写成功。属于冷启动/首写性能问题，与幂等相关，暂按现状记录；若复现影响使用，再单独评估
+   「提高首写超时」或「为 save 加 `@Idempotent`」。当前 `save` 接口无幂等注解。
+4. **列表“文章数”恒为 0** 与 4 个存量后端测试失败（`DatabaseTests.saveDanmakuList`、
+   `DatabaseTests.updateArticleCoverUrl`、`FileAdminHttpContractTest.saveAndUploadStillDeclareOwnerOnlyAdminScope`、
+   `AuthHttpContractTest.ownerOnlyAspectRejectsManagerWithoutRenewing`）：已用基线对照确认与本轮改动无关
+   （本轮前后失败用例同名同因），记录为存量债务，不阻塞本轮提交。
 
 ## 三、缓存规范
 
