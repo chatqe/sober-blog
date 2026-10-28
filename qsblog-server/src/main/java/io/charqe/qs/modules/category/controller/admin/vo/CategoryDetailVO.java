@@ -25,6 +25,9 @@ public class CategoryDetailVO {
     @Schema(description = "分类类型: 0-导航栏分类, 1-普通分类")
     private Integer type;
 
+    @Schema(description = "启用状态: 0-停用 1-启用")
+    private Integer status;
+
     @Schema(description = "是否展示: 0-否, 1-是")
     private Integer isShow;
 

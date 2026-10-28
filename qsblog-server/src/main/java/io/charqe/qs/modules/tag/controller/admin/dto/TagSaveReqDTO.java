@@ -29,4 +29,7 @@ public class TagSaveReqDTO {
 
     @Schema(description = "标签描述", example = "Java编程语言相关文章")
     private String desc;
+
+    @Schema(description = "排序权重：数字小的在前面。不传则新增走库列默认值 1、编辑保持原值不变", example = "1")
+    private Integer sort;
 }

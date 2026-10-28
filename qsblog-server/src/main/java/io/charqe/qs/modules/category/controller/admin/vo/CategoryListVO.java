@@ -25,6 +25,9 @@ public class CategoryListVO {
     @Schema(description = "分类类型")
     private Integer type;
 
+    @Schema(description = "启用状态: 0-停用 1-启用（停用的分类不进公开口径 options，后台下拉置灰）")
+    private Integer status;
+
     @Schema(description = "是否展示")
     private Integer isShow;
 

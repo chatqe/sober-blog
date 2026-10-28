@@ -25,6 +25,9 @@ public class TagListVO {
     @Schema(description = "标签描述")
     private String desc;
 
+    @Schema(description = "排序权重：数字小的在前面")
+    private Integer sort;
+
     @Schema(description = "创建时间")
     private String createTime;
 }

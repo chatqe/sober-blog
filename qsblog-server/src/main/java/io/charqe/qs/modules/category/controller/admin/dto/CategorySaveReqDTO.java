@@ -28,6 +28,10 @@ public class CategorySaveReqDTO {
     @Schema(description = "分类类型: 0-导航栏分类, 1-普通分类", example = "1")
     private Integer type;
 
+    @Schema(description = "启用状态: 0-停用 1-启用。不传则新增走库列默认值 1、编辑保持原值不变；"
+            + "停用的分类不进公开口径 options，后台下拉置灰但存量文章仍可读到", example = "1")
+    private Integer status;
+
     @Schema(description = "是否展示: 0-否, 1-是", example = "1")
     private Integer isShow;
 
