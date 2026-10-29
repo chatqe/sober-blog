@@ -379,7 +379,15 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
                 // stream 分组
                 Map<Long, List<Article>> sortArticleMap = articles.stream().collect(Collectors.groupingBy(Article::getCategoryId));
+                // 首页“分类文章”区块排除标记：home_show=0 的分类不进该映射（仅影响首页展示，导航栏/文章列表/分类页不受影响）
+                Set<Long> hiddenCateIds = categoryMapper.selectList(Wrappers.<Category>lambdaQuery()
+                                .select(Category::getId)
+                                .eq(Category::getHomeShow, 0))
+                        .stream().map(Category::getId).collect(Collectors.toSet());
                 sortArticleMap.forEach((categoryId, articleList) -> {
+                    if (hiddenCateIds.contains(categoryId)) {
+                        return;
+                    }
                     // 根据权重计算倒序排序
                     articleList.sort(Comparator.comparing(Article::getWeight).reversed());
                     // 获取前6条数据

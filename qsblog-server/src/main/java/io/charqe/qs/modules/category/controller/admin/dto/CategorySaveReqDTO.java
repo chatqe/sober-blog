@@ -35,6 +35,10 @@ public class CategorySaveReqDTO {
     @Schema(description = "是否展示: 0-否, 1-是", example = "1")
     private Integer isShow;
 
+    @Schema(description = "是否首页展示: 0-否, 1-是。仅控制首页“分类文章”区块，"
+            + "不影响导航栏/下拉/文章列表；不传则新增走库列默认值 1、编辑保持原值不变", example = "1")
+    private Integer homeShow;
+
     @Schema(description = "排序", example = "1")
     private Integer sort;
 

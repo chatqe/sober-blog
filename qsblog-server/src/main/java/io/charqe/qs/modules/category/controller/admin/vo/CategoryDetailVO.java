@@ -31,6 +31,9 @@ public class CategoryDetailVO {
     @Schema(description = "是否展示: 0-否, 1-是")
     private Integer isShow;
 
+    @Schema(description = "是否首页展示: 0-否, 1-是（仅控制首页分类文章区块）")
+    private Integer homeShow;
+
     @Schema(description = "排序")
     private Integer sort;
 
