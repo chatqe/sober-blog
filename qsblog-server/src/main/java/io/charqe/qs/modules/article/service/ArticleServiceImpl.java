@@ -48,6 +48,7 @@ import io.charqe.qs.modules.user.controller.web.dto.ArticleUserNameDTO;
 import io.charqe.qs.modules.user.domain.dao.UserMapper;
 import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.service.UserService;
+import io.charqe.qs.modules.user.auth.AuthSessionService;
 import io.charqe.qs.modules.webInfo.domain.pojo.WebInfo;
 import io.charqe.qs.utils.BlogUtil;
 import io.charqe.qs.utils.CommonQuery;
@@ -180,12 +181,20 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 webName);
     }
 
+    /** 当前登录用户是否为 BOSS/Admin（可管理任意文章）。 */
+    private boolean isManagerNow() {
+        User cur = BlogUtil.getCurrentUser();
+        return cur != null && AuthSessionService.isManager(cur.getUserType());
+    }
+
     @Override
     public R deleteArticle(Long id) {
-        Long userId = BlogUtil.getUserId();
-        lambdaUpdate().eq(Article::getId, id)
-                .eq(Article::getUserId, userId)
-                .remove();
+        LambdaUpdateChainWrapper<Article> delWrapper = lambdaUpdate().eq(Article::getId, id);
+        // BOSS/Admin 可删除任意文章；其余仅能删除自己的文章
+        if (!isManagerNow()) {
+            delWrapper.eq(Article::getUserId, BlogUtil.getUserId());
+        }
+        delWrapper.remove();
         qingSiCache.del(CommonConst.CATEGORY_INFO);
         return R.success();
     }
@@ -198,8 +207,12 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
         Long userId = BlogUtil.getUserId();
         LambdaUpdateChainWrapper<Article> updateChainWrapper = lambdaUpdate()
-                .eq(Article::getId, articleVO.getId())
-                .eq(Article::getUserId, userId)
+                .eq(Article::getId, articleVO.getId());
+        // BOSS/Admin 可修改任意文章；其余仅能修改自己的文章
+        if (!isManagerNow()) {
+            updateChainWrapper.eq(Article::getUserId, userId);
+        }
+        updateChainWrapper
                 .set(Article::getTagId, articleVO.getTagId())
                 .set(Article::getCategoryId, articleVO.getCategoryId())
                 .set(Article::getArticleTitle, articleVO.getArticleTitle())
@@ -499,9 +512,12 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void setArticleStatus(Long articleId, Boolean viewStatus, Boolean commentStatus, Boolean recommendStatus, Integer publishStatus) {
+        // 权限：BOSS/Admin 可切换任意文章状态；其余仅自己的文章（与 updateArticle/deleteArticle 一致）
         LambdaUpdateWrapper<Article> wrapper = Lb.<Article>u()
-                .eq(Article::getId, articleId)
-                .eq(Article::getUserId, BlogUtil.getUserId());
+                .eq(Article::getId, articleId);
+        if (!isManagerNow()) {
+            wrapper.eq(Article::getUserId, BlogUtil.getUserId());
+        }
 
         if (Objects.nonNull(viewStatus)) {
             wrapper.set(Article::getViewStatus, viewStatus);
@@ -526,10 +542,15 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             throw new BizException(ArticleIErrorCode.UPDATE_FAILED);
         }
 
-        // 发布态/可见态变更会改变首页、列表、搜索集合，需清除相关缓存
+        // 发布态/可见态变更会改变首页、列表、搜索集合，需清除相关缓存。
+        // 用户文章列表缓存按「文章作者」而非「当前管理员」清除：管理员可改他人文章，
+        // 若仍用 BlogUtil.getUserId() 会漏清作者缓存，导致作者主页展示旧可见/发布态
+        Article updated = articleMapper.selectById(articleId);
         qingSiCache.del(CommonConst.ARTICLE_LIST);
         qingSiCache.del(CommonConst.CATEGORY_ARTICLE_LIST);
-        qingSiCache.del(CommonConst.USER_ARTICLE_LIST + BlogUtil.getUserId());
+        if (updated != null && updated.getUserId() != null) {
+            qingSiCache.del(CommonConst.USER_ARTICLE_LIST + updated.getUserId());
+        }
 
     }
 
