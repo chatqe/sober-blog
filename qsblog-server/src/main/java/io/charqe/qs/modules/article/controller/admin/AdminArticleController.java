@@ -120,9 +120,11 @@ public class AdminArticleController {
             @Parameter(name = "commentStatus", description = "评论状态，true-开启，false-关闭", required = false, example = "true")
             @RequestParam(value = "commentStatus", required = false) Boolean commentStatus,
             @Parameter(name = "recommendStatus", description = "推荐状态，true-推荐，false-不推荐", required = false, example = "false")
-            @RequestParam(value = "recommendStatus", required = false) Boolean recommendStatus) {
+            @RequestParam(value = "recommendStatus", required = false) Boolean recommendStatus,
+            @Parameter(name = "publishStatus", description = "发布状态，0-草稿，1-已发布（草稿箱发布传 1）", required = false, example = "1")
+            @RequestParam(value = "publishStatus", required = false) Integer publishStatus) {
 
-        articleService.setArticleStatus(articleId, viewStatus, commentStatus, recommendStatus);
+        articleService.setArticleStatus(articleId, viewStatus, commentStatus, recommendStatus, publishStatus);
 
         return R.success("更新成功");
     }

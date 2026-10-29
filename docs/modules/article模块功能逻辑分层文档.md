@@ -499,3 +499,21 @@ public void toggleArticleStatus(Long id, String type, Boolean value) {
 | 文章回收站 | P2 | 软删除后可恢复 |
 | 文章版本历史 | P3 | 记录每次修改 |
 | OpenAPI 注解补充 | P3 | 已有部分，需完善 |
+
+---
+
+## DDL 变更留痕
+
+### 2026-10-29 新增 `publish_status`（草稿箱）
+
+为支持后台“草稿箱”，`article` 表新增发布状态列（此前无任何草稿/发布维度；`view_status` 仅表示“公开/密码可见的隐藏发布文”，语义上不能复用为草稿）。
+
+```sql
+ALTER TABLE `article`
+  ADD COLUMN `publish_status` tinyint NOT NULL DEFAULT 1 COMMENT '发布状态[0:草稿，1:已发布]' AFTER `comment_status`;
+```
+
+- 存量文章默认 `1`（已发布），行为不变。
+- 草稿（`publish_status=0`）仅后台草稿箱可见；前台公开读路径一律排除：首页分类区块（`listCategoryArticle`）、文章总分页（`listArticle`）、公开详情（`/article/getArticleById` 拦截）、标签文章数（`countByTagId`）、搜索集合（`getArticleIds`）。
+- “存为草稿”走 `/article/save`（`publishStatus=0`）；草稿编辑走 `/admin/article/getArticleWithPwd`（后台专用，不拦截草稿）；发布/转草稿走 `/admin/article/changeArticleStatus` 新增的 `publishStatus` 入参。
+- 缓存语义变更：`article_list`→`article_list_v2`、`category_article_list_v4`→`category_article_list_v5`；save/update/changeArticleStatus 均清除相关缓存。

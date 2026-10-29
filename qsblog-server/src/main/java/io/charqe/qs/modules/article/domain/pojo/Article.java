@@ -103,6 +103,13 @@ public class Article extends BaseDO {
     private Boolean recommendStatus;
 
     /**
+     * 发布状态[0:草稿，1:已发布]
+     * 草稿（=0）仅后台草稿箱可见，首页分类区块/文章列表/详情/标签计数等前台读路径一律排除
+     */
+    @TableField("publish_status")
+    private Integer publishStatus;
+
+    /**
      * 最终修改人
      */
     @TableField(value = "update_by", fill = FieldFill.UPDATE)

@@ -339,6 +339,7 @@ public class CommonQuery {
                     //         .orderByDesc(Article::getCreateTime)
                     //         .list();
                     articles = articleMapper.selectList(Wrappers.<Article>lambdaQuery()
+                            .eq(Article::getPublishStatus, 1)
                             .orderByDesc(Article::getCreateTime));
                     if (CollectionUtils.isEmpty(articles)) {
                         // 为空直接返回

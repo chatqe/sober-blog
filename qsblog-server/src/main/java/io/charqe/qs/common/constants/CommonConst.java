@@ -180,12 +180,12 @@ public class CommonConst {
     /**
      * 文章缓存，用于搜索
      */
-    public static final String ARTICLE_LIST = "article_list";
+    public static final String ARTICLE_LIST = "article_list_v2";
 
     /**
      * 文章缓存，用于首页（v4：在 v3 基础上排除 home_show=0 的分类，仅影响首页分类区块）
      */
-    public static final String CATEGORY_ARTICLE_LIST = "category_article_list_v4";
+    public static final String CATEGORY_ARTICLE_LIST = "category_article_list_v5";
 
     /**
      * 用户点赞缓存

@@ -73,6 +73,7 @@ CREATE TABLE `article`  (
   `tips` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '提示',
   `recommend_status` tinyint NOT NULL DEFAULT 0 COMMENT '是否推荐[0:否，1:是]',
   `comment_status` tinyint NOT NULL DEFAULT 1 COMMENT '是否启用评论[0:否，1:是]',
+  `publish_status` tinyint NOT NULL DEFAULT 1 COMMENT '发布状态[0:草稿，1:已发布]',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最终修改时间',
   `update_by` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '最终修改人',

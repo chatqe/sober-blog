@@ -30,7 +30,7 @@ public interface ArticleMapper extends CoreMapper<Article> {
      *
      * @return Map<tagId, count>
      */
-    @Select("SELECT tag_id AS id, COUNT(*) AS cnt FROM article WHERE is_del = 0 AND tag_id IS NOT NULL GROUP BY tag_id")
+    @Select("SELECT tag_id AS id, COUNT(*) AS cnt FROM article WHERE is_del = 0 AND publish_status = 1 AND tag_id IS NOT NULL GROUP BY tag_id")
     Map<Long, Long> countByTagId();
 
     /**
