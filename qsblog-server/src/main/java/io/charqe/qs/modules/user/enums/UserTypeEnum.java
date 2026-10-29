@@ -15,17 +15,17 @@ public enum UserTypeEnum implements BaseEnum<Integer> {
     /**
      * 站长
      */
-    ADMIN(0, "超级管理员/站长"),
+    BOSS(0, "超级管理员/站长"),
     
     /**
      * 管理员
      */
-    DEV(1, "管理员"),
+    ADMIN(1, "管理员"),
     
     /**
      * 普通用户
      */
-    USER(2, "用户");
+    NORMAL(2, "用户");
     
     private final int code;
     private final String desc;

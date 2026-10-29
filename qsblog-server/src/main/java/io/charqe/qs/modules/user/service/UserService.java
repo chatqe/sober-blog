@@ -8,6 +8,7 @@ import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.auth.AuthSessionVO;
 import io.charqe.qs.modules.user.auth.SessionScope;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
+import io.charqe.qs.modules.user.controller.admin.vo.AdminUserUpdateReq;
 import io.charqe.qs.common.model.mp.CoreService;
 
 import java.util.List;
@@ -35,6 +36,12 @@ public interface UserService extends CoreService<User> {
     R<AuthSessionVO> regist(UserVO user);
 
     R<UserVO> updateUserInfo(UserVO user);
+
+    /** 后台白名单编辑，返回是否因角色、状态或联系方式变化撤销目标用户会话。 */
+    R<Boolean> updateAdminUser(AdminUserUpdateReq request);
+
+    /** 后台逻辑删除用户，并撤销该用户全部会话。 */
+    R<Void> deleteAdminUser(Long userId);
 
     R getCode(Integer flag);
 

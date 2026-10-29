@@ -30,6 +30,8 @@ import io.charqe.qs.modules.im.websocket.TioWebsocketStarter;
 import io.charqe.qs.modules.moment.domain.pojo.Moment;
 import io.charqe.qs.modules.moment.service.MomentService;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
+import io.charqe.qs.modules.user.controller.admin.vo.AdminUserUpdateReq;
+import io.charqe.qs.modules.user.auth.AuthAccessException;
 import io.charqe.qs.modules.user.auth.AuthSessionService;
 import io.charqe.qs.modules.user.auth.AuthSessionVO;
 import io.charqe.qs.modules.user.auth.SessionScope;
@@ -44,12 +46,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 import org.tio.core.Tio;
 
 import javax.annotation.Resource;
+import javax.validation.Validator;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -103,6 +110,9 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
 
     @Resource
     private UserCredentialService credentials;
+
+    @Resource
+    private Validator validator;
 
     @Value("${user.code.format}")
     private String codeFormat;
@@ -181,7 +191,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         u.setPhoneNumber(user.getPhoneNumber());
         u.setEmail(user.getEmail());
         u.setPassword(encodePassword(user.getPassword()));
-        u.setUserType(2);
+        u.setUserType(UserTypeEnum.NORMAL.getCode());
         u.setUserStatus(1);
         // u.setAvatar(BlogUtil.getRandomAvatar(null));
         u.setAvatar(qingsiUtil.getRandomAvatar());
@@ -254,6 +264,140 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         userVO.setPassword(null);
         userVO.setAccessToken(BlogUtil.getToken());
         return R.success(userVO);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public R<Boolean> updateAdminUser(AdminUserUpdateReq request) {
+        User identity = sessions.current(SessionScope.ADMIN, false).user();
+        requireUserEditor(identity);
+        if (request == null || !validator.validate(request).isEmpty()) {
+            throw new BizException("用户编辑参数无效", "400");
+        }
+
+        User target = lockEditableUser(identity, request.getId(), request.getUserType());
+
+        String username = request.getUsername();
+        if (username != null) {
+            username = username.trim();
+            if (!StringUtils.hasText(username) || username.matches("\\d{11}") || username.contains("@")) {
+                throw new BizException("用户名不能为空、不能为11位数字或包含@", "400");
+            }
+            if (count(Wrappers.<User>lambdaQuery().eq(User::getUsername, username)
+                    .ne(User::getId, target.getId())) > 0) {
+                throw new BizException("用户名重复！", "400");
+            }
+        }
+        String phoneNumber = request.getPhoneNumber();
+        String email = request.getEmail();
+        if (StringUtils.hasText(phoneNumber) && count(Wrappers.<User>lambdaQuery()
+                .eq(User::getPhoneNumber, phoneNumber).ne(User::getId, target.getId())) > 0) {
+            throw new BizException("手机号已被其他用户使用", "400");
+        }
+        if (StringUtils.hasText(email) && count(Wrappers.<User>lambdaQuery()
+                .eq(User::getEmail, email).ne(User::getId, target.getId())) > 0) {
+            throw new BizException("邮箱已被其他用户使用", "400");
+        }
+        if (username == null && request.getAvatar() == null && request.getGender() == null
+                && phoneNumber == null && email == null
+                && request.getIntroduction() == null && request.getAdmire() == null
+                && request.getUserStatus() == null && request.getUserType() == null) {
+            throw new BizException("请提供需要修改的字段", "400");
+        }
+
+        // 显式赋值，禁止批量拷贝实体，避免携带密码、第三方账号绑定或审计字段。
+        User patch = new User();
+        patch.setId(target.getId());
+        patch.setUsername(username);
+        patch.setPhoneNumber(phoneNumber);
+        patch.setEmail(email);
+        patch.setAvatar(request.getAvatar());
+        patch.setGender(request.getGender());
+        patch.setIntroduction(request.getIntroduction());
+        patch.setAdmire(request.getAdmire());
+        patch.setUserStatus(request.getUserStatus());
+        patch.setUserType(request.getUserType());
+        boolean securityChanged = (patch.getUserType() != null && !Objects.equals(patch.getUserType(), target.getUserType()))
+                || (patch.getUserStatus() != null && !Objects.equals(patch.getUserStatus(), target.getUserStatus()))
+                || (phoneNumber != null && !phoneNumber.equals(target.getPhoneNumber() == null ? "" : target.getPhoneNumber().trim()))
+                || (email != null && !email.equals(target.getEmail() == null ? "" : target.getEmail().trim()));
+        try {
+            if (!updateById(patch)) {
+                throw new BizException("保存失败，请刷新后重试");
+            }
+        } catch (DuplicateKeyException e) {
+            throw new BizException("用户名或联系方式已被使用，请刷新后重试", "400");
+        }
+        invalidateUserAfterCommit(target.getId(), securityChanged);
+        return R.success(securityChanged);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public R<Void> deleteAdminUser(Long userId) {
+        User identity = sessions.current(SessionScope.ADMIN, false).user();
+        requireUserEditor(identity);
+        if (userId == null || userId <= 0) {
+            throw new BizException("用户ID无效", "400");
+        }
+        User target = lockEditableUser(identity, userId, null);
+        // User 继承的 @TableLogic 仅标记删除，保留其历史内容，不做级联物理删除。
+        if (!removeById(target.getId())) {
+            throw new BizException("删除失败，请刷新后重试");
+        }
+        invalidateUserAfterCommit(target.getId(), true);
+        return R.success();
+    }
+
+    private User lockEditableUser(User identity, Long userId, Integer requestedRole) {
+        // 按固定顺序锁定操作者与目标，校验数据库最新角色，避免并发提级绕过 Boss 保护。
+        Map<Long, User> locked = list(Wrappers.<User>lambdaQuery()
+                .in(User::getId, Arrays.asList(identity.getId(), userId))
+                .orderByAsc(User::getId).last("FOR UPDATE"))
+                .stream().collect(Collectors.toMap(User::getId, user -> user));
+        User operator = locked.get(identity.getId());
+        requireUserEditor(operator);
+        User target = locked.get(userId);
+        if (target == null) {
+            throw new BizException("用户不存在", "404");
+        }
+        if (!UserTypeEnum.isValid(target.getUserType())) {
+            throw new BizException("目标用户角色无效", "400");
+        }
+        boolean boss = UserTypeEnum.BOSS.getCode().equals(operator.getUserType());
+        if (!boss && (UserTypeEnum.BOSS.getCode().equals(target.getUserType())
+                || UserTypeEnum.BOSS.getCode().equals(requestedRole))) {
+            throw new AuthAccessException(403, "Admin 不能操作 Boss 用户或授予 Boss 角色");
+        }
+        return target;
+    }
+
+    private void invalidateUserAfterCommit(Long userId, boolean securityChanged) {
+        Runnable invalidate = () -> {
+            if (securityChanged) {
+                sessions.revokeAll(userId);
+            }
+            qingSiCache.del(CommonConst.USER_CACHE + userId);
+            qingSiCache.del(CommonConst.ADMIN);
+        };
+        // 提交后才吊销会话、清缓存，避免事务回滚或读取到提交前旧角色。
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    invalidate.run();
+                }
+            });
+        } else {
+            invalidate.run();
+        }
+    }
+
+    private void requireUserEditor(User operator) {
+        if (operator == null || !Integer.valueOf(1).equals(operator.getUserStatus())
+                || !AuthSessionService.isManager(operator.getUserType())) {
+            throw new AuthAccessException(403, "仅 Boss 或 Admin 可管理后台用户");
+        }
     }
 
     @Override
@@ -776,7 +920,7 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
     @Override
     public User getOwner() {
         return getOne(Wrappers.<User>lambdaQuery()
-                .eq(User::getUserType, UserTypeEnum.ADMIN.getCode())
+                .eq(User::getUserType, UserTypeEnum.BOSS.getCode())
                 .orderByAsc(User::getId)
                 .last("limit 1"));
     }

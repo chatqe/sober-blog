@@ -78,7 +78,7 @@ public class TaskSchedule {
             qingSiCache.put(CommonConst.WEB_INFO, list.get(0));
         }
 
-        User admin = userService.lambdaQuery().eq(User::getUserType, UserTypeEnum.ADMIN.getCode()).one();
+        User admin = userService.lambdaQuery().eq(User::getUserType, UserTypeEnum.BOSS.getCode()).one();
         qingSiCache.put(CommonConst.ADMIN, admin);
 
         Family family = familyService.lambdaQuery().eq(Family::getUserId, admin.getId()).one();
