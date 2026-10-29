@@ -136,6 +136,17 @@
 > ```
 > 实测迁移结果：`total=7 nulls=0`，`DESCRIBE tag` 得 `Field=sort Type=int Null=NO Default=1`。
 
+> DDL 变更（2026-10-30 文章标题长度上限提升，同样因 `*.sql` 被忽略在此留痕）：前端后台编辑页标题
+> `maxlength` 由 30 放开到 100，但线上库 `article.article_title` 实为 `varchar(32)`，超长写入被 MySQL
+> 严格模式报 `Data too long` 并由全局异常包装成 code:500「服务异常」：
+> ```sql
+> alter table article modify column article_title varchar(200) not null comment '博文标题';
+> ```
+> 实测迁移结果：`information_schema` 查得 `article_title varchar(200) nullable=NO`，100 字标题调
+> `/article/update` 返回 code:200。200 与 `ArticleVO` Schema `maxLength=200` 对齐；前端保持 100。
+> 已修（2026-10-30 同日）：`ArticleVO.articleTitle` 补 `@Size(max=200, message="文章标题长度不能超过200个字符")`，
+> 实测 100/200 字保存 code:200、201 字返回 HTTP 400 且 msg 携带可读提示，不再落到数据库层报 500。
+
 搁置（未修，非本轮范围）：
 
 3. **首次写接口耗时可能超过前端 axios 10s 超时**：实测新建分类服务端 10052ms，客户端 `ERR_ABORTED`（

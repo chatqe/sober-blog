@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
@@ -42,6 +43,8 @@ public class ArticleVO {
             maxLength = 200
     )
     @NotBlank(message = "文章标题不能为空")
+    // Schema 的 maxLength 仅是文档声明不生效；补 @Size 让参数校验层拦截超长，避免落到数据库层报 500
+    @Size(max = 200, message = "文章标题长度不能超过200个字符")
     private String articleTitle;
 
     @Schema(
