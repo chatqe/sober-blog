@@ -553,6 +553,18 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         Page<Article> articlePage = articleMapper.selectPage(dto.toMpPage(), pageWrapper);
 
         List<Article> articleList = articlePage.getRecords();
+
+        // 结果为空时直接返回：避免用空 ID 集合调用 selectBatchIds* 拼出 `IN ()` 触发 SQL 语法错误（草稿箱尚无草稿时即此场景）
+        if (CollectionUtils.isEmpty(articleList)) {
+            AdminArticlePageRespVO emptyResp = new AdminArticlePageRespVO();
+            emptyResp.setList(new ArrayList<>());
+            emptyResp.setTotal(Math.toIntExact(articlePage.getTotal()));
+            emptyResp.setPages((int) articlePage.getPages());
+            emptyResp.setPageNum((int) articlePage.getCurrent());
+            emptyResp.setPageSize((int) articlePage.getSize());
+            return emptyResp;
+        }
+
         List<Long> cateIds = articleList.stream().map(Article::getCategoryId).toList();
         List<Long> tagIds = articleList.stream().map(Article::getTagId).toList();
         List<Long> userIds = articleList.stream().map(Article::getUserId).toList();
