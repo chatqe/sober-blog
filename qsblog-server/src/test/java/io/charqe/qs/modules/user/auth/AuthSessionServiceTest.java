@@ -3,6 +3,7 @@ package io.charqe.qs.modules.user.auth;
 import io.charqe.qs.modules.user.auth.SaTokenSessionAdapter.Metadata;
 import io.charqe.qs.modules.user.domain.dao.UserMapper;
 import io.charqe.qs.modules.user.domain.pojo.User;
+import io.charqe.qs.modules.user.enums.UserTypeEnum;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,8 +69,19 @@ class AuthSessionServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"0,WEB,true", "1,WEB,true", "2,WEB,true", "0,ADMIN,true", "1,ADMIN,true", "2,ADMIN,false"})
-    void loginMatrix(int role, SessionScope scope, boolean allowed) {
+    @CsvSource({"BOSS,0", "ADMIN,1", "NORMAL,2"})
+    void renamedUserTypesKeepStoredCodes(UserTypeEnum type, int code) {
+        assertEquals(code, type.getCode().intValue());
+        assertSame(type, UserTypeEnum.getByCode(code));
+        assertTrue(UserTypeEnum.isValid(code));
+        assertEquals(3, UserTypeEnum.values().length);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"BOSS,WEB,true", "ADMIN,WEB,true", "NORMAL,WEB,true",
+            "BOSS,ADMIN,true", "ADMIN,ADMIN,true", "NORMAL,ADMIN,false"})
+    void loginMatrix(UserTypeEnum type, SessionScope scope, boolean allowed) {
+        int role = type.getCode();
         if (!allowed) {
             assertEquals(403, assertThrows(AuthAccessException.class,
                     () -> sessions.issue(user(1, role), scope, 0)).getStatus());
@@ -79,6 +91,7 @@ class AuthSessionServiceTest {
         when(adapter.issue(any())).thenReturn("new-token");
         AuthSessionVO result = sessions.issue(user(1, role), scope, 0);
         assertEquals(scope, result.getSessionType());
+        assertEquals(role, result.getUser().getUserType().intValue());
         assertEquals("new-token", result.getAccessToken());
         assertEquals(now + properties.policy(scope).getAbsolute().toMillis(), result.getAbsoluteExpiresAt());
         String json = com.alibaba.fastjson2.JSON.toJSONString(result);
