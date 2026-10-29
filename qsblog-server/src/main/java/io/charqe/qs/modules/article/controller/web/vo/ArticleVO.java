@@ -77,6 +77,9 @@ public class ArticleVO {
     @Schema(name = "viewStatus", description = "可见状态，true-公开，false-私有", example = "true")
     private Boolean viewStatus;
 
+    @Schema(name = "publishStatus", description = "发布状态，0-草稿，1-已发布", example = "1")
+    private Integer publishStatus;
+
     @Schema(
             name = "createTime",
             description = "创建时间",

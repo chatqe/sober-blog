@@ -60,7 +60,7 @@ public interface ArticleService extends CoreService<Article> {
      * @param commentStatus
      * @param recommendStatus
      */
-    void setArticleStatus(Long articleId, Boolean viewStatus, Boolean commentStatus, Boolean recommendStatus);
+    void setArticleStatus(Long articleId, Boolean viewStatus, Boolean commentStatus, Boolean recommendStatus, Integer publishStatus);
 
     AdminArticlePageRespVO pageList(AdminArticlePageReqDTO dto);
 

@@ -25,4 +25,7 @@ public class AdminArticlePageReqDTO extends PageQuery {
 
     @Schema(description = "是否推荐，null表示不筛选")
     private Boolean recommend;
+
+    @Schema(description = "发布状态，0-草稿，1-已发布，null表示不筛选（草稿箱传 0）")
+    private Integer publishStatus;
 }

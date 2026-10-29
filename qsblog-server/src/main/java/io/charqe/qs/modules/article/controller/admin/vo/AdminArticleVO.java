@@ -65,6 +65,9 @@ public class AdminArticleVO implements Serializable {
     @Schema(description = "是否启用评论[0:否，1:是]")
     private Boolean commentStatus;
 
+    @Schema(description = "发布状态[0:草稿，1:已发布]")
+    private Integer publishStatus;
+
     @Schema(description = "浏览量")
     private Integer viewCount;
 

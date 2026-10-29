@@ -136,12 +136,16 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         article.setCategoryId(articleVO.getCategoryId());
         article.setTagId(articleVO.getTagId());
         article.setUserId(BlogUtil.getUserId());
+        // 发布状态：null 视为已发布（默认 1）；“存为草稿”传 0，仅后台草稿箱可见
+        Integer publishStatus = articleVO.getPublishStatus() == null ? 1 : articleVO.getPublishStatus();
+        article.setPublishStatus(publishStatus);
         save(article);
 
         qingSiCache.del(CommonConst.CATEGORY_INFO);
 
         try {
-            if (articleVO.getViewStatus()) {
+            // 仅对已发布且可见的文章推送订阅邮件；草稿不触发
+            if (Boolean.TRUE.equals(articleVO.getViewStatus()) && publishStatus != 0) {
                 List<User> users = userService.lambdaQuery().select(User::getEmail, User::getSubscribe).eq(User::getUserStatus, StatusEnum.ENABLE.getCode()).list();
                 List<String> emails = users.stream().filter(u -> {
                     // 订阅列表里存的是标签 ID（Long）：以前解析成 List<Integer> 后 contains(Long) 永远为 false，
@@ -219,6 +223,10 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         }
         if (articleVO.getViewStatus() != null) {
             updateChainWrapper.set(Article::getViewStatus, articleVO.getViewStatus());
+        }
+        // 编辑器可切换发布/草稿：非空才改，不传保留原发布态
+        if (articleVO.getPublishStatus() != null) {
+            updateChainWrapper.set(Article::getPublishStatus, articleVO.getPublishStatus());
         }
         updateChainWrapper.update();
         qingSiCache.del(CommonConst.CATEGORY_INFO);
@@ -350,6 +358,10 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         if (article == null) {
             return R.fail(ArticleIErrorCode.NOT_FOUND);
         }
+        // 草稿不得通过任何公开入口获取
+        if (Integer.valueOf(0).equals(article.getPublishStatus())) {
+            return R.fail(ArticleIErrorCode.NOT_FOUND);
+        }
 
         return R.success(ArticleConvert.INSTANCE.convert(article));
     }
@@ -374,8 +386,10 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 Map<Long, List<ArticleVO>> map = new HashMap<>();
 
                 // 与 /sort 列表保持一致：私密文章也进入首页分类区块，正文由 projectForPublicList 摘要化
+                // 草稿（publish_status=0）不进入首页，仅保留已发布文章
                 List<Article> articles = list(Wrappers.<Article>lambdaQuery()
-                        .eq(Article::getIsDel, 0));
+                        .eq(Article::getIsDel, 0)
+                        .eq(Article::getPublishStatus, 1));
 
                 // stream 分组
                 Map<Long, List<Article>> sortArticleMap = articles.stream().collect(Collectors.groupingBy(Article::getCategoryId));
@@ -484,7 +498,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void setArticleStatus(Long articleId, Boolean viewStatus, Boolean commentStatus, Boolean recommendStatus) {
+    public void setArticleStatus(Long articleId, Boolean viewStatus, Boolean commentStatus, Boolean recommendStatus, Integer publishStatus) {
         LambdaUpdateWrapper<Article> wrapper = Lb.<Article>u()
                 .eq(Article::getId, articleId)
                 .eq(Article::getUserId, BlogUtil.getUserId());
@@ -498,6 +512,9 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
         if (Objects.nonNull(recommendStatus)) {
             wrapper.set(Article::getRecommendStatus, recommendStatus);
         }
+        if (Objects.nonNull(publishStatus)) {
+            wrapper.set(Article::getPublishStatus, publishStatus);
+        }
 
         int row = articleMapper.update(wrapper);
         if (row == 0) {
@@ -508,6 +525,11 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
             }
             throw new BizException(ArticleIErrorCode.UPDATE_FAILED);
         }
+
+        // 发布态/可见态变更会改变首页、列表、搜索集合，需清除相关缓存
+        qingSiCache.del(CommonConst.ARTICLE_LIST);
+        qingSiCache.del(CommonConst.CATEGORY_ARTICLE_LIST);
+        qingSiCache.del(CommonConst.USER_ARTICLE_LIST + BlogUtil.getUserId());
 
     }
 
@@ -525,6 +547,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
                 .eq(Objects.nonNull(dto.getCateId()), Article::getCategoryId, dto.getCateId())
                 .eq(Objects.nonNull(dto.getTagId()), Article::getTagId, dto.getTagId())
                 .eq(Objects.nonNull(dto.getRecommend()), Article::getRecommendStatus, dto.getRecommend())
+                .eq(Objects.nonNull(dto.getPublishStatus()), Article::getPublishStatus, dto.getPublishStatus())
                 .orderByDesc(Article::getCreateTime);
 
         Page<Article> articlePage = articleMapper.selectPage(dto.toMpPage(), pageWrapper);
@@ -597,6 +620,7 @@ public class ArticleServiceImpl extends CoreServiceImpl<ArticleMapper, Article> 
 
         Page<Article> page = new Page<>(dto.getPageNum(), dto.getPageSize());
         Page<Article> articlePage = articleMapper.selectPage(page, Wrappers.<Article>lambdaQuery()
+                .eq(Article::getPublishStatus, 1)
                 .like(StringUtils.hasText(dto.getSearchKey()), Article::getArticleTitle, dto.getSearchKey())
                 .eq((Objects.nonNull(dto.getRecommendStatus()) && dto.getRecommendStatus()), Article::getRecommendStatus, StatusEnum.ENABLE.getCode())
                 .eq(Objects.nonNull(dto.getCategoryId()), Article::getCategoryId, dto.getCategoryId())

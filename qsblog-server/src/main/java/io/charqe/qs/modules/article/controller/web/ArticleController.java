@@ -188,7 +188,12 @@ public class ArticleController {
         if (targetId == null) {
             return R.fail("文章ID不能为空");
         }
-        return articleService.getArticleWithPwd(targetId, password);
+        R<ArticleVO> result = articleService.getArticleWithPwd(targetId, password);
+        // 草稿（publish_status=0）不得从公开详情接口获取；后台编辑器走 /admin/article 专用接口
+        if (result.getCode() == 200 && result.getData() != null && Integer.valueOf(0).equals(result.getData().getPublishStatus())) {
+            return R.fail("文章不存在");
+        }
+        return result;
     }
 
     /**
