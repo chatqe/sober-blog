@@ -194,6 +194,8 @@ public class CategoryServiceImpl extends CoreServiceImpl<CategoryMapper, Categor
         qingSiCache.del(CommonConst.CATEGORY_DICT);
         qingSiCache.del(CateConstant.CATEGORY_NAVBAR);
         qingSiCache.del(CateConstant.CATEGORY_PUBLIC);
+        // 首页“分类文章”映射按分类 home_show 过滤，分类变更（尤其切换首页展示）必须一并失效，否则首页命中旧快照
+        qingSiCache.del(CommonConst.CATEGORY_ARTICLE_LIST);
         // 选项缓存按口径分片（public / all），必须整族失效，否则会出现一口新、一口旧的不一致数据
         Set<String> optionKeys = qingSiCache.keys(CacheKeyConst.CATEGORY_OPTIONS + "*");
         if (optionKeys != null && !optionKeys.isEmpty()) {

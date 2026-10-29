@@ -27,6 +27,12 @@ public class Category extends BaseDO {
     private Integer isShow;
 
     /**
+     * 是否首页展示（0:否 1:是）：仅控制首页“分类文章”区块是否展示该分类，
+     * 不影响导航栏、下拉 options、文章总分页列表与分类页（/sort）
+     */
+    private Integer homeShow;
+
+    /**
      * 分类类型: 0-导航栏分类, 1-普通分类
      */
     private  Integer type;

@@ -367,3 +367,18 @@ public R<Map> listCategoryAndTag() {
 | Tag.categoryId 类型 Long vs Category.id 类型 Integer | P3 | 外键关联类型不一致 |
 | 缺少 OpenAPI 注解 | P2 | TagController 方法无 @Operation/@ApiResponses |
 | 分类删除未检查关联文章 | P1 | 删除分类前应检查是否有文章引用该分类 |
+
+## DDL 变更留痕
+
+> `docs/sql/*.sql` 被 `.gitignore` 忽略（仅 `qingsi-model.sql` 例外并已同步），故在此留痕。
+>
+> **2026-10-29 新增 `category.home_show`（是否首页展示）**：用于把某个分类从首页“分类文章”区块排除，
+> 同时保留其在导航栏、下拉 options、文章总分页列表与分类页（/sort）的正常展示。默认 1，存量分类行为不变。
+> 后端在 `ArticleServiceImpl#listCategoryArticle`（首页专用聚合）按 `home_show=0` 过滤，缓存 key 由
+> `category_article_list_v3` 升为 `v4`；`CategoryServiceImpl#clearCache` 增加清理该缓存。
+>
+> ```sql
+> alter table `category`
+>   add column `home_show` tinyint(1) NOT NULL DEFAULT 1
+>   COMMENT '是否首页展示（0:否 1:是）：仅控制首页分类文章区块' AFTER `is_show`;
+> ```

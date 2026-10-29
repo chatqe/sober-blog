@@ -151,6 +151,7 @@ CREATE TABLE `category`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `status` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否可用（0:否 1:是）',
   `is_show` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否展示（0:否 1:是）',
+  `home_show` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否首页展示（0:否 1:是）：仅控制首页分类文章区块',
   `name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '分类名称',
   `cate_desc` varchar(75) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '分类描述',
   `sort` int NULL DEFAULT NULL COMMENT '分类优先级：数字小的在前面',
