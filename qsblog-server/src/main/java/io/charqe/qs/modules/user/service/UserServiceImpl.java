@@ -30,6 +30,7 @@ import io.charqe.qs.modules.im.websocket.TioWebsocketStarter;
 import io.charqe.qs.modules.moment.domain.pojo.Moment;
 import io.charqe.qs.modules.moment.service.MomentService;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
+import io.charqe.qs.modules.user.controller.admin.vo.AdminUserCreateReq;
 import io.charqe.qs.modules.user.controller.admin.vo.AdminUserUpdateReq;
 import io.charqe.qs.modules.user.auth.AuthAccessException;
 import io.charqe.qs.modules.user.auth.AuthSessionService;
@@ -347,6 +348,76 @@ public class UserServiceImpl extends CoreServiceImpl<UserMapper, User> implement
         }
         invalidateUserAfterCommit(target.getId(), true);
         return R.success();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public R<Long> addAdminUser(AdminUserCreateReq request) {
+        User identity = sessions.current(SessionScope.ADMIN, false).user();
+        requireUserEditor(identity);
+        if (request == null || !validator.validate(request).isEmpty()) {
+            throw new BizException("新增用户参数无效", "400");
+        }
+
+        Integer userType = request.getUserType() == null ? UserTypeEnum.NORMAL.getCode() : request.getUserType();
+        // 与编辑口径一致：加行锁重读操作者角色后再判定，避免并发降级后仍能创建 Boss。
+        User operator = getOne(Wrappers.<User>lambdaQuery().eq(User::getId, identity.getId()).last("FOR UPDATE"));
+        requireUserEditor(operator);
+        // Boss 可创建全部权限类型；Admin 仅可创建 Boss 以外的类型，与编辑、授予口径一致。
+        if (!UserTypeEnum.BOSS.getCode().equals(operator.getUserType())
+                && UserTypeEnum.BOSS.getCode().equals(userType)) {
+            throw new AuthAccessException(403, "Admin 不能创建 Boss 用户");
+        }
+
+        String username = request.getUsername().trim();
+        if (!StringUtils.hasText(username) || username.matches("\\d{11}") || username.contains("@")) {
+            throw new BizException("用户名不能为空、不能为11位数字或包含@", "400");
+        }
+        if (count(Wrappers.<User>lambdaQuery().eq(User::getUsername, username)) > 0) {
+            throw new BizException("用户名重复！", "400");
+        }
+        String phoneNumber = request.getPhoneNumber();
+        String email = request.getEmail();
+        if (StringUtils.hasText(phoneNumber) && count(Wrappers.<User>lambdaQuery()
+                .eq(User::getPhoneNumber, phoneNumber)) > 0) {
+            throw new BizException("手机号已被其他用户使用", "400");
+        }
+        if (StringUtils.hasText(email) && count(Wrappers.<User>lambdaQuery()
+                .eq(User::getEmail, email)) > 0) {
+            throw new BizException("邮箱已被其他用户使用", "400");
+        }
+
+        // 密码与登录/注册同口径：前端 AES-ECB 密文传输，服务端解密后 BCrypt 落库。
+        String rawPassword;
+        try {
+            rawPassword = new String(SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8))
+                    .decrypt(request.getPassword()), StandardCharsets.UTF_8);
+        } catch (RuntimeException e) {
+            throw new BizException("密码格式错误", "400");
+        }
+        if (rawPassword.length() < 6 || rawPassword.length() > 32) {
+            throw new BizException("密码长度须为6至32个字符", "400");
+        }
+
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(encodePassword(rawPassword));
+        user.setPhoneNumber(StringUtils.hasText(phoneNumber) ? phoneNumber : null);
+        user.setEmail(StringUtils.hasText(email) ? email : null);
+        user.setAvatar(StringUtils.hasText(request.getAvatar()) ? request.getAvatar() : qingsiUtil.getRandomAvatar());
+        user.setGender(request.getGender() == null ? 0 : request.getGender());
+        user.setIntroduction(request.getIntroduction());
+        user.setAdmire(request.getAdmire());
+        user.setUserStatus(request.getUserStatus() == null ? 1 : request.getUserStatus());
+        user.setUserType(userType);
+        try {
+            if (!save(user)) {
+                throw new BizException("保存失败，请刷新后重试");
+            }
+        } catch (DuplicateKeyException e) {
+            throw new BizException("用户名或联系方式已被使用，请刷新后重试", "400");
+        }
+        return R.success(user.getId());
     }
 
     private User lockEditableUser(User identity, Long userId, Integer requestedRole) {

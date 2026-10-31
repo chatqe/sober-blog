@@ -8,6 +8,7 @@ import io.charqe.qs.modules.user.domain.pojo.User;
 import io.charqe.qs.modules.user.auth.AuthSessionVO;
 import io.charqe.qs.modules.user.auth.SessionScope;
 import io.charqe.qs.modules.user.controller.web.vo.UserVO;
+import io.charqe.qs.modules.user.controller.admin.vo.AdminUserCreateReq;
 import io.charqe.qs.modules.user.controller.admin.vo.AdminUserUpdateReq;
 import io.charqe.qs.common.model.mp.CoreService;
 
@@ -39,6 +40,9 @@ public interface UserService extends CoreService<User> {
 
     /** 后台白名单编辑，返回是否因角色、状态或联系方式变化撤销目标用户会话。 */
     R<Boolean> updateAdminUser(AdminUserUpdateReq request);
+
+    /** 后台新增用户；Boss 可创建所有类型，Admin 不可创建 Boss。返回新用户 ID。 */
+    R<Long> addAdminUser(AdminUserCreateReq request);
 
     /** 后台逻辑删除用户，并撤销该用户全部会话。 */
     R<Void> deleteAdminUser(Long userId);

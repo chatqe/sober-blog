@@ -4,6 +4,7 @@ import io.charqe.qs.aop.LoginCheck;
 import io.charqe.qs.common.model.BaseReqVO;
 import io.charqe.qs.common.model.PageResult;
 import io.charqe.qs.common.model.R;
+import io.charqe.qs.modules.user.controller.admin.vo.AdminUserCreateReq;
 import io.charqe.qs.modules.user.controller.admin.vo.AdminUserUpdateReq;
 import io.charqe.qs.modules.user.service.UserService;
 import io.charqe.qs.modules.user.auth.AuthSessionService;
@@ -75,6 +76,13 @@ public class AdminUserController {
             @Parameter(name = "baseReqVO", description = "查询条件", required = true, example = "{\"page\":1,\"pageSize\":10}")
             @RequestBody BaseReqVO baseReqVO) {
         return userService.listUser(baseReqVO);
+    }
+
+    @PostMapping("/add")
+    @LoginCheck(value = 1, scope = SessionScope.ADMIN)
+    @Operation(summary = "新增用户", description = "Boss 可创建所有权限类型用户；Admin 仅可创建除 Boss 以外的类型。返回新用户 ID")
+    public R<Long> addAdminUser(@Valid @RequestBody AdminUserCreateReq request) {
+        return userService.addAdminUser(request);
     }
 
     @PostMapping("/update")
