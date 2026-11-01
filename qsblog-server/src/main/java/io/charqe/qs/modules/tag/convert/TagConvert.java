@@ -3,6 +3,7 @@ package io.charqe.qs.modules.tag.convert;
 import io.charqe.qs.modules.tag.controller.admin.dto.TagSaveReqDTO;
 import io.charqe.qs.modules.tag.controller.admin.vo.TagDetailVO;
 import io.charqe.qs.modules.tag.controller.admin.vo.TagListVO;
+import io.charqe.qs.modules.tag.controller.web.vo.TagCloudVO;
 import io.charqe.qs.modules.tag.controller.web.vo.TagWebVO;
 import io.charqe.qs.modules.tag.domain.pojo.Tag;
 import org.mapstruct.Mapper;
@@ -45,6 +46,11 @@ public interface TagConvert {
      */
     @Mapping(source = "tagDesc", target = "desc")
     TagWebVO toWebVO(Tag entity);
+
+    /**
+     * Entity → CloudVO：标签云仅需 id、name，字段同名自动映射
+     */
+    TagCloudVO toCloudVO(Tag entity);
 
     /**
      * Entity 批量转 ListVO
