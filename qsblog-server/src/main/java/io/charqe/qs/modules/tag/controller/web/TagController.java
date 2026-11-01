@@ -4,6 +4,7 @@ import io.charqe.qs.common.model.OptionVO;
 import io.charqe.qs.common.model.R;
 import io.charqe.qs.common.enums.OptionScopeEnum;
 import io.charqe.qs.modules.sysdict.controller.web.vo.DictVO;
+import io.charqe.qs.modules.tag.controller.web.vo.TagCloudVO;
 import io.charqe.qs.modules.tag.controller.web.vo.TagDictVO;
 import io.charqe.qs.modules.tag.controller.web.vo.TagWebVO;
 import io.charqe.qs.modules.tag.service.TagService;
@@ -59,10 +60,10 @@ public class TagController {
         return R.success(tagService.getDictList());
     }
 
-    @Operation(summary = "获取标签云数据", description = "返回所有未删除标签的名称，按 sort、id 升序，供首页标签云展示")
+    @Operation(summary = "获取标签云数据", description = "返回所有未删除标签的 id 与名称，按 sort、id 升序，供首页标签云展示与点击跳转")
     @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("/cloud")
-    public R<List<String>> cloud() {
-        return R.success(tagService.getCloudNames());
+    public R<List<TagCloudVO>> cloud() {
+        return R.success(tagService.getCloud());
     }
 }

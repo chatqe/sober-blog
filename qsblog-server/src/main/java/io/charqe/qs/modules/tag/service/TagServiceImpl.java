@@ -14,6 +14,7 @@ import io.charqe.qs.modules.category.service.CategoryService;
 import io.charqe.qs.modules.tag.controller.admin.dto.TagSaveReqDTO;
 import io.charqe.qs.modules.tag.controller.admin.vo.TagDetailVO;
 import io.charqe.qs.modules.tag.controller.admin.vo.TagListVO;
+import io.charqe.qs.modules.tag.controller.web.vo.TagCloudVO;
 import io.charqe.qs.modules.tag.controller.web.vo.TagDictVO;
 import io.charqe.qs.modules.tag.controller.web.vo.TagWebVO;
 import io.charqe.qs.modules.sysdict.controller.web.vo.DictVO;
@@ -216,16 +217,15 @@ public class TagServiceImpl extends CoreServiceImpl<TagMapper, Tag> implements T
     }
 
     @Override
-    public List<String> getCloudNames() {
+    public List<TagCloudVO> getCloud() {
         // BaseDO.isDel 带 @TableLogic，MyBatis-Plus 会自动追加 is_del = 0 条件
         return lambdaQuery()
                 .orderByAsc(Tag::getSort)
                 .orderByAsc(Tag::getId)
                 .list()
                 .stream()
-                .map(Tag::getName)
-                .filter(StringUtils::hasText)
-                .distinct()
+                .filter(t -> StringUtils.hasText(t.getName()))
+                .map(TagConvert.INSTANCE::toCloudVO)
                 .toList();
     }
 }

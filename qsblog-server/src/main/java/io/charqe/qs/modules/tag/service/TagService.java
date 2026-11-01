@@ -6,6 +6,7 @@ import io.charqe.qs.common.model.OptionVO;
 import io.charqe.qs.modules.tag.controller.admin.dto.TagSaveReqDTO;
 import io.charqe.qs.modules.tag.controller.admin.vo.TagDetailVO;
 import io.charqe.qs.modules.tag.controller.admin.vo.TagListVO;
+import io.charqe.qs.modules.tag.controller.web.vo.TagCloudVO;
 import io.charqe.qs.modules.tag.controller.web.vo.TagDictVO;
 import io.charqe.qs.modules.tag.controller.web.vo.TagWebVO;
 import io.charqe.qs.modules.sysdict.controller.web.vo.DictVO;
@@ -73,7 +74,9 @@ public interface TagService extends CoreService<Tag> {
     List<TagDictVO> getDictList();
 
     /**
-     * 获取标签云名称列表（Web）
+     * 获取标签云数据（Web）
+     *
+     * <p>返回所有未删除标签的 id 与名称，按 sort、id 升序，供首页标签云展示与点击跳转
      */
-    List<String> getCloudNames();
+    List<TagCloudVO> getCloud();
 }
