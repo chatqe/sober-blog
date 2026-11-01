@@ -1,11 +1,12 @@
-# Qs-Blog · 青肆博客
+# SoberUP-Blog · 青肆博客
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Java 17](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.org/)
 [![Spring Boot 2.7](https://img.shields.io/badge/Spring%20Boot-2.7.18-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Maven](https://img.shields.io/badge/Build-Maven-brightgreen.svg)](https://maven.apache.org/)
 [![MySQL 8](https://img.shields.io/badge/MySQL-8.x-blue.svg)](https://www.mysql.com/)
-[![Redis](https://img.shields.io/badge/Redis-6%2B-red.svg)](https://redis.io/)
+[![Redis](https://img.shields.io/badge/Redis-7.x-red.svg)](https://redis.io/)
+[![Sa-Token](https://img.shields.io/badge/Sa--Token-1.46.0-green.svg)](https://sa-token.cc/)
 
 > 青肆，青春肆意。一个基于 Spring Boot + Vue3 的前后端分离个人博客系统，支持文章管理、评论互动、弹幕、IM 聊天室、资源收藏、访问统计等完整功能。
 
@@ -40,13 +41,13 @@
 | Spring Boot | 2.7.18 | 应用框架 |
 | MyBatis-Plus | 3.5.5 | ORM / 数据访问层 |
 | MySQL | 8.x | 关系型数据库 |
-| Redis | 6+ | 缓存 / 分布式锁 / 会话存储 |
+| Redis | 7.x | 缓存 / 会话存储（Sa-Token 双域会话，需支持 `SET KEEPTTL`） |
 | Druid | 1.2.18 | 数据库连接池 |
-| Lettuce | — | Redis 客户端 |
-| Redisson | 3.16.3 | 分布式锁 |
+| Lettuce + commons-pool2 | — | Redis 客户端与连接池（Redisson 已移除） |
+| Sa-Token | 1.46.0 | 前后台独立双会话鉴权（`sa-token-spring-boot-starter` + `sa-token-redis-template`） |
 | Knife4j | 4.5.0 | API 文档（OpenAPI 3.0） |
 | Spring Security Crypto | — | BCrypt 密码加密 |
-| JJWT | 0.11.5 | JWT Token 签发与校验 |
+| JJWT | 0.11.5 | JWT 工具（登录凭据已迁至 Sa-Token opaque token） |
 | t-io | 3.7.5.v20211028-RELEASE | WebSocket 即时通信 |
 | Hutool | 5.8.32 | 通用工具库 |
 | FastJSON2 | 2.0.43 | JSON 序列化 |
@@ -90,7 +91,7 @@ qs-blog/
 │       │   │   └── model/                    # 基础模型（BaseDO、R<T>、PageQuery、PageResult）
 │       │   ├── framework/                    # 框架层（拦截器、过滤器、异步线程池）
 │       │   ├── infra/                        # 第三方服务集成（七牛、百度地图、邮件）
-│       │   ├── modules/                      # 业务模块（15+ 子模块）
+│       │   ├── modules/                      # 业务模块（19 个子模块）
 │       │   └── utils/                        # 工具类（JWT、AES、Redis、IP、验证码等）
 │       └── resources/
 │           ├── mapper/                       # MyBatis XML Mapper 文件
@@ -128,7 +129,7 @@ modules/<name>/
 | JDK | 17 | 17 LTS |
 | Maven | 3.6+ | 3.8+ |
 | MySQL | 8.0 | 8.0+ |
-| Redis | 6.0 | 7.0+ |
+| Redis | 6.2（需支持 `SET KEEPTTL`） | 7.2 |
 
 ### 数据库初始化
 
@@ -195,10 +196,10 @@ pnpm dev
 
 ### 后台管理
 
-- 文章 CRUD、批量操作、分类/标签管理
-- 评论审核、用户管理、访问日志分析
+- 文章 CRUD、批量操作、草稿箱（`publish_status`）、分类/标签管理（启用停用、排序、`home_show` 首页展示开关）
+- 评论审核、用户管理（新增/编辑/删除，Boss/Admin 提权隔离）、访问日志分析
 - 系统配置（通过 MySQL 动态配置，无需重新打包）
-- 文件资源管理（本地 / 七牛云切换）
+- 文件资源管理（本地 / 七牛云切换、服务端下发上传 Key、引用绑定、回收站、孤儿治理、派生变体、随机封面场景）
 - 字典管理、权限控制
 
 ### 即时通信（可选）
@@ -314,19 +315,25 @@ server {
 
 ### 认证与授权
 
+前后台独立双会话（Sa-Token 改造后，2026-10）：
+
 ```
-请求 → WebInfoHandlerInterceptor（提取 Token）
-     → UserContext（ThreadLocal 存当前用户）
-     → @LoginCheck 切面（鉴权拦截）
+请求 → 提取 Authorization（opaque token，非 JWT）
+     → AuthSessionService / SaTokenSessionAdapter（WEB / ADMIN 双 StpLogic，Redis 会话 + revision 版本撤销）
+     → @LoginCheck(scope = WEB | ADMIN | EITHER) 切面（域匹配 + userType 角色门槛）
      → @ResourceCheck 切面（资源权限校验）
      → Controller → Service → Mapper → DB
 ```
+
+- 登录凭据为 64 位 opaque token，存 Redis 会话；改密/冻结/改角色通过递增 `auth:v2:revision:<userId>` 撤销旧会话。
+- 后台入口 `/admin/user/login` 仅放行站长(0)与管理员(1)；动态写接口为站长专属（`value=0, scope=EITHER`）。
+- `401/403` 以真实 HTTP 状态码返回（`GlobalExceptionHandler`），不再统一 200 信封。
 
 ### 防刷与幂等
 
 | 注解 | 作用 | 实现 |
 |------|------|------|
-| `@LoginCheck` | 强制登录校验 | JWT 验证 + AOP 切面 |
+| `@LoginCheck` | 强制登录校验（含域与角色门槛） | Sa-Token 双域会话解析 + AOP 切面 |
 | `@Idempotent` | 接口幂等性 | Redis SET NX + TTL |
 | `@SaveCheck` | 保存操作限流 | IP + 用户维度计数 |
 | `@ResourceCheck` | 资源访问控制 | 归属校验 |
@@ -342,15 +349,27 @@ BaseDO（id / isDel / createTime / updateTime 逻辑删除自动填充）
 
 ### 缓存策略
 
-- **Redis（Lettuce）**：热点数据、会话 Token、限流计数
-- **Redisson**：分布式锁（评论审核、点赞互斥等场景）
+- **Redis（Lettuce + commons-pool2）**：热点数据、Sa-Token 双域会话、限流计数（Redisson 已移除，Sa-Token 会话要求 Redis 支持 `SET KEEPTTL`）
 - **QingSiCache**：统一缓存封装，支持 TTL 和缓存失效
 
 ---
 
 ## 变更记录
 
-### 近期重构（2026）
+### 2026-10 鉴权与能力改造
+
+- **Sa-Token 前后台独立双会话**：WEB/ADMIN 双域 `StpLogic`、opaque token、revision 版本撤销、401/403 真实 HTTP 状态；移除 Redisson，改用 Lettuce + commons-pool2（要求 Redis 支持 `SET KEEPTTL`，dev 已升级 7.2）
+- **文件模块迭代 0–8**：登记链路打通、上传 Key 改服务端下发（ULID）+ 大小/类型/场景约束、引用绑定与回收站（`force` 永久删除）、孤儿扫描/补登记/批量治理、媒体详情 + ETag 304 + 派生变体（七牛 `imageView2`）、上传前压缩（前端 OffscreenCanvas）+ 服务端重绘净化（JDK ImageIO 去 EXIF）、`/file/admin/update` 元信息编辑、`/file/my/list` C 端选图
+- **随机封面场景**：`scene=random_cover`，历史 `backgroundImg` 资源登记为随机封面
+- **全站分页响应统一 `PageResult`**（`list/total/pages/pageNum/pageSize`），前端统一读 `list`
+- **ID 全链路字符串序列化**：全局 Jackson `@JsonFormat(shape=STRING)` + 守卫单测锁死契约（见 `docs/开发规范-ID序列化与下拉选项.md`）
+- **分类/标签下拉选项端点** `/category/options`、`/tag/options`（含 admin 侧，OptionVO + Scope 隔离）；补 `status`/`sort` 字段打通停用与排序
+- **文章草稿箱**：独立 `publish_status` 字段，后台列表/编辑/发布链路支持草稿
+- **分类 `home_show`**：支持分类从首页区块排除
+- **后台用户管理**：新增 `POST /admin/user/add`、编辑/删除（Boss/Admin 提权隔离：Admin 不能创建/编辑/删除 Boss）；BOSS/Admin 可修改任意文章；标题超长返回可读校验提示
+- **动态（moment）**：写权限收敛为站长专属，作者信息回填，`pageList` 空结果防 `IN()` 语法错误
+
+### 更早重构（2026）
 
 - 主键策略统一为数据库自增（`IdType.AUTO`）
 - 行为模块重构：点赞/点踩互斥逻辑修复，Like/Unlike 拆分

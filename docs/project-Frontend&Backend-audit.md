@@ -1,23 +1,23 @@
 # 前后端联合审计报告
 
-更新日期：2026-10-26（第九轮：文件模块专项审计 F1–F17，只读源码 + 数据库事实核对，未改动业务代码）。本文前半部分为当前结论；末尾折叠附录保留旧运行时审计记录，不代表当前版本的运行结果。
+更新日期：2026-11-01（第十轮：对第九轮之后 2026-10-27 ~ 11-01 两仓库已提交变更做静态源码复核，未启动服务、未改业务代码）。本文前半部分为当前结论；末尾折叠附录保留旧运行时审计记录，不代表当前版本的运行结果。
 
 ## Result
 
-**PARTIAL：Sa-Token 双会话改造已完成源码复审、构建/单测与运行时回归。动态模块的鉴权链路（S1/S2）、回归中暴露的三处存量缺陷（S9–S11）、第四轮按业务更正落地的站长专属写权限、第五轮的后台登录门槛与菜单全量开放，第七轮按业务口径修复的 A2（私密文章列表正文暴露），以及第八轮的首页分类放开私密文章 + 分类区块解包修复，均已在真实 MySQL/Redis + 浏览器环境中验证通过；第五轮改动已提交并快进合并至两仓库 `main`（第七、八轮已提交：后端 `361cd07`、前端 `bcd56f2`，两仓库均未推送远程）。第九轮新增文件模块专项审计（F1–F17）：dev 库 `file_info`/`file_biz_ref` 均为 0 行，登记从未成功落库；前端压缩、后端重绘、派生变体三项内部能力全部缺失，详见「文件模块专项审计（第九轮）」。A1/B1/B2 等存量项仍未在运行时复核，项目整体不判定为通过。**
+**PARTIAL：Sa-Token 双会话改造已完成源码复审、构建/单测与运行时回归。动态模块的鉴权链路（S1/S2）、回归中暴露的三处存量缺陷（S9–S11）、第四轮按业务更正落地的站长专属写权限、第五轮的后台登录门槛与菜单全量开放，第七轮按业务口径修复的 A2（私密文章列表正文暴露），以及第八轮的首页分类放开私密文章 + 分类区块解包修复，均已在真实 MySQL/Redis + 浏览器环境中验证通过；第五轮改动已提交并快进合并至两仓库 `main`（第七、八轮已提交：后端 `361cd07`、前端 `bcd56f2`，两仓库均未推送远程）。第九轮新增文件模块专项审计（F1–F17）：dev 库 `file_info`/`file_biz_ref` 均为 0 行，登记从未成功落库；前端压缩、后端重绘、派生变体三项内部能力全部缺失，详见「文件模块专项审计（第九轮）」。第十轮（2026-11-01，静态源码复核）确认：第九轮之后两仓库合计前进约 45 次提交（后端至 `49d8d05`、前端至 `bebd035`），存量项 B1/B2/B4 及 D1 的多数旧调用点已在功能迭代中实际修复或迁移（`FIXED(STATIC)`，未重跑运行时），S3/C4 在源码层原样保留；新增功能（ID 全局字符串序列化、PageResult 统一分页、草稿箱、后台用户管理、随机封面场景等）均为自主提交经复审合入，未做专项运行时回归。A1/B5 等其余存量项仍未在运行时复核，项目整体不判定为通过。**
 
 - 本轮最高优先级（S1）：动态模块 12 个写接口原为 `value=1` + `scope=ADMIN`，既拒绝普通用户又以 WEB 会话拦截所有人。第四轮按业务方更正后的口径重定契约：**新增/修改/删除仅站长（`userType=0`）**，其余人（含匿名）可读动态、点赞数、评论内容与作者信息，点赞/评论需登录；后台 `/admin/moment/*` 保留给站长(0)与管理员(1)。
 - 双会话设计在源码层成立：WEB/ADMIN 各自独立的 `StpLogic`、revision 版本撤销、跨域调用显式拒绝、401/403 以真实 HTTP 状态返回、前端按域存储并按 generation 丢弃过期响应。
 - 上轮 P0 的「普通用户可调管理接口」在源码层已收敛：`controller/admin` 下 69 个方法级操作中 61 个 ADMIN、5 个 EITHER、仅 3 个认证入口无注解；全仓 134 处 `@LoginCheck` 为 88 ADMIN / 11 EITHER / 35 默认 WEB。
-- 存量未修：family 归属与审核（A1）、文章编辑双解包与旧字段（B1/B2）、标签缓存与字典（B4/B5）、友链（C1/D4）、活跃旧路径（D1）、关于页分页（D2）。
+- 存量未修：family 归属与审核（A1）、友链（C1/D4）、关于页分页（D2，静态复核：调用端点已换为 `/resAgg/listWeblinks`，但该端点仍绑定 MP Page 的 `current/size`，前端发 `pageNum/pageSize` 的错配本质保留，运行时未复核）、标签字典端点本体（B5，前端已无活跃引用）。第十轮复核后，B1/B2（文章编辑双解包与旧字段）、B4（标签分片缓存不清理）已 `FIXED(STATIC)`，D1 多数行已迁移或成死代码（见「第十轮：静态源码复核」）。
 - 第二轮只更新本文件、不改业务代码；第三轮（fix 分支运行时回归）在本文件中回填运行时证据，并在 `fix/sa-token-scope-regression` 分支提交了 3 处后端缺陷修复（S9–S11），回归产生的临时账号/动态/行为/评论数据已全部清理（验证 SQL 计数归零）。
 
 ### 当前基线与证据口径
 
 | 项目 | 本次实际基线 | 任务开始工作树 |
 | --- | --- | --- |
-| 后端 `E:\idea\qs-blog` | `main@a59b9e9` | 干净 |
-| 前端 `E:\web\qs-web` | `main@244ebe3` | 干净（另有未跟踪 `scripts/auth-browser-harness.cjs`、`temp/`） |
+| 后端 `E:\idea\qs-blog` | `main@49d8d05`（第十轮，2026-11-01；第九轮及此前记录基线为 `main@a59b9e9`） | 干净（另有本文件与 `README.md`、`docs/方案C…审计.md` 文档改动） |
+| 前端 `E:\web\qs-web` | `main@bebd035`（第十轮，2026-11-01；此前记录基线为 `main@244ebe3`） | 干净（另有未跟踪 `scripts/auth-browser-harness.cjs`、`temp/`） |
 
 本轮基线前进到两次鉴权专项提交：后端 `3bd2670 feat(auth): 前后台独立双会话改造（Sa-Token + Redis 双域）`（61 文件 +2559/−455）、前端 `4f4fed9 feat(auth): 前后台独立双会话与分域请求鉴权`（69 文件 +1968/−1345）。上一轮基线为后端 `d96e823`、前端 `05697b4`，本文中标注「上轮」的结论均指该基线。旧报告后端 `89e2a1c` 在当前仓库无法解析，且旧基线带有未提交改动，不能用提交差分完整重建当时工作树。
 
@@ -818,6 +818,7 @@ F16 服务端重绘：新增 [ImageSanitizer.java](file:///E:/idea/qs-blog/qsblo
 - 迭代 6（2026-10-26，前端仓库）：把前端「文件媒体库」链路从 `resource` 改为 `file` —— 新增 `src/api/types/file.ts`、`src/api/modules/file.ts`（12 个封装）与 `file.test.ts`（12 条）、`src/utils/file/fileFormat.ts`、`views/admin/file/List.vue` 及 `FileDetailDrawer`/`RecyclePanel`/`GovernancePanel` 三组件；`resource.ts` 只留 `ResourcePath*`，`upload.ts`/`article.ts` 的 `saveResource` 改 `saveFile`，删除死类型 `ResourceInfo` 与 `Graffiti.vue` 死声明；路由 `resourceList`→`fileList`，菜单「资源管理」→「文件管理」，`adminTabs`/`navigation.ts` 同步；删除 `views/admin/resource/List.vue`。`pnpm test:auth` 66 条全绿、`pnpm type-check` 通过；前后端联调 7 项通过，探针解绑并永久删除后 0 残留。未跟踪的 `temp/`、`scripts/auth-browser-harness.cjs` 与截图不入库。
 - 迭代 7（2026-10-26，双仓库 + 数据）：文件管理拆为 `file/list|recycle|governance` 三个二级菜单页并兼容 `/admin/fileList`，新增 `FilePageHeader`，删除 `RecyclePanel`/`GovernancePanel`；文件库默认卡片网格（固定 6 列 + 窄屏降级）并保留列表切换，新增 `thumbUrl()` 与两级图片降级，默认分页改 20；卡片操作图标改为悬停才出现的左上角按钮组（详情/复制链接/编辑/移入回收站），选择框移到右上角，触屏常驻；为支撑编辑图标新增 `POST /file/admin/update`（`FileUpdateReqVO` + `FileInfoService#updateMeta` + `FileAdminController#update`，仅文件名/场景，回收站记录 404）与前端 `updateFile` + 编辑对话框；`ADMIN_ROLES` 增 3 条、`adminTabs` 增 3 条标题，新增 `navigation.test.ts` 4 条与 `updateFile` 1 条用例，前端 72 条全绿；用官方「凭证 → 七牛直传 → 登记」链路把 `src/assets/file` 的 18 张位图登记进 `file_info`（id 16–33，`scene=system`），5 个伪 `.jpg` 按文件头纠正为 `.png`。
 - 迭代 8（2026-10-26，双仓库）：新增通用选图容器 `src/components/media/ImagePickerDialog.vue`（类型筛选 + 关键词搜索 + 容器内上传 + 卡片单选 + 分页 + 「使用该图片」），接入文章封面、站点头像/背景图片、C 端用户头像三处；后端新增 `POST /file/my/list`（`FileController#myList`，EITHER，拥有者取自会话）与前端 `listMyFiles`；修两处既有缺陷——`SCENE_BY_PREFIX` 补齐六个前缀映射（此前这些页面上传全落 `scene=unknown`）、七牛直传改以凭证 `uploadUrl` 为准并在 `application-dev.yml` 配 `up-as0.qiniup.com`（此前写死域名导致浏览器上传必 400 incorrect region）；新增 `listMyFiles` 1 条用例，前端 73 条全绿，运行时 7 项验收通过，测试图与头像改动均已回滚。
+- 第十轮（2026-11-01，仅本文件）：对第九轮之后的两仓库已提交变更做静态源码复核，新增「第十轮：静态源码复核」小节，刷新 B1/B2/B4/B5/C2/D1/D2/S3–S8 状态与 Result/基线表；业务代码 0 行改动，未启动服务、未跑构建/单测。
 - 保留旧原文为折叠历史附录；其测试数据操作、运行状态及清理披露均属于过去，不作为本轮行为。
 - 第二轮业务源代码、配置、数据库和缓存未修改，也未提交/合并/推送 Git；第三轮只改上述 3 个后端文件并提交到 fix 分支，回归数据已清理。编译/构建/测试只更新本地生成产物（`target/`、`dist/`、`logs/audit-build-1024.log`）。
 
@@ -922,6 +923,52 @@ F16 服务端重绘：新增 [ImageSanitizer.java](file:///E:/idea/qs-blog/qsblo
 - 已知差异：首页卡片组件 `SortArticle.vue` 不渲染摘要区，私密文章在首页仅显示标题/封面/分类/时间；如需首页也展示摘要，需改该组件。
 - 未提交：后端 3 文件（`ArticleServiceImpl`、`CommonConst`、本报告）、前端 2 文件（`ArticleList.vue`、`index.vue`）仍在 `main` 工作区。
 
+### 第十轮：静态源码复核（2026-11-01，覆盖第九轮迭代 8 之后的已提交变更）
+
+基线：后端 `main@49d8d05`、前端 `main@bebd035`。自第九轮末（后端 `67f7d68` / 前端 `bcd56f2`）起，后端经约 15 次、前端约 30 次提交（含合并）推进，均以 fix/feat 分支经 `git merge` 合入 `main`；两仓库 `main` 领先远程（后端 `origin/main`/`github/main` 已同步至 `49d8d05`，前端 `origin/main` 停在 `4969176`，`bebd035` 未推送）。本轮**只做源码与 Git 历史核对，未启动服务、未跑构建/单测、未产生任何运行时断言**；下列全部为 `FIXED(STATIC)` / `源码确认` 级别。
+
+#### 已提交功能变更清单（按主题）
+
+| 主题 | 落地事实（源码） |
+| --- | --- |
+| ID 全链路字符串 | 后端出参改为全局 Jackson 字符串序列化（`c36b54f`），并有守卫单测锁死类型契约；前端不做 `Number()` 归一（如 `Edit.vue` 分类/标签 ID 直接字符串严格相等比较）。 |
+| 分页响应统一 | 全站分页统一 `PageResult`，前端统一读 `list`（`ea683ac`）；`/file/admin/list` 等不再返回 `records`。 |
+| 下拉选项端点 | 新增 `/category/options`、`/admin/category/options`、`/tag/options`、`/admin/tag/options`（OptionVO 口径，`6cb7e77`）；前端 [category.ts](file:///E:/web/qs-web/src/api/modules/category.ts)/[tag.ts](file:///E:/web/qs-web/src/api/modules/tag.ts) 全面改用 options，注释显式禁止再走 dict 端点。 |
+| 分类/标签状态与排序 | `category`/`tag` 补 `status`/`sort` 字段（`eb6233e`），打通后台启用停用与标签排序；`tag.sort` DDL 迁移在文档留痕。 |
+| 首页分类展示开关 | `category.home_show` 支持分类从首页区块排除（`02ebeee` + 前端 `9ed985a` 开关列）。 |
+| 文章草稿箱 | 后端独立 `publish_status` 字段（`0da35c5`），`/admin/article/pageList` 支持草稿过滤、`changeArticleStatus` 带 `publishStatus`、`getArticleWithPwd` 供后台加载草稿；前端新增 `Draft.vue` 草稿箱页、编辑器「存草稿」、列表草稿列。 |
+| 后台用户管理 | 统一角色枚举与后台用户编辑/删除（`0c5d21f`）、新增用户接口 `POST /admin/user/add`（`c12900f`）：`AdminUserController` 提供 `add/update/delete/{userId}`，均 `@LoginCheck(value=1, scope=ADMIN)`，Boss(0) 可创建/编辑/删除所有用户，Admin(1) 不能创建 Boss、不能编辑/删除 Boss；提权入口沿用第五轮的收口口径。前端 `/admin/user/List.vue` 接入新增（含头像选择）与编辑删除。 |
+| 文章归属放宽 | BOSS/Admin 可修改任意文章（`674240a`）；标题超长返回可读校验提示而非 500（`29a1672`），前端输入上限同步 30→100（`6021610`）。 |
+| 随机封面场景 | `scene=random_cover` 新增，历史 `backgroundImg` 资源批量登记为随机封面（`401ad51`）。 |
+| 登录跳转对齐主流 | 登录/注册成功后留在唤起弹窗的当前页（`d799038`）、前台退出默认停留当前页、仅登录态专属页回首页（`65966ac`）。 |
+| 前台总览页与样式复刻 | 新增标签/分类/归档/收藏总览页（`src/views/front/tags|category|timeline|collection`，复刻 ragnote.top）；文章详情页两栏卡片式重构、目录/正文/返回按钮与深色可读性对齐 ragnote；胶囊导航栏间距/毛玻璃/回顶闪隐修复；回顶按钮果冻化 + 进度实时修复；时间线 `tl-row` 鼠标移入特效；朋友圈样式重构并将 `weiYan` 模块重命名为 `moment`。 |
+| 后台 UI 统一 | 容器图标精简、操作列统一图标按钮、页签限流、浏览器标签页标题前后台区分、静态初始标题统一为 SoberUP。 |
+
+#### 存量项状态刷新（本轮源码核对）
+
+| 编号 | 第十轮状态 | 依据 |
+| --- | --- | --- |
+| B1 文章回显双重解包 | `FIXED(STATIC)` | [Edit.vue](file:///E:/web/qs-web/src/views/admin/article/Edit.vue) 改调 `articleApi.getAdminArticleById`（`GET /admin/article/getArticleWithPwd`，`authScope:'admin'`），注释明确「已剥壳不能再取 res.data」，直接 `Object.assign(article, res)`。运行时未复测。 |
+| B2 保存字段旧命名 | `FIXED(STATIC)` | 表单模型已统一为 `categoryId`/`tagId`（含校验规则与 watch），与后端必填字段对齐；编辑器经 `a03755b` 样式重构后仍保持单选语义。 |
+| B4 标签分片缓存不清理 | 清理侧 `FIXED(STATIC)`，TTL 未解决 | [TagServiceImpl.clearCache](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/modules/tag/service/TagServiceImpl.java#L154-L165) 现按前缀批量删除 `tag:public:cat_*` 并同步清理 `TAG_DICT`/`TAG_OPTIONS`；但 `listPublic` 写入仍无 TTL（与 `category:public` 同类风险保留）。 |
+| B5 字典 value=tagDesc | 端点本体未改，前端无活跃引用 | `getDictList` 仍 `setValue(t.getTagDesc())`；前端选项链路已迁至 options 端点，`category.ts`/`api/README.md` 明文禁止 dict 当 ID 用。dict 端点本身成为遗留面（建议下线或修正，见 Remaining Uncertainty）。 |
+| C2 动态删除裸 Axios | 保持关闭 | `moment.ts` 走 `request` + `authScope:'web'`；`weiYan.ts` 已随模块重命名消失。 |
+| D1 后台用户状态 | 已接入 | `/admin/user/page|add|update|delete|changeUserStatus` 均带 `authScope:'admin'`（[user.ts](file:///E:/web/qs-web/src/api/modules/user.ts)）。 |
+| D1 后台资源路径/文件删除/资源状态 | `FIXED(STATIC)` / 死代码 | `views/admin/resource/List.vue` 已删除（迭代 6 迁至 `views/admin/file`）；[resource.ts](file:///E:/web/qs-web/src/api/modules/resource.ts) 重写为 `/weblinks/listWeblinks|saveWeblinks|update|deleteWeblinks`（后端存在且 query/body 位置匹配），`Promise.resolve(null)` 假成功方法消失。`/admin/resourcePathList` 的第五轮 404 遗留应随此迁移解决（运行时未复测）。 |
+| D1 旅行资源 | **仍未修** | [travel/index.vue:144](file:///E:/web/qs-web/src/views/front/travel/index.vue#L144) 仍调 `POST /webInfo/listResourcePath`，后端全仓已无该映射（`/webInfo` 前缀下仅剩 `listAdminLovePhoto`/`saveLovePhoto`），静态判定 404。 |
+| D1 文章附属动态 | 死代码 | `moment.ts` 保留 `listMoments`/`listNews`（旧 `/moment/list|listNews`）但全仓无调用方；文章详情页树洞遗留调用已移除（`86d47dc`）。建议删除封装防止回流。 |
+| D2 关于页分页 | 未修（形态变化） | 前端改调 `/resAgg/listWeblinks`（[about.ts:55-58](file:///E:/web/qs-web/src/api/modules/about.ts#L55-L58) 发 `pageNum/pageSize`），该端点入参 `BaseReqVO extends Page`，JSON 绑定字段仍是 `current/size`，错配本质保留。 |
+| S3 上传过滤器顺序 | 未修 | [FileFilter.java:46-47](file:///E:/idea/qs-blog/qsblog-server/src/main/java/io/charqe/qs/infra/storage/FileFilter.java#L46-L47) 仍先 `sessions.resolve(token,…)` 后判 `hasText`；计数仍为反序列化 `AtomicInteger` 不回写。文件模块迭代 0–8 未触及该类。 |
+| S4–S8 | 无变化 | 本轮提交未触及 `POST /user/token`、`tokenName`、`revokeAll`、`getAdminUser()` 启动缓存、`auth.session` 外部化。 |
+| A1/C1/C3/C4/D3–D5 | 无变化 | 相关源码本轮未被修改，结论沿用第九轮。 |
+
+#### 本轮观察到的新风险/待办（不单列编号，未运行时验证）
+
+- 草稿箱 `publish_status` 与既有 `viewStatus`/发布链路是两套状态位；`pageList` 空结果防 `IN()` 修复（`3aa7373`）提示该路径此前空 ID 集合会直接 SQL 报错，同类 `IN()` 用法建议后续全仓排查。
+- `changeUserStatus`/`changeUserAdmire`/`changeUserType` 三个旧 GET 端点已改为薄封装转发到 `updateAdminUser`，与新 `POST /admin/user/update` 并存；GET 修改语义不符合 REST 口径，建议前端迁移完成后下线。
+- `random_cover` 场景登记的历史资源来自 `backgroundImg`，与迭代 7 登记的 `scene=system` 素材并存，场景口径需在后续媒体库治理中统一。
+- 前端 `bebd035` 尚未推送 `origin/main`（停在 `4969176`）；后端 `main` 与远程一致。
+
 ### CONFIRMED(BUILD) / CONFIRMED(TEST)：本轮实际观察
 
 1. **Rollup 分包循环依赖警告已消失**：上轮 `categoryInfo.ts → stores/index.ts` 的跨 chunk 循环本轮未再出现。属构建结果变化，未在浏览器验证是否影响执行顺序。
@@ -943,6 +990,9 @@ F16 服务端重绘：新增 [ImageSanitizer.java](file:///E:/idea/qs-blog/qsblo
 ## Remaining Uncertainty
 
 - 第二轮没有 HTTP/浏览器/DB/Redis 复测，S1–S8 当时均为源码结论；第三、四轮已补齐 S1/S2、S9–S12 与站长专属写权限的运行时证据，第七轮补齐 A2；S3–S8 仍为源码结论。
+- 第十轮同样是纯静态复核：B1/B2/B4/D1(resource)/D2 的状态刷新全部只依据源码与 Git 历史，第九轮迭代 0–8 之后的功能提交（options 端点、草稿箱、后台用户管理、PageResult、ID 序列化、random_cover、前台总览页等）未做专项运行时回归，不能当作已验收；`FIXED(STATIC)` 不等于 `FIXED(VERIFIED)`。
+- B5 的 dict 端点（`/category/dict`、`/tag/dict`）本体仍返回 `value=cateDesc/tagDesc`：前端虽已无引用，但端点对任何外部调用方仍是陷阱，下线或修正前不应视为关闭。
+- 旅行页 `/webInfo/listResourcePath` 静态判定为 404（后端无此映射），但本轮未发起真实请求确认，且旅拍功能是否在前台可达（路由/入口）未核查。
 - A2 的修复把「私密短文不返回正文」定为规则：列表对 ≤80 字的私密文章返回 `articleContent=null`，前端显示加密提示；若产品希望短私密文也展示开头，需要改为固定长度截断并接受“摘要即全文”的残留风险。
 - 首页分类区块解包缺陷已于第八轮修复并经浏览器验证；遗留差异是 `SortArticle.vue` 不渲染摘要，首页只有标题/封面。
 - `category:public` / `category:navbar_` 无 TTL，仅分类写操作才失效；第八轮遇到一次陈旧快照导致首页分类区块缺项，已手工清除，但缓存策略本身未改，换环境或长期运行后仍可能复现。
